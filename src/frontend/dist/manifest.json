@@ -1,0 +1,17 @@
+{
+  "name": "Money Kingdom",
+  "short_name": "Money Kingdom",
+  "description": "Money Kingdom - Social Finance App",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1a56db",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/assets/generated/crown-logo-transparent.dim_120x120.png",
+      "sizes": "120x120",
+      "type": "image/png"
+    }
+  ]
+}
