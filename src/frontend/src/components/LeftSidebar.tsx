@@ -53,11 +53,6 @@ export default function LeftSidebar({ onNavigate }: LeftSidebarProps) {
           >
             <item.icon className="w-4 h-4" />
             {item.label}
-            {item.id === "notifications" && (
-              <span className="ml-auto bg-primary text-primary-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                3
-              </span>
-            )}
           </button>
         ))}
       </nav>
@@ -70,10 +65,8 @@ export default function LeftSidebar({ onNavigate }: LeftSidebarProps) {
           </AvatarFallback>
         </Avatar>
         <div>
-          <p className="font-semibold text-xs text-foreground">
-            Prince Pawan Kumar
-          </p>
-          <p className="text-[11px] text-muted-foreground">523 मित्र</p>
+          <p className="font-semibold text-xs text-foreground">प्रिंस पवन कुमार</p>
+          <p className="text-[11px] text-muted-foreground">0 मित्र</p>
         </div>
         <Crown className="w-3.5 h-3.5 text-yellow-500 ml-auto" />
       </div>

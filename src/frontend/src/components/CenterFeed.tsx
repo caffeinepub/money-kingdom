@@ -21,13 +21,6 @@ export interface Post {
 
 const EXPIRY_MS = 86400000; // 24 hours
 
-const PLACEHOLDER_STORIES = [
-  { name: "राहुल", initials: "RK", gradient: "from-orange-400 to-pink-500" },
-  { name: "प्रिया", initials: "PS", gradient: "from-blue-400 to-cyan-500" },
-  { name: "अमित", initials: "AS", gradient: "from-green-400 to-emerald-500" },
-  { name: "नेहा", initials: "NV", gradient: "from-purple-400 to-violet-500" },
-];
-
 export default function CenterFeed() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
@@ -144,30 +137,6 @@ export default function CenterFeed() {
               </div>
             </button>
           ))}
-
-          {/* Placeholder stories */}
-          {activeStories.length === 0 &&
-            PLACEHOLDER_STORIES.map((s) => (
-              <div
-                key={s.name}
-                className="relative flex flex-col rounded-2xl overflow-hidden shrink-0 w-24 h-40 shadow border border-border opacity-50"
-              >
-                <div
-                  className={`w-full h-full bg-gradient-to-br ${s.gradient} flex items-end`}
-                >
-                  <div className="absolute top-2 left-2 w-8 h-8 rounded-full bg-primary border-2 border-white flex items-center justify-center shadow">
-                    <span className="text-primary-foreground text-[10px] font-bold">
-                      {s.initials}
-                    </span>
-                  </div>
-                  <div className="w-full px-2 pb-2 pt-7 bg-gradient-to-t from-black/60 to-transparent">
-                    <p className="text-[11px] font-semibold text-white truncate">
-                      {s.name}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
         </div>
       </div>
 

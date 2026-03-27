@@ -33,35 +33,9 @@ const TRENDING_TOPICS = [
   { tag: "#Gold", count: "4.1K" },
 ];
 
-const INITIAL_USERS: SuggestedUser[] = [
-  {
-    id: "1",
-    name: "Deepak Mehta",
-    initials: "DM",
-    bio: "Stock Market Expert",
-    followed: false,
-  },
-  {
-    id: "2",
-    name: "Kavita Nair",
-    initials: "KN",
-    bio: "Crypto Enthusiast",
-    followed: false,
-  },
-  {
-    id: "3",
-    name: "Arjun Reddy",
-    initials: "AR",
-    bio: "Real Estate Investor",
-    followed: false,
-  },
-];
+const INITIAL_USERS: SuggestedUser[] = [];
 
-const INITIAL_GOALS: Goal[] = [
-  { id: "1", label: "इमरजेंसी फंड", progress: 75, target: "₹5 लाख" },
-  { id: "2", label: "घर खरीदना", progress: 32, target: "₹50 लाख" },
-  { id: "3", label: "Retirement", progress: 18, target: "₹2 करोड़" },
-];
+const INITIAL_GOALS: Goal[] = [];
 
 export default function RightSidebar() {
   const [users, setUsers] = useState<SuggestedUser[]>(INITIAL_USERS);
@@ -112,43 +86,49 @@ export default function RightSidebar() {
           </CardTitle>
         </CardHeader>
         <CardContent className="px-3 pb-3 flex flex-col gap-2">
-          {users.map((user, idx) => (
-            <motion.div
-              key={user.id}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: idx * 0.1 }}
-              className="flex items-center gap-2"
-              data-ocid={`suggestions.item.${idx + 1}`}
-            >
-              <Avatar className="w-7 h-7 shrink-0">
-                <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-semibold">
-                  {user.initials}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-[11px] text-foreground truncate">
-                  {user.name}
-                </p>
-                <p className="text-[10px] text-muted-foreground truncate">
-                  {user.bio}
-                </p>
-              </div>
-              <Button
-                size="sm"
-                variant={user.followed ? "outline" : "default"}
-                className={`text-[11px] rounded-full px-2.5 h-6 shrink-0 ${
-                  user.followed
-                    ? ""
-                    : "bg-primary text-primary-foreground hover:bg-primary/90"
-                }`}
-                onClick={() => handleToggleFollow(user.id)}
-                data-ocid={`suggestions.toggle.${idx + 1}`}
+          {users.length === 0 ? (
+            <p className="text-xs text-muted-foreground text-center py-2">
+              कोई सुझाव नहीं
+            </p>
+          ) : (
+            users.map((user, idx) => (
+              <motion.div
+                key={user.id}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.1 }}
+                className="flex items-center gap-2"
+                data-ocid={`suggestions.item.${idx + 1}`}
               >
-                {user.followed ? "फॉलोइंग" : "फॉलो"}
-              </Button>
-            </motion.div>
-          ))}
+                <Avatar className="w-7 h-7 shrink-0">
+                  <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-semibold">
+                    {user.initials}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-[11px] text-foreground truncate">
+                    {user.name}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground truncate">
+                    {user.bio}
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant={user.followed ? "outline" : "default"}
+                  className={`text-[11px] rounded-full px-2.5 h-6 shrink-0 ${
+                    user.followed
+                      ? ""
+                      : "bg-primary text-primary-foreground hover:bg-primary/90"
+                  }`}
+                  onClick={() => handleToggleFollow(user.id)}
+                  data-ocid={`suggestions.toggle.${idx + 1}`}
+                >
+                  {user.followed ? "फॉलोइंग" : "फॉलो"}
+                </Button>
+              </motion.div>
+            ))
+          )}
         </CardContent>
       </Card>
 
@@ -222,29 +202,35 @@ export default function RightSidebar() {
             </div>
           )}
 
-          {goals.map((goal, idx) => (
-            <div
-              key={goal.id}
-              className="flex flex-col gap-1"
-              data-ocid={`goals.item.${idx + 1}`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1">
-                  <Target className="w-3 h-3 text-primary" />
-                  <span className="text-[11px] font-medium text-foreground">
-                    {goal.label}
+          {goals.length === 0 ? (
+            <p className="text-xs text-muted-foreground text-center py-2">
+              कोई लक्ष्य नहीं
+            </p>
+          ) : (
+            goals.map((goal, idx) => (
+              <div
+                key={goal.id}
+                className="flex flex-col gap-1"
+                data-ocid={`goals.item.${idx + 1}`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1">
+                    <Target className="w-3 h-3 text-primary" />
+                    <span className="text-[11px] font-medium text-foreground">
+                      {goal.label}
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-semibold text-primary">
+                    {goal.progress}%
                   </span>
                 </div>
-                <span className="text-[10px] font-semibold text-primary">
-                  {goal.progress}%
-                </span>
+                <Progress value={goal.progress} className="h-1" />
+                <p className="text-[10px] text-muted-foreground">
+                  लक्ष्य: {goal.target}
+                </p>
               </div>
-              <Progress value={goal.progress} className="h-1" />
-              <p className="text-[10px] text-muted-foreground">
-                लक्ष्य: {goal.target}
-              </p>
-            </div>
-          ))}
+            ))
+          )}
         </CardContent>
       </Card>
     </div>
