@@ -53,13 +53,19 @@
   body {
     @apply bg-background text-foreground;
     font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+    font-size: 14px;
+  }
+  @media (min-width: 640px) {
+    body {
+      font-size: 15px;
+    }
   }
 }
 
 @layer components {
   .video-caption {
     font-family: "Playfair Display", Georgia, serif;
-    font-size: 1.05rem;
+    font-size: 1rem;
     font-weight: 600;
     line-height: 1.5;
     color: oklch(var(--primary));

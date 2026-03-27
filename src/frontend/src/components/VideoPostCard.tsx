@@ -9,6 +9,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
+  playCommentSound,
+  playLikeSound,
+  playShareSound,
+} from "@/utils/sounds";
+import {
   MessageCircle,
   MoreHorizontal,
   Send,
@@ -48,11 +53,12 @@ export default function VideoPostCard({
       {
         id: Date.now().toString(),
         author: "आप",
-        initials: "AB",
+        initials: "PPK",
         text: newComment.trim(),
       },
     ]);
     setNewComment("");
+    playCommentSound();
   };
 
   return (
@@ -62,30 +68,26 @@ export default function VideoPostCard({
     >
       <CardContent className="p-0 flex flex-col">
         {/* Header */}
-        <div className="flex items-start justify-between px-3 pt-3 pb-2">
-          <div className="flex items-center gap-2">
-            <Avatar className="w-8 h-8">
-              <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xs">
+        <div className="flex items-start justify-between px-4 pt-4 pb-2">
+          <div className="flex items-center gap-3">
+            <Avatar className="w-11 h-11">
+              <AvatarFallback className="bg-primary/10 text-primary font-bold text-sm">
                 {post.authorInitials}
               </AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-semibold text-xs text-foreground">
-                {post.author}
-              </p>
-              <p className="text-[11px] text-muted-foreground">
-                {post.timeAgo}
-              </p>
+              <p className="font-bold text-sm text-foreground">{post.author}</p>
+              <p className="text-xs text-muted-foreground">{post.timeAgo}</p>
             </div>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="p-0.5 rounded-full hover:bg-muted transition-colors"
+                className="p-1.5 rounded-full hover:bg-muted transition-colors"
                 data-ocid={`post.dropdown_menu.${markerIndex}`}
               >
-                <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
+                <MoreHorizontal className="w-5 h-5 text-muted-foreground" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -98,16 +100,16 @@ export default function VideoPostCard({
           </DropdownMenu>
         </div>
 
-        {/* Caption text — premium serif styling above video */}
+        {/* Caption */}
         {post.content && (
-          <div className="px-3 pb-2">
+          <div className="px-4 pb-3">
             <p className="video-caption">{post.content}</p>
           </div>
         )}
 
-        {/* Video — full-width, large, Facebook-style */}
+        {/* Video */}
         <div className="aspect-video w-full bg-black">
-          {/* biome-ignore lint/a11y/useMediaCaption: user-uploaded video, captions not available */}
+          {/* biome-ignore lint/a11y/useMediaCaption: user-uploaded video */}
           <video
             src={post.videoUrl}
             controls
@@ -119,7 +121,7 @@ export default function VideoPostCard({
 
         {/* Hashtags */}
         {post.hashtags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 px-3 pt-2">
+          <div className="flex flex-wrap gap-1.5 px-4 pt-3">
             {post.hashtags.map((tag, i) => {
               const colors = [
                 "bg-violet-100 text-violet-700",
@@ -131,7 +133,7 @@ export default function VideoPostCard({
               return (
                 <span
                   key={tag}
-                  className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${colors[i % colors.length]}`}
+                  className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${colors[i % colors.length]}`}
                 >
                   {tag}
                 </span>
@@ -141,8 +143,11 @@ export default function VideoPostCard({
         )}
 
         {/* Engagement counts */}
-        <div className="flex items-center justify-between text-[11px] text-muted-foreground px-3 pt-2 pb-1 border-t border-border mt-2">
-          <span>{post.likes} लाइक्स</span>
+        <div className="flex items-center justify-between text-sm text-muted-foreground px-4 pt-3 pb-1 border-t border-border mt-2">
+          <span className="flex items-center gap-1">
+            <ThumbsUp className="w-4 h-4 text-primary" />
+            {post.likes}
+          </span>
           <button
             type="button"
             onClick={() => setShowComments(!showComments)}
@@ -154,38 +159,44 @@ export default function VideoPostCard({
         </div>
 
         {/* Action buttons */}
-        <div className="flex gap-1.5 px-3 pb-3">
+        <div className="flex gap-1 px-4 pb-3 border-t border-border pt-1">
           <Button
-            variant={post.liked ? "default" : "outline"}
+            variant={post.liked ? "default" : "ghost"}
             size="sm"
-            className={`flex-1 gap-1 rounded-md text-[11px] h-7 px-2 ${
+            className={`flex-1 gap-2 rounded-md text-sm h-10 font-semibold ${
               post.liked
-                ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                : ""
+                ? "bg-primary/10 text-primary hover:bg-primary/20"
+                : "text-muted-foreground hover:text-foreground"
             }`}
-            onClick={() => onToggleLike(post.id)}
+            onClick={() => {
+              playLikeSound();
+              onToggleLike(post.id);
+            }}
             data-ocid={`post.toggle.${markerIndex}`}
           >
-            <ThumbsUp className="w-3.5 h-3.5" />
-            {post.liked ? "लाइक किया" : "लाइक"}
+            <ThumbsUp
+              className={`w-5 h-5 ${post.liked ? "fill-primary text-primary" : ""}`}
+            />
+            लाइक
           </Button>
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
-            className="flex-1 gap-1 rounded-md text-[11px] h-7 px-2"
+            className="flex-1 gap-2 rounded-md text-sm h-10 font-semibold text-muted-foreground hover:text-foreground"
             onClick={() => setShowComments(!showComments)}
             data-ocid={`post.button.${markerIndex}`}
           >
-            <MessageCircle className="w-3.5 h-3.5" />
+            <MessageCircle className="w-5 h-5" />
             टिप्पणी
           </Button>
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
-            className="flex-1 gap-1 rounded-md text-[11px] h-7 px-2"
+            className="flex-1 gap-2 rounded-md text-sm h-10 font-semibold text-muted-foreground hover:text-foreground"
+            onClick={() => playShareSound()}
             data-ocid={`post.button.${markerIndex}`}
           >
-            <Share2 className="w-3.5 h-3.5" />
+            <Share2 className="w-5 h-5" />
             शेयर
           </Button>
         </div>
@@ -200,36 +211,31 @@ export default function VideoPostCard({
               transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
-              <div className="flex flex-col gap-2 px-3 pb-3 border-t border-border pt-2">
-                {comments.length === 0 && (
-                  <p className="text-[11px] text-muted-foreground text-center py-1">
-                    अभी कोई टिप्पणी नहीं। पहले टिप्पणी करें!
-                  </p>
-                )}
+              <div className="flex flex-col gap-2 px-4 pb-4 border-t border-border pt-2">
                 {comments.map((c) => (
                   <div key={c.id} className="flex gap-2">
-                    <Avatar className="w-6 h-6 shrink-0">
-                      <AvatarFallback className="text-[10px] bg-muted text-muted-foreground">
+                    <Avatar className="w-8 h-8 shrink-0">
+                      <AvatarFallback className="text-xs bg-muted text-muted-foreground">
                         {c.initials}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="bg-muted rounded-xl px-2.5 py-1.5 text-xs flex-1">
-                      <span className="font-semibold text-foreground text-[11px]">
+                    <div className="bg-muted rounded-2xl px-3 py-2 text-sm flex-1">
+                      <span className="font-bold text-foreground text-xs">
                         {c.author}:{" "}
                       </span>
                       <span className="text-foreground">{c.text}</span>
                     </div>
                   </div>
                 ))}
-                <div className="flex gap-1.5">
-                  <Avatar className="w-6 h-6 shrink-0">
-                    <AvatarFallback className="bg-primary text-primary-foreground text-[10px]">
-                      AB
+                <div className="flex gap-2 mt-1">
+                  <Avatar className="w-8 h-8 shrink-0">
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
+                      PPK
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex-1 flex gap-1.5">
+                  <div className="flex-1 flex gap-2">
                     <Input
-                      className="rounded-xl bg-muted border-none text-xs h-7"
+                      className="rounded-2xl bg-muted border-none text-sm h-9"
                       placeholder="टिप्पणी लिखें…"
                       value={newComment}
                       onChange={(e) => setNewComment(e.target.value)}
@@ -238,11 +244,11 @@ export default function VideoPostCard({
                     />
                     <Button
                       size="icon"
-                      className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 shrink-0 w-7 h-7"
+                      className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 shrink-0 w-9 h-9"
                       onClick={handleAddComment}
                       data-ocid={`post.submit_button.${markerIndex}`}
                     >
-                      <Send className="w-3 h-3" />
+                      <Send className="w-4 h-4" />
                     </Button>
                   </div>
                 </div>

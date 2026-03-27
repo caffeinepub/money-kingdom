@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
+type View = "home" | "profile";
+
 const navItems = [
   { icon: Home, label: "होम", id: "home" },
   { icon: User, label: "प्रोफ़ाइल", id: "profile" },
@@ -19,8 +21,19 @@ const navItems = [
   { icon: TrendingUp, label: "ट्रेंड्स", id: "trends" },
 ];
 
-export default function LeftSidebar() {
+interface LeftSidebarProps {
+  onNavigate?: (view: View) => void;
+}
+
+export default function LeftSidebar({ onNavigate }: LeftSidebarProps) {
   const [active, setActive] = useState("home");
+
+  const handleNav = (id: string) => {
+    setActive(id);
+    if (id === "home" || id === "profile") {
+      onNavigate?.(id as View);
+    }
+  };
 
   return (
     <div className="sticky top-16 flex flex-col gap-2">
@@ -30,8 +43,8 @@ export default function LeftSidebar() {
           <button
             type="button"
             key={item.id}
-            onClick={() => setActive(item.id)}
-            data-ocid={`nav.${item.id === "home" ? "link" : "link"}`}
+            onClick={() => handleNav(item.id)}
+            data-ocid={`nav.${item.id}.link`}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors w-full text-left ${
               active === item.id
                 ? "bg-accent text-accent-foreground"
@@ -53,11 +66,13 @@ export default function LeftSidebar() {
       <div className="bg-card rounded-xl shadow-card border border-border p-3 flex items-center gap-2">
         <Avatar className="w-8 h-8">
           <AvatarFallback className="bg-primary text-primary-foreground font-semibold text-xs">
-            AB
+            PPK
           </AvatarFallback>
         </Avatar>
         <div>
-          <p className="font-semibold text-xs text-foreground">Alex B.</p>
+          <p className="font-semibold text-xs text-foreground">
+            Prince Pawan Kumar
+          </p>
           <p className="text-[11px] text-muted-foreground">523 मित्र</p>
         </div>
         <Crown className="w-3.5 h-3.5 text-yellow-500 ml-auto" />

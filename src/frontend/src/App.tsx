@@ -4,12 +4,42 @@ import { useState } from "react";
 import LoginPage from "./components/LoginPage";
 import MainLayout from "./components/MainLayout";
 import { useInternetIdentity } from "./hooks/useInternetIdentity";
+import { useSessionTimer } from "./hooks/useSessionTimer";
 
 const queryClient = new QueryClient();
+
+function SessionSummaryDialog({
+  minutes,
+  onClose,
+}: { minutes: number; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="bg-card rounded-2xl shadow-2xl p-6 mx-4 max-w-sm w-full text-center border border-border">
+        <div className="text-4xl mb-3">⏱️</div>
+        <h2 className="text-lg font-bold text-foreground mb-2">सत्र सारांश</h2>
+        <p className="text-muted-foreground text-sm mb-4">
+          आपने इस बार{" "}
+          <span className="text-primary font-bold text-base">
+            {minutes} मिनट
+          </span>{" "}
+          Money Kingdom पर बिताए!
+        </p>
+        <button
+          type="button"
+          onClick={onClose}
+          className="w-full bg-primary text-primary-foreground rounded-lg py-2 font-semibold text-sm hover:opacity-90 transition"
+        >
+          ठीक है
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function AppInner() {
   const { identity, isInitializing } = useInternetIdentity();
   const [guestMode, setGuestMode] = useState(false);
+  const { showSummary, lastDuration, dismissSummary } = useSessionTimer();
 
   if (isInitializing) {
     return (
@@ -30,7 +60,14 @@ function AppInner() {
     return <LoginPage onGuestMode={() => setGuestMode(true)} />;
   }
 
-  return <MainLayout />;
+  return (
+    <>
+      <MainLayout />
+      {showSummary && (
+        <SessionSummaryDialog minutes={lastDuration} onClose={dismissSummary} />
+      )}
+    </>
+  );
 }
 
 export default function App() {

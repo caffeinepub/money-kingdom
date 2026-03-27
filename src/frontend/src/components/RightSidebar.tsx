@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { playFollowSound } from "@/utils/sounds";
 import { Plus, Target } from "lucide-react";
 import { motion } from "motion/react";
 import { useState } from "react";
@@ -72,6 +73,9 @@ export default function RightSidebar() {
     setUsers((prev) =>
       prev.map((u) => {
         if (u.id === id) {
+          if (!u.followed) {
+            playFollowSound();
+          }
           toast.success(
             u.followed ? `${u.name} को अनफॉलो किया` : `${u.name} को फॉलो किया`,
           );

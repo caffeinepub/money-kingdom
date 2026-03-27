@@ -9,6 +9,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
+  playCommentSound,
+  playLikeSound,
+  playShareSound,
+} from "@/utils/sounds";
+import {
   MessageCircle,
   MoreHorizontal,
   Send,
@@ -48,11 +53,12 @@ export default function PostCard({
       {
         id: Date.now().toString(),
         author: "आप",
-        initials: "AB",
+        initials: "PPK",
         text: newComment.trim(),
       },
     ]);
     setNewComment("");
+    playCommentSound();
   };
 
   const colorClasses = [
@@ -68,29 +74,27 @@ export default function PostCard({
       className="shadow-card border-border"
       data-ocid={`post.item.${markerIndex}`}
     >
-      <CardContent className="p-3 flex flex-col gap-2">
+      <CardContent className="p-3 flex flex-col gap-2.5">
         {/* Header */}
         <div className="flex items-start justify-between">
-          <div className="flex items-center gap-2">
-            <Avatar className="w-8 h-8">
+          <div className="flex items-center gap-2.5">
+            <Avatar className="w-9 h-9">
               <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xs">
                 {post.authorInitials}
               </AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-semibold text-xs text-foreground">
+              <p className="font-semibold text-sm text-foreground">
                 {post.author}
               </p>
-              <p className="text-[11px] text-muted-foreground">
-                {post.timeAgo}
-              </p>
+              <p className="text-xs text-muted-foreground">{post.timeAgo}</p>
             </div>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="p-0.5 rounded-full hover:bg-muted transition-colors"
+                className="p-1 rounded-full hover:bg-muted transition-colors"
                 data-ocid={`post.dropdown_menu.${markerIndex}`}
               >
                 <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
@@ -107,17 +111,17 @@ export default function PostCard({
         </div>
 
         {/* Content */}
-        <p className="text-xs text-foreground leading-relaxed whitespace-pre-line">
+        <p className="text-sm text-foreground leading-normal whitespace-pre-line">
           {post.content}
         </p>
 
         {/* Hashtags */}
         {post.hashtags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-1">
             {post.hashtags.map((tag, i) => (
               <span
                 key={tag}
-                className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${colorClasses[i % colorClasses.length]}`}
+                className={`text-xs font-medium px-2 py-0.5 rounded-full ${colorClasses[i % colorClasses.length]}`}
               >
                 {tag}
               </span>
@@ -126,8 +130,11 @@ export default function PostCard({
         )}
 
         {/* Engagement counts */}
-        <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1 border-t border-border">
-          <span>{post.likes} लाइक्स</span>
+        <div className="flex items-center justify-between text-xs text-muted-foreground pt-1 border-t border-border">
+          <span className="flex items-center gap-1">
+            <ThumbsUp className="w-3.5 h-3.5 text-primary" />
+            {post.likes}
+          </span>
           <button
             type="button"
             onClick={() => setShowComments(!showComments)}
@@ -139,38 +146,44 @@ export default function PostCard({
         </div>
 
         {/* Action buttons */}
-        <div className="flex gap-1.5">
+        <div className="flex gap-0.5 border-t border-border pt-1">
           <Button
-            variant={post.liked ? "default" : "outline"}
+            variant={post.liked ? "default" : "ghost"}
             size="sm"
-            className={`flex-1 gap-1 rounded-md text-[11px] h-7 px-2 ${
+            className={`flex-1 gap-1.5 rounded-md text-xs h-8 font-medium ${
               post.liked
-                ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                : ""
+                ? "bg-primary/10 text-primary hover:bg-primary/20"
+                : "text-muted-foreground hover:text-foreground"
             }`}
-            onClick={() => onToggleLike(post.id)}
+            onClick={() => {
+              playLikeSound();
+              onToggleLike(post.id);
+            }}
             data-ocid={`post.toggle.${markerIndex}`}
           >
-            <ThumbsUp className="w-3.5 h-3.5" />
-            {post.liked ? "लाइक किया" : "लाइक"}
+            <ThumbsUp
+              className={`w-4 h-4 ${post.liked ? "fill-primary text-primary" : ""}`}
+            />
+            लाइक
           </Button>
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
-            className="flex-1 gap-1 rounded-md text-[11px] h-7 px-2"
+            className="flex-1 gap-1.5 rounded-md text-xs h-8 font-medium text-muted-foreground hover:text-foreground"
             onClick={() => setShowComments(!showComments)}
             data-ocid={`post.button.${markerIndex}`}
           >
-            <MessageCircle className="w-3.5 h-3.5" />
+            <MessageCircle className="w-4 h-4" />
             टिप्पणी
           </Button>
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
-            className="flex-1 gap-1 rounded-md text-[11px] h-7 px-2"
+            className="flex-1 gap-1.5 rounded-md text-xs h-8 font-medium text-muted-foreground hover:text-foreground"
+            onClick={() => playShareSound()}
             data-ocid={`post.button.${markerIndex}`}
           >
-            <Share2 className="w-3.5 h-3.5" />
+            <Share2 className="w-4 h-4" />
             शेयर
           </Button>
         </div>
@@ -188,13 +201,13 @@ export default function PostCard({
               <div className="flex flex-col gap-2 pt-2 border-t border-border">
                 {comments.map((c) => (
                   <div key={c.id} className="flex gap-2">
-                    <Avatar className="w-6 h-6 shrink-0">
+                    <Avatar className="w-7 h-7 shrink-0">
                       <AvatarFallback className="text-[10px] bg-muted text-muted-foreground">
                         {c.initials}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="bg-muted rounded-xl px-2.5 py-1.5 text-xs flex-1">
-                      <span className="font-semibold text-foreground text-[11px]">
+                    <div className="bg-muted rounded-2xl px-3 py-1.5 text-xs flex-1">
+                      <span className="font-semibold text-foreground">
                         {c.author}:{" "}
                       </span>
                       <span className="text-foreground">{c.text}</span>
@@ -203,15 +216,15 @@ export default function PostCard({
                 ))}
 
                 {/* Add comment */}
-                <div className="flex gap-1.5">
-                  <Avatar className="w-6 h-6 shrink-0">
-                    <AvatarFallback className="bg-primary text-primary-foreground text-[10px]">
-                      AB
+                <div className="flex gap-2 mt-1">
+                  <Avatar className="w-7 h-7 shrink-0">
+                    <AvatarFallback className="bg-primary text-primary-foreground text-[10px] font-bold">
+                      PPK
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex-1 flex gap-1.5">
+                  <div className="flex-1 flex gap-2">
                     <Input
-                      className="rounded-xl bg-muted border-none text-xs h-7"
+                      className="rounded-2xl bg-muted border-none text-xs h-8"
                       placeholder="टिप्पणी लिखें…"
                       value={newComment}
                       onChange={(e) => setNewComment(e.target.value)}
@@ -220,11 +233,11 @@ export default function PostCard({
                     />
                     <Button
                       size="icon"
-                      className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 shrink-0 w-7 h-7"
+                      className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 shrink-0 w-8 h-8"
                       onClick={handleAddComment}
                       data-ocid={`post.submit_button.${markerIndex}`}
                     >
-                      <Send className="w-3 h-3" />
+                      <Send className="w-3.5 h-3.5" />
                     </Button>
                   </div>
                 </div>
