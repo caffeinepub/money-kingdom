@@ -1,7 +1,14 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useFollowers } from "@/hooks/useFollowers";
 import { Camera, UserPlus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
@@ -21,9 +28,20 @@ const FRIENDS = [
 export default function ProfilePage({ onBack }: ProfilePageProps) {
   const [coverPhoto, setCoverPhoto] = useState<string | null>(null);
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  const [showFollowersModal, setShowFollowersModal] = useState(false);
+  const [showFollowingModal, setShowFollowingModal] = useState(false);
 
   const coverInputRef = useRef<HTMLInputElement>(null);
   const profileInputRef = useRef<HTMLInputElement>(null);
+
+  const {
+    followers,
+    following,
+    followersCount,
+    followingCount,
+    isFollowing,
+    toggleFollow,
+  } = useFollowers("PPK");
 
   useEffect(() => {
     const savedCover = localStorage.getItem("mk_cover_photo");
@@ -56,6 +74,15 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
     reader.readAsDataURL(file);
   };
 
+  // Get display name from all suggested users + any followed users
+  const ALL_USERS: Record<string, { name: string; initials: string }> = {
+    RAJ: { name: "राज शर्मा", initials: "RS" },
+    ANI: { name: "अनिता गुप्ता", initials: "AG" },
+    VIK: { name: "विकास मेहता", initials: "VM" },
+    PRI: { name: "प्रिया सिंह", initials: "PS" },
+    SUH: { name: "सुहास जोशी", initials: "SJ" },
+  };
+
   return (
     <div className="flex flex-col gap-0" data-ocid="profile.page">
       {/* Hidden file inputs */}
@@ -73,6 +100,106 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
         className="hidden"
         onChange={handleProfileUpload}
       />
+
+      {/* Followers Modal */}
+      <Dialog open={showFollowersModal} onOpenChange={setShowFollowersModal}>
+        <DialogContent data-ocid="profile.followers.dialog">
+          <DialogHeader>
+            <DialogTitle>फॉलोअर्स ({followersCount})</DialogTitle>
+          </DialogHeader>
+          {followers.length === 0 ? (
+            <p
+              className="text-sm text-muted-foreground text-center py-4"
+              data-ocid="profile.followers.empty_state"
+            >
+              अभी कोई फॉलोअर्स नहीं है
+            </p>
+          ) : (
+            <div className="flex flex-col gap-2 mt-2">
+              {followers.map((uid, idx) => {
+                const user = ALL_USERS[uid];
+                return (
+                  <div
+                    key={uid}
+                    className="flex items-center gap-3"
+                    data-ocid={`profile.followers.item.${idx + 1}`}
+                  >
+                    <Avatar className="w-9 h-9">
+                      <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                        {user?.initials ?? uid.slice(0, 2)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <p className="font-semibold text-sm text-foreground">
+                        {user?.name ?? uid}
+                      </p>
+                    </div>
+                    <Button
+                      variant={isFollowing(uid) ? "outline" : "default"}
+                      size="sm"
+                      className="rounded-full text-xs h-7 px-3"
+                      onClick={() => toggleFollow(uid, user?.name ?? uid)}
+                      data-ocid={`profile.followers.toggle.${idx + 1}`}
+                    >
+                      {isFollowing(uid) ? "फॉलोइंग ✓" : "फॉलो करें"}
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Following Modal */}
+      <Dialog open={showFollowingModal} onOpenChange={setShowFollowingModal}>
+        <DialogContent data-ocid="profile.following.dialog">
+          <DialogHeader>
+            <DialogTitle>फॉलोइंग ({followingCount})</DialogTitle>
+          </DialogHeader>
+          {following.length === 0 ? (
+            <p
+              className="text-sm text-muted-foreground text-center py-4"
+              data-ocid="profile.following.empty_state"
+            >
+              अभी किसी को फॉलो नहीं किया
+            </p>
+          ) : (
+            <div className="flex flex-col gap-2 mt-2">
+              {following.map((uid, idx) => {
+                const user = ALL_USERS[uid];
+                return (
+                  <div
+                    key={uid}
+                    className="flex items-center gap-3"
+                    data-ocid={`profile.following.item.${idx + 1}`}
+                  >
+                    <Avatar className="w-9 h-9">
+                      <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                        {user?.initials ?? uid.slice(0, 2)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <p className="font-semibold text-sm text-foreground">
+                        {user?.name ?? uid}
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full text-xs h-7 px-3"
+                      onClick={() => toggleFollow(uid, user?.name ?? uid)}
+                      data-ocid={`profile.following.toggle.${idx + 1}`}
+                    >
+                      अनफॉलो
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Cover Photo */}
       <div className="relative w-full h-44 sm:h-56 rounded-xl overflow-hidden">
@@ -147,7 +274,7 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
               data-ocid="profile.primary_button"
             >
               <UserPlus className="w-3.5 h-3.5" />
-              मित्र जोड़ें
+              मित्र जोड़ें
             </Button>
           </div>
         </div>
@@ -162,13 +289,40 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
           </p>
         </div>
 
-        {/* Stats */}
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-          <span className="font-semibold text-foreground">523</span> मित्र
-          <span className="text-border">·</span>
-          <span className="font-semibold text-foreground">0</span> पोस्ट
-          <span className="text-border">·</span>
-          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+        {/* Follower/Following Stats */}
+        <div className="flex items-center gap-4 text-sm mb-2">
+          <button
+            type="button"
+            onClick={() => setShowFollowersModal(true)}
+            className="flex flex-col items-center hover:text-primary transition-colors"
+            data-ocid="profile.followers.button"
+          >
+            <span className="font-bold text-foreground text-base">
+              {followersCount}
+            </span>
+            <span className="text-xs text-muted-foreground">फॉलोअर्स</span>
+          </button>
+          <div className="w-px h-8 bg-border" />
+          <button
+            type="button"
+            onClick={() => setShowFollowingModal(true)}
+            className="flex flex-col items-center hover:text-primary transition-colors"
+            data-ocid="profile.following.button"
+          >
+            <span className="font-bold text-foreground text-base">
+              {followingCount}
+            </span>
+            <span className="text-xs text-muted-foreground">फॉलोइंग</span>
+          </button>
+          <div className="w-px h-8 bg-border" />
+          <div className="flex flex-col items-center">
+            <span className="font-bold text-foreground text-base">0</span>
+            <span className="text-xs text-muted-foreground">पोस्ट</span>
+          </div>
+          <Badge
+            variant="secondary"
+            className="text-[10px] px-1.5 py-0 h-5 ml-auto"
+          >
             👑 Top Investor
           </Badge>
         </div>

@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { useFollowers } from "@/hooks/useFollowers";
 import {
   playCommentSound,
   playLikeSound,
@@ -19,6 +20,8 @@ import {
   Send,
   Share2,
   ThumbsUp,
+  UserCheck,
+  UserPlus,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
@@ -46,6 +49,13 @@ export default function PostCard({
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
 
+  const { isFollowing, toggleFollow } = useFollowers("PPK");
+
+  const isOwnPost =
+    post.author === "आप" ||
+    post.author === "PPK" ||
+    post.authorInitials === "PPK";
+
   const handleAddComment = () => {
     if (!newComment.trim()) return;
     setComments((prev) => [
@@ -69,6 +79,9 @@ export default function PostCard({
     "bg-pink-100 text-pink-700",
   ];
 
+  const authorId = post.authorInitials?.toUpperCase() ?? "";
+  const following = isFollowing(authorId);
+
   return (
     <Card
       className="shadow-card border-border"
@@ -84,9 +97,35 @@ export default function PostCard({
               </AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-semibold text-sm text-foreground">
-                {post.author}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="font-semibold text-sm text-foreground">
+                  {post.author}
+                </p>
+                {!isOwnPost && (
+                  <button
+                    type="button"
+                    onClick={() => toggleFollow(authorId, post.author)}
+                    className={`flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full border transition-colors ${
+                      following
+                        ? "border-border text-muted-foreground bg-muted hover:bg-destructive/10 hover:text-destructive"
+                        : "border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                    }`}
+                    data-ocid={`post.toggle.${markerIndex}`}
+                  >
+                    {following ? (
+                      <>
+                        <UserCheck className="w-3 h-3" />
+                        फॉलोइंग
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="w-3 h-3" />
+                        फॉलो करें
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
               <p className="text-xs text-muted-foreground">{post.timeAgo}</p>
             </div>
           </div>

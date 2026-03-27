@@ -4,19 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { playFollowSound } from "@/utils/sounds";
+import { useFollowers } from "@/hooks/useFollowers";
 import { Plus, Target } from "lucide-react";
 import { motion } from "motion/react";
 import { useState } from "react";
 import { toast } from "sonner";
-
-interface SuggestedUser {
-  id: string;
-  name: string;
-  initials: string;
-  bio: string;
-  followed: boolean;
-}
 
 interface Goal {
   id: string;
@@ -33,30 +25,19 @@ const TRENDING_TOPICS = [
   { tag: "#Gold", count: "4.1K" },
 ];
 
-const INITIAL_USERS: SuggestedUser[] = [];
-
 const INITIAL_GOALS: Goal[] = [];
 
 export default function RightSidebar() {
-  const [users, setUsers] = useState<SuggestedUser[]>(INITIAL_USERS);
   const [goals, setGoals] = useState<Goal[]>(INITIAL_GOALS);
   const [newGoal, setNewGoal] = useState("");
   const [showGoalForm, setShowGoalForm] = useState(false);
 
-  const handleToggleFollow = (id: string) => {
-    setUsers((prev) =>
-      prev.map((u) => {
-        if (u.id === id) {
-          if (!u.followed) {
-            playFollowSound();
-          }
-          toast.success(
-            u.followed ? `${u.name} को अनफॉलो किया` : `${u.name} को फॉलो किया`,
-          );
-          return { ...u, followed: !u.followed };
-        }
-        return u;
-      }),
+  const { suggestedUsers, isFollowing, toggleFollow } = useFollowers("PPK");
+
+  const handleToggleFollow = (id: string, name: string) => {
+    toggleFollow(id, name);
+    toast.success(
+      isFollowing(id) ? `${name} को अनफॉलो किया` : `${name} को फॉलो किया`,
     );
   };
 
@@ -73,7 +54,7 @@ export default function RightSidebar() {
     ]);
     setNewGoal("");
     setShowGoalForm(false);
-    toast.success("नया लक्ष्य जोड़ा गया!");
+    toast.success("नया लक्ष्य जोड़ा गया!");
   };
 
   return (
@@ -86,12 +67,15 @@ export default function RightSidebar() {
           </CardTitle>
         </CardHeader>
         <CardContent className="px-3 pb-3 flex flex-col gap-2">
-          {users.length === 0 ? (
-            <p className="text-xs text-muted-foreground text-center py-2">
-              कोई सुझाव नहीं
+          {suggestedUsers.length === 0 ? (
+            <p
+              className="text-xs text-muted-foreground text-center py-2"
+              data-ocid="suggestions.empty_state"
+            >
+              सभी को फॉलो कर लिया ✓
             </p>
           ) : (
-            users.map((user, idx) => (
+            suggestedUsers.map((user, idx) => (
               <motion.div
                 key={user.id}
                 initial={{ opacity: 0, x: 20 }}
@@ -115,16 +99,16 @@ export default function RightSidebar() {
                 </div>
                 <Button
                   size="sm"
-                  variant={user.followed ? "outline" : "default"}
+                  variant={isFollowing(user.id) ? "outline" : "default"}
                   className={`text-[11px] rounded-full px-2.5 h-6 shrink-0 ${
-                    user.followed
+                    isFollowing(user.id)
                       ? ""
                       : "bg-primary text-primary-foreground hover:bg-primary/90"
                   }`}
-                  onClick={() => handleToggleFollow(user.id)}
+                  onClick={() => handleToggleFollow(user.id, user.name)}
                   data-ocid={`suggestions.toggle.${idx + 1}`}
                 >
-                  {user.followed ? "फॉलोइंग" : "फॉलो"}
+                  {isFollowing(user.id) ? "फॉलोइंग" : "फॉलो"}
                 </Button>
               </motion.div>
             ))
@@ -197,7 +181,7 @@ export default function RightSidebar() {
                 onClick={handleAddGoal}
                 data-ocid="goals.submit_button"
               >
-                जोड़ें
+                जोड़ें
               </Button>
             </div>
           )}

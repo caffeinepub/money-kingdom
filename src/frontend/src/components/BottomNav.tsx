@@ -1,5 +1,13 @@
 import { Badge } from "@/components/ui/badge";
-import { Bell, Home, Search, User, Video } from "lucide-react";
+import {
+  Bell,
+  Home,
+  MessageCircle,
+  Search,
+  User,
+  Video,
+  Wallet,
+} from "lucide-react";
 import { useNotifications } from "../hooks/useNotifications";
 
 type View = "home" | "search" | "videos" | "notifications" | "profile";
@@ -7,9 +15,16 @@ type View = "home" | "search" | "videos" | "notifications" | "profile";
 interface BottomNavProps {
   activeTab: View;
   onNavigate: (view: View) => void;
+  onOpenChat?: () => void;
+  onOpenWallet?: () => void;
 }
 
-export default function BottomNav({ activeTab, onNavigate }: BottomNavProps) {
+export default function BottomNav({
+  activeTab,
+  onNavigate,
+  onOpenChat,
+  onOpenWallet,
+}: BottomNavProps) {
   const { unreadCount } = useNotifications();
 
   const tabs = [
@@ -59,6 +74,28 @@ export default function BottomNav({ activeTab, onNavigate }: BottomNavProps) {
             )}
           </button>
         ))}
+
+        {/* Chat button */}
+        <button
+          type="button"
+          onClick={onOpenChat}
+          className="flex flex-col items-center justify-center gap-0.5 flex-1 transition-colors text-muted-foreground hover:text-primary"
+          data-ocid="bottomnav.travel_chat.button"
+        >
+          <MessageCircle className="w-5 h-5" strokeWidth={1.8} />
+          <span className="text-[10px] font-medium leading-none">चैट</span>
+        </button>
+
+        {/* Wallet button */}
+        <button
+          type="button"
+          onClick={onOpenWallet}
+          className="flex flex-col items-center justify-center gap-0.5 flex-1 transition-colors text-muted-foreground hover:text-amber-600"
+          data-ocid="bottomnav.wallet.button"
+        >
+          <Wallet className="w-5 h-5" strokeWidth={1.8} />
+          <span className="text-[10px] font-medium leading-none">वॉलेट</span>
+        </button>
       </div>
     </nav>
   );
