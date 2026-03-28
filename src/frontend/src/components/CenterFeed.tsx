@@ -37,7 +37,7 @@ export default function CenterFeed() {
   const handleNewPost = (content: string, videoUrl?: string) => {
     const newPost: Post = {
       id: Date.now().toString(),
-      author: "आप",
+      author: "Prince Pawan Kumar",
       authorInitials: "PPK",
       timeAgo: "अभी",
       content,

@@ -52,7 +52,7 @@ export default function VideoPostCard({
       ...prev,
       {
         id: Date.now().toString(),
-        author: "आप",
+        author: "Prince Pawan Kumar",
         initials: "PPK",
         text: newComment.trim(),
       },

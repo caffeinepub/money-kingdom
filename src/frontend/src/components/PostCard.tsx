@@ -74,9 +74,7 @@ export default function PostCard({
   const { isFollowing, toggleFollow } = useFollowers("PPK");
 
   const isOwnPost =
-    post.author === "आप" ||
-    post.author === "PPK" ||
-    post.authorInitials === "PPK";
+    post.author === "Prince Pawan Kumar" || post.authorInitials === "PPK";
 
   const handleAddComment = () => {
     if (!newComment.trim()) return;
@@ -84,7 +82,7 @@ export default function PostCard({
       ...prev,
       {
         id: Date.now().toString(),
-        author: "आप",
+        author: "Prince Pawan Kumar",
         initials: "PPK",
         text: newComment.trim(),
       },
