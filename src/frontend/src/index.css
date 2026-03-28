@@ -53,11 +53,11 @@
   body {
     @apply bg-background text-foreground;
     font-family: "Plus Jakarta Sans", system-ui, sans-serif;
-    font-size: 14px;
+    font-size: 18px;
   }
   @media (min-width: 640px) {
     body {
-      font-size: 15px;
+      font-size: 18px;
     }
   }
 }

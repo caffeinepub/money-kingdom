@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { Image, Smile, Video, X } from "lucide-react";
+import { Image, MapPin, Smile, Video, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -42,27 +42,27 @@ export default function CreatePost({ onPost }: CreatePostProps) {
 
   return (
     <Card className="shadow-card border-border">
-      <CardContent className="p-3">
+      <CardContent className="p-5">
         {/* Input row */}
-        <div className="flex gap-2.5">
-          <Avatar className="w-9 h-9 shrink-0">
-            <AvatarFallback className="bg-primary text-primary-foreground font-bold text-xs">
+        <div className="flex gap-4 items-start">
+          <Avatar className="w-20 h-20 shrink-0">
+            <AvatarFallback className="bg-primary text-primary-foreground font-bold text-xl">
               PPK
             </AvatarFallback>
           </Avatar>
           <Textarea
-            placeholder="क्या सोच रहे हैं? 💰"
+            placeholder="आप क्या सोच रहे हैं? 💰"
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            className="resize-none border-none bg-muted rounded-2xl px-3 py-2 text-sm min-h-[40px] focus-visible:ring-1 focus-visible:ring-primary text-foreground placeholder:text-muted-foreground"
-            rows={1}
+            className="resize-none border-none bg-muted rounded-2xl px-5 py-4 text-2xl min-h-[130px] focus-visible:ring-1 focus-visible:ring-primary text-foreground placeholder:text-muted-foreground"
+            rows={3}
             data-ocid="post.textarea"
           />
         </div>
 
         {/* Video preview */}
         {videoUrl && (
-          <div className="relative rounded-xl overflow-hidden border border-border mt-2">
+          <div className="relative rounded-xl overflow-hidden border border-border mt-4">
             {/* biome-ignore lint/a11y/useMediaCaption: user-uploaded video */}
             <video
               src={videoUrl}
@@ -77,57 +77,73 @@ export default function CreatePost({ onPost }: CreatePostProps) {
                 setVideoName("");
                 if (videoInputRef.current) videoInputRef.current.value = "";
               }}
-              className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1 hover:bg-black/80 transition-colors"
+              className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1.5 hover:bg-black/80 transition-colors"
               data-ocid="post.close_button"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-5 h-5" />
             </button>
-            <p className="text-xs text-muted-foreground px-3 py-1 truncate">
+            <p className="text-base text-muted-foreground px-3 py-1 truncate">
               {videoName}
             </p>
           </div>
         )}
 
-        <Separator className="my-2" />
+        <Separator className="my-4" />
 
         {/* Action buttons row */}
-        <div className="flex items-center gap-1">
+        <div className="grid grid-cols-4 gap-1 mb-4">
           <button
             type="button"
             onClick={() => videoInputRef.current?.click()}
-            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+            className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl hover:bg-muted transition-colors"
             data-ocid="post.upload_button"
           >
-            <Video className="w-4 h-4 text-red-500" />
-            <span className="text-xs font-medium">फोटो/वीडियो</span>
+            <Image className="w-9 h-9 text-green-500" />
+            <span className="text-base font-bold text-muted-foreground">
+              📷 फ़ोटो
+            </span>
           </button>
           <button
             type="button"
-            onClick={() => imageInputRef.current?.click()}
-            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+            onClick={() => videoInputRef.current?.click()}
+            className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl hover:bg-muted transition-colors"
             data-ocid="post.upload_button"
           >
-            <Image className="w-4 h-4 text-green-500" />
-            <span className="text-xs font-medium">टैग करें</span>
+            <Video className="w-9 h-9 text-red-500" />
+            <span className="text-base font-bold text-muted-foreground">
+              🎬 वीडियो
+            </span>
           </button>
           <button
             type="button"
-            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+            className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl hover:bg-muted transition-colors"
             data-ocid="post.button"
           >
-            <Smile className="w-4 h-4 text-yellow-500" />
-            <span className="text-xs font-medium">भावना</span>
+            <Smile className="w-9 h-9 text-yellow-500" />
+            <span className="text-base font-bold text-muted-foreground">
+              😊 भावना
+            </span>
           </button>
-
-          <Button
-            className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-4 text-xs font-semibold h-7 shrink-0"
-            onClick={handleSubmit}
-            disabled={!content.trim() && !videoUrl}
-            data-ocid="post.submit_button"
+          <button
+            type="button"
+            className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl hover:bg-muted transition-colors"
+            data-ocid="post.button"
           >
-            पोस्ट
-          </Button>
+            <MapPin className="w-9 h-9 text-blue-500" />
+            <span className="text-base font-bold text-muted-foreground">
+              📍 चेक-इन
+            </span>
+          </button>
         </div>
+
+        <Button
+          className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-full text-2xl font-black h-16"
+          onClick={handleSubmit}
+          disabled={!content.trim() && !videoUrl}
+          data-ocid="post.submit_button"
+        >
+          पोस्ट करें
+        </Button>
 
         <input
           ref={videoInputRef}

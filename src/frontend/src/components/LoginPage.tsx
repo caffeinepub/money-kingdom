@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Crown, Loader2, Target, TrendingUp, Users } from "lucide-react";
+import { Loader2, Target, TrendingUp, Users } from "lucide-react";
 import { motion } from "motion/react";
 import { useState } from "react";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
@@ -33,15 +33,12 @@ export default function LoginPage({ onGuestMode }: LoginPageProps) {
           transition={{ duration: 0.6 }}
           className="flex flex-col gap-6"
         >
-          <div className="flex items-center gap-3">
+          <div className="flex items-center">
             <img
-              src="/assets/generated/crown-logo-transparent.dim_120x120.png"
-              alt="Crown"
-              className="w-14 h-14"
+              src="/assets/uploads/1774687973872-019d33a6-946f-737e-8d66-ae825605513d-1.png"
+              alt="Money Kingdom"
+              className="w-24 h-24"
             />
-            <span className="text-primary-foreground font-bold text-3xl">
-              Money Kingdom
-            </span>
           </div>
           <h1 className="text-primary-foreground text-4xl font-bold leading-tight">
             आर्थिक सफलता की
@@ -74,15 +71,12 @@ export default function LoginPage({ onGuestMode }: LoginPageProps) {
           transition={{ duration: 0.4 }}
           className="w-full max-w-md"
         >
-          <div className="flex items-center justify-center gap-2 mb-8 lg:hidden">
+          <div className="flex items-center justify-center mb-8 lg:hidden">
             <img
-              src="/assets/generated/crown-logo-transparent.dim_120x120.png"
-              alt="Crown"
-              className="w-10 h-10"
+              src="/assets/uploads/1774687973872-019d33a6-946f-737e-8d66-ae825605513d-1.png"
+              alt="Money Kingdom"
+              className="w-20 h-20"
             />
-            <span className="text-foreground font-bold text-2xl">
-              Money Kingdom
-            </span>
           </div>
 
           <Card className="shadow-card border-border">

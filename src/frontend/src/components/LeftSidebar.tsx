@@ -9,7 +9,6 @@ import {
   TrendingUp,
   User,
   Users,
-  Wallet,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -27,13 +26,11 @@ const navItems = [
 interface LeftSidebarProps {
   onNavigate?: (view: View) => void;
   onOpenChat?: () => void;
-  onOpenWallet?: () => void;
 }
 
 export default function LeftSidebar({
   onNavigate,
   onOpenChat,
-  onOpenWallet,
 }: LeftSidebarProps) {
   const [active, setActive] = useState("home");
   const { followingCount } = useFollowers("PPK");
@@ -97,15 +94,6 @@ export default function LeftSidebar({
         >
           <MessageCircle className="w-4 h-4" />
           यात्रा चैट
-        </button>
-        <button
-          type="button"
-          onClick={onOpenWallet}
-          data-ocid="nav.wallet.button"
-          className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 transition-colors w-full text-left"
-        >
-          <Wallet className="w-4 h-4" />
-          वॉलेट
         </button>
       </div>
     </div>

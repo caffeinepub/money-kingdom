@@ -44,14 +44,11 @@ function AppInner() {
   if (isInitializing) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-3">
-          <img
-            src="/assets/generated/crown-logo-transparent.dim_120x120.png"
-            alt="Money Kingdom"
-            className="w-12 h-12 animate-pulse"
-          />
-          <p className="text-muted-foreground text-sm">लोड हो रहा है...</p>
-        </div>
+        <img
+          src="/assets/uploads/1774687973872-019d33a6-946f-737e-8d66-ae825605513d-1.png"
+          alt="Money Kingdom"
+          className="w-32 h-32 animate-pulse"
+        />
       </div>
     );
   }

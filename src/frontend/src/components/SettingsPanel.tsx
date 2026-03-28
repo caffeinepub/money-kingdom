@@ -1,0 +1,161 @@
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Check } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { useState } from "react";
+import EnglishGuruAI from "./EnglishGuruAI";
+
+const LANGUAGES = [
+  { code: "hi", name: "हिन्दी", label: "Hindi" },
+  { code: "ta", name: "தமிழ்", label: "Tamil" },
+  { code: "te", name: "తెలుగు", label: "Telugu" },
+  { code: "kn", name: "ಕನ್ನಡ", label: "Kannada" },
+  { code: "ml", name: "മലയാളം", label: "Malayalam" },
+  { code: "bn", name: "বাংলা", label: "Bengali" },
+  { code: "mr", name: "मराठी", label: "Marathi" },
+  { code: "gu", name: "ગુજરાતી", label: "Gujarati" },
+  { code: "pa", name: "ਪੰਜਾਬੀ", label: "Punjabi" },
+  { code: "or", name: "ଓଡ଼ିଆ", label: "Odia" },
+  { code: "ur", name: "اردو", label: "Urdu" },
+];
+
+function getStoredLang() {
+  return localStorage.getItem("mk_language") ?? "hi";
+}
+
+interface SettingsPanelProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
+  const [selected, setSelected] = useState<string>(getStoredLang);
+
+  const handleSelect = (code: string) => {
+    setSelected(code);
+    localStorage.setItem("mk_language", code);
+  };
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            key="settings-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/50"
+            onClick={onClose}
+          />
+
+          {/* Panel slides from bottom */}
+          <motion.div
+            key="settings-panel"
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", damping: 28, stiffness: 280 }}
+            className="fixed bottom-0 inset-x-0 z-[110] sm:inset-auto sm:bottom-6 sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-lg bg-card border border-border rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col"
+            style={{ maxHeight: "90vh" }}
+            data-ocid="settings.panel"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">⚙️</span>
+                <h2 className="font-bold text-base text-foreground">सेटिंग्स</h2>
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                data-ocid="settings.close_button"
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors text-lg"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Tabs */}
+            <Tabs
+              defaultValue="language"
+              className="flex flex-col flex-1 min-h-0"
+            >
+              <TabsList className="mx-4 mt-3 shrink-0 grid grid-cols-2">
+                <TabsTrigger value="language" data-ocid="settings.language.tab">
+                  🌐 भाषा चुनें
+                </TabsTrigger>
+                <TabsTrigger
+                  value="english-guru"
+                  data-ocid="settings.english_guru.tab"
+                >
+                  🎓 English Guru AI
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Language Tab */}
+              <TabsContent
+                value="language"
+                className="flex-1 min-h-0 data-[state=active]:flex data-[state=active]:flex-col"
+              >
+                <ScrollArea className="flex-1">
+                  <div className="px-4 py-4">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                      अपनी भाषा चुनें
+                    </p>
+                    <div className="flex flex-col gap-1">
+                      {LANGUAGES.map((lang) => {
+                        const isActive = selected === lang.code;
+                        return (
+                          <button
+                            key={lang.code}
+                            type="button"
+                            onClick={() => handleSelect(lang.code)}
+                            data-ocid="settings.language.button"
+                            className={`flex items-center justify-between px-4 py-3 rounded-xl transition-colors text-left ${
+                              isActive
+                                ? "bg-primary/10 border border-primary/30"
+                                : "hover:bg-muted border border-transparent"
+                            }`}
+                          >
+                            <div className="flex flex-col">
+                              <span
+                                className={`text-lg font-semibold leading-tight ${
+                                  isActive ? "text-primary" : "text-foreground"
+                                }`}
+                              >
+                                {lang.name}
+                              </span>
+                              <span className="text-xs text-muted-foreground mt-0.5">
+                                {lang.label}
+                              </span>
+                            </div>
+                            {isActive && (
+                              <Check className="w-5 h-5 text-primary shrink-0" />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-4 text-center leading-relaxed">
+                      यह सेटिंग सिर्फ आपके लिए है। ऐप की भाषा बदलेगी।
+                    </p>
+                  </div>
+                </ScrollArea>
+              </TabsContent>
+
+              {/* English Guru AI Tab */}
+              <TabsContent
+                value="english-guru"
+                className="flex-1 min-h-0 data-[state=active]:flex data-[state=active]:flex-col"
+              >
+                <EnglishGuruAI />
+              </TabsContent>
+            </Tabs>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+}

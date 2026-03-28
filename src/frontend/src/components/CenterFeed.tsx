@@ -79,62 +79,68 @@ export default function CenterFeed() {
   };
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4">
       {/* Stories Section */}
-      <div className="overflow-x-auto pb-1 -mx-1 px-1">
-        <div className="flex gap-2 w-max">
-          {/* Create Story card */}
+      <div className="overflow-x-auto pb-2 -mx-1 px-1">
+        <div className="flex gap-4 w-max px-1">
+          {/* Create Story button — Instagram circle style */}
           <button
             type="button"
             onClick={() => setCreatorOpen(true)}
-            className="relative flex flex-col rounded-2xl overflow-hidden shrink-0 w-24 h-40 shadow border border-border group"
+            className="flex flex-col items-center gap-2 shrink-0 group"
             data-ocid="stories.primary_button"
           >
-            <div className="flex-1 bg-gradient-to-b from-card to-muted" />
-            <div className="absolute inset-x-0 bottom-0 bg-card px-2 pb-2 pt-5">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-primary flex items-center justify-center shadow border-2 border-card">
-                <span className="text-primary-foreground text-lg font-bold leading-none">
-                  +
-                </span>
+            <div
+              className="w-28 h-28 rounded-full p-0.5 shadow-md"
+              style={{
+                background:
+                  "linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)",
+              }}
+            >
+              <div className="w-full h-full rounded-full bg-card flex items-center justify-center border-2 border-card">
+                <span className="text-4xl font-black text-primary">+</span>
               </div>
-              <p className="text-[11px] font-semibold text-foreground text-center leading-tight">
-                स्टोरी बनाएं
-              </p>
             </div>
+            <span className="text-xl font-bold text-foreground text-center leading-tight max-w-[7rem] truncate">
+              स्टोरी
+            </span>
           </button>
 
-          {/* User-created stories */}
+          {/* User-created stories — Instagram circle style */}
           {activeStories.map((story, idx) => (
             <button
               key={story.id}
               type="button"
               onClick={() => setViewerIndex(idx)}
-              className="relative flex flex-col rounded-2xl overflow-hidden shrink-0 w-24 h-40 shadow border-2 border-primary"
+              className="flex flex-col items-center gap-2 shrink-0"
               data-ocid="stories.card.button"
             >
-              {/* biome-ignore lint/a11y/useMediaCaption: Story thumbnail preview */}
-              <video
-                src={story.videoUrl}
-                muted
-                playsInline
-                className="w-full h-full object-cover"
+              <div
+                className="w-28 h-28 rounded-full p-0.5 shadow-md"
                 style={{
-                  filter:
-                    story.filterStyle === "none"
-                      ? undefined
-                      : story.filterStyle,
+                  background:
+                    "linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)",
                 }}
-              />
-              <div className="absolute top-2 left-2 w-8 h-8 rounded-full bg-primary border-2 border-white flex items-center justify-center shadow">
-                <span className="text-primary-foreground text-[10px] font-bold">
-                  {story.authorInitials}
-                </span>
+              >
+                <div className="w-full h-full rounded-full overflow-hidden border-2 border-card">
+                  {/* biome-ignore lint/a11y/useMediaCaption: Story thumbnail */}
+                  <video
+                    src={story.videoUrl}
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover"
+                    style={{
+                      filter:
+                        story.filterStyle === "none"
+                          ? undefined
+                          : story.filterStyle,
+                    }}
+                  />
+                </div>
               </div>
-              <div className="absolute inset-x-0 bottom-0 px-2 pb-2 pt-5 bg-gradient-to-t from-black/70 to-transparent">
-                <p className="text-[11px] font-semibold text-white truncate">
-                  {story.author.split(" ")[0]}
-                </p>
-              </div>
+              <span className="text-xl font-bold text-foreground text-center leading-tight max-w-[7rem] truncate">
+                {story.author.split(" ")[0]}
+              </span>
             </button>
           ))}
         </div>
@@ -148,15 +154,15 @@ export default function CenterFeed() {
             key="empty"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex flex-col items-center justify-center py-12 gap-3 text-center"
+            className="flex flex-col items-center justify-center py-16 gap-4 text-center"
             data-ocid="feed.empty_state"
           >
-            <div className="text-4xl">📰</div>
+            <div className="text-7xl">📰</div>
             <div>
-              <p className="text-base font-semibold text-foreground">
+              <p className="text-2xl font-bold text-foreground">
                 अभी कोई पोस्ट नहीं
               </p>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-xl text-muted-foreground mt-2">
                 पहली पोस्ट डालें और अपनी बात शेयर करें!
               </p>
             </div>
