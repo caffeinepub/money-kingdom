@@ -7,44 +7,44 @@
 @layer base {
   :root {
     --radius: 0.75rem;
-    /* Multani Mitti (Fuller's Earth clay) palette */
-    --background: 0.94 0.02 75;
-    --foreground: 0.22 0.03 60;
-    --card: 0.97 0.015 75;
-    --card-foreground: 0.22 0.03 60;
-    --popover: 0.97 0.015 75;
-    --popover-foreground: 0.22 0.03 60;
-    /* Primary: warm clay brown — the Multani Mitti color */
-    --primary: 0.55 0.08 65;
-    --primary-foreground: 0.98 0 0;
-    /* Secondary: soft sandy beige */
-    --secondary: 0.9 0.03 75;
-    --secondary-foreground: 0.22 0.03 60;
-    /* Muted */
-    --muted: 0.92 0.02 75;
-    --muted-foreground: 0.5 0.04 65;
-    /* Accent: warm sandy tone */
-    --accent: 0.88 0.04 70;
-    --accent-foreground: 0.55 0.08 65;
+    /* Multani Mitti earthy clay palette */
+    --background: 0.96 0.02 72;
+    --foreground: 0.22 0.04 55;
+    --card: 0.98 0.01 72;
+    --card-foreground: 0.22 0.04 55;
+    --popover: 0.98 0.01 72;
+    --popover-foreground: 0.22 0.04 55;
+    /* Primary: Multani Mitti warm clay */
+    --primary: 0.62 0.09 66;
+    --primary-foreground: 0.98 0.01 72;
+    /* Secondary: light clay tint */
+    --secondary: 0.9 0.03 70;
+    --secondary-foreground: 0.62 0.09 66;
+    /* Muted: soft warm beige */
+    --muted: 0.92 0.02 70;
+    --muted-foreground: 0.52 0.05 60;
+    /* Accent: warm sand tint */
+    --accent: 0.88 0.04 68;
+    --accent-foreground: 0.62 0.09 66;
     --destructive: 0.577 0.245 27.325;
-    --destructive-foreground: 0.98 0 0;
-    /* Borders: soft clay */
-    --border: 0.86 0.03 70;
-    --input: 0.86 0.03 70;
-    --ring: 0.55 0.08 65;
-    --chart-1: 0.55 0.08 65;
-    --chart-2: 0.65 0.1 55;
-    --chart-3: 0.45 0.07 70;
-    --chart-4: 0.72 0.09 80;
-    --chart-5: 0.6 0.06 60;
-    --sidebar: 0.96 0.018 75;
-    --sidebar-foreground: 0.22 0.03 60;
-    --sidebar-primary: 0.55 0.08 65;
-    --sidebar-primary-foreground: 0.98 0 0;
-    --sidebar-accent: 0.88 0.04 70;
-    --sidebar-accent-foreground: 0.55 0.08 65;
-    --sidebar-border: 0.86 0.03 70;
-    --sidebar-ring: 0.55 0.08 65;
+    --destructive-foreground: 0.98 0.01 72;
+    /* Borders */
+    --border: 0.86 0.03 68;
+    --input: 0.86 0.03 68;
+    --ring: 0.62 0.09 66;
+    --chart-1: 0.62 0.09 66;
+    --chart-2: 0.55 0.1 50;
+    --chart-3: 0.72 0.08 80;
+    --chart-4: 0.68 0.06 90;
+    --chart-5: 0.48 0.12 45;
+    --sidebar: 0.97 0.015 70;
+    --sidebar-foreground: 0.22 0.04 55;
+    --sidebar-primary: 0.62 0.09 66;
+    --sidebar-primary-foreground: 0.98 0.01 72;
+    --sidebar-accent: 0.9 0.03 70;
+    --sidebar-accent-foreground: 0.62 0.09 66;
+    --sidebar-border: 0.86 0.03 68;
+    --sidebar-ring: 0.62 0.09 66;
   }
 
   * {

@@ -31,6 +31,9 @@ export default function CenterFeed() {
     (s) => Date.now() - s.createdAt < EXPIRY_MS,
   );
 
+  const videoPosts = posts.filter((p) => p.videoUrl);
+  const textPosts = posts.filter((p) => !p.videoUrl);
+
   const handleNewPost = (content: string, videoUrl?: string) => {
     const newPost: Post = {
       id: Date.now().toString(),
@@ -83,7 +86,7 @@ export default function CenterFeed() {
       {/* Stories Section */}
       <div className="overflow-x-auto pb-2 -mx-1 px-1">
         <div className="flex gap-4 w-max px-1">
-          {/* Create Story button — Instagram circle style */}
+          {/* Create Story button */}
           <button
             type="button"
             onClick={() => setCreatorOpen(true)}
@@ -106,7 +109,7 @@ export default function CenterFeed() {
             </span>
           </button>
 
-          {/* User-created stories — Instagram circle style */}
+          {/* User-created stories */}
           {activeStories.map((story, idx) => (
             <button
               key={story.id}
@@ -146,10 +149,44 @@ export default function CenterFeed() {
         </div>
       </div>
 
+      {/* Video Section — only shows when videos exist */}
+      <AnimatePresence>
+        {videoPosts.length > 0 && (
+          <motion.div
+            key="video-section"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="flex flex-col gap-4"
+          >
+            <div className="flex items-center gap-2 px-1">
+              <span className="text-2xl">🎬</span>
+              <h2 className="text-xl font-bold text-foreground">वीडियो</h2>
+            </div>
+            {videoPosts.map((post, idx) => (
+              <motion.div
+                key={post.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3, delay: idx * 0.05 }}
+              >
+                <VideoPostCard
+                  post={post}
+                  onToggleLike={handleToggleLike}
+                  markerIndex={idx + 1}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <CreatePost onPost={handleNewPost} />
 
+      {/* Text Posts */}
       <AnimatePresence initial={false}>
-        {posts.length === 0 ? (
+        {textPosts.length === 0 ? (
           <motion.div
             key="empty"
             initial={{ opacity: 0 }}
@@ -168,7 +205,7 @@ export default function CenterFeed() {
             </div>
           </motion.div>
         ) : (
-          posts.map((post, idx) => (
+          textPosts.map((post, idx) => (
             <motion.div
               key={post.id}
               initial={{ opacity: 0, y: 20 }}
@@ -176,19 +213,11 @@ export default function CenterFeed() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3, delay: idx * 0.05 }}
             >
-              {post.videoUrl ? (
-                <VideoPostCard
-                  post={post}
-                  onToggleLike={handleToggleLike}
-                  markerIndex={idx + 1}
-                />
-              ) : (
-                <PostCard
-                  post={post}
-                  onToggleLike={handleToggleLike}
-                  markerIndex={idx + 1}
-                />
-              )}
+              <PostCard
+                post={post}
+                onToggleLike={handleToggleLike}
+                markerIndex={idx + 1}
+              />
             </motion.div>
           ))
         )}

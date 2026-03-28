@@ -44,11 +44,7 @@ function AppInner() {
   if (isInitializing) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <img
-          src="/assets/uploads/1774687973872-019d33a6-946f-737e-8d66-ae825605513d-1.png"
-          alt="Money Kingdom"
-          className="w-32 h-32 animate-pulse"
-        />
+        <span className="text-4xl font-black text-primary">Money Kingdom</span>
       </div>
     );
   }

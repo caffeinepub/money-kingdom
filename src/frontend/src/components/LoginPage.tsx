@@ -25,36 +25,39 @@ export default function LoginPage({ onGuestMode }: LoginPageProps) {
 
   return (
     <div className="min-h-screen flex bg-background">
-      {/* Left panel */}
-      <div className="hidden lg:flex flex-col justify-center items-start w-1/2 bg-primary p-16 gap-8">
+      {/* Left panel - Multani Mitti clay */}
+      <div
+        className="hidden lg:flex flex-col justify-center items-start w-1/2 p-16 gap-8"
+        style={{ background: "oklch(0.62 0.09 66)" }}
+      >
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           className="flex flex-col gap-6"
         >
-          <div className="flex items-center">
-            <img
-              src="/assets/uploads/1774687973872-019d33a6-946f-737e-8d66-ae825605513d-1.png"
-              alt="Money Kingdom"
-              className="w-24 h-24"
-            />
+          <div className="flex items-center gap-4">
+            <div>
+              <h2 className="text-white font-black text-4xl leading-tight">
+                Money Kingdom
+              </h2>
+            </div>
           </div>
-          <h1 className="text-primary-foreground text-4xl font-bold leading-tight">
+          <h1 className="text-white text-3xl font-bold leading-tight">
             आर्थिक सफलता की
             <br />
             दुनिया में आपका स्वागत है
           </h1>
-          <p className="text-primary-foreground/80 text-lg">
+          <p className="text-white/80 text-lg">
             मित्रों से जुड़ें, वित्तीय ज्ञान साझा करें और अपने लक्ष्य हासिल करें।
           </p>
           <div className="flex flex-col gap-4 mt-4">
             {features.map((f) => (
               <div key={f.label} className="flex items-center gap-3">
-                <div className="bg-primary-foreground/20 p-2 rounded-full">
-                  <f.icon className="w-5 h-5 text-primary-foreground" />
+                <div className="bg-white/20 p-2 rounded-full">
+                  <f.icon className="w-5 h-5 text-white" />
                 </div>
-                <span className="text-primary-foreground font-medium">
+                <span className="text-white font-medium text-lg">
                   {f.label}
                 </span>
               </div>
@@ -71,12 +74,13 @@ export default function LoginPage({ onGuestMode }: LoginPageProps) {
           transition={{ duration: 0.4 }}
           className="w-full max-w-md"
         >
-          <div className="flex items-center justify-center mb-8 lg:hidden">
-            <img
-              src="/assets/uploads/1774687973872-019d33a6-946f-737e-8d66-ae825605513d-1.png"
-              alt="Money Kingdom"
-              className="w-20 h-20"
-            />
+          {/* Mobile header */}
+          <div className="flex flex-col items-center justify-center mb-8 lg:hidden gap-3">
+            <div className="text-center">
+              <h1 className="font-black text-3xl text-foreground">
+                Money Kingdom
+              </h1>
+            </div>
           </div>
 
           <Card className="shadow-card border-border">
@@ -117,7 +121,8 @@ export default function LoginPage({ onGuestMode }: LoginPageProps) {
                     />
                   </div>
                   <Button
-                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                    className="w-full text-white hover:opacity-90 text-lg font-bold h-14"
+                    style={{ background: "oklch(0.62 0.09 66)" }}
                     onClick={login}
                     disabled={isLoggingIn}
                     data-ocid="login.submit_button"
@@ -129,7 +134,7 @@ export default function LoginPage({ onGuestMode }: LoginPageProps) {
                   </Button>
                   <Button
                     variant="outline"
-                    className="w-full"
+                    className="w-full text-lg h-14"
                     onClick={onGuestMode}
                     data-ocid="login.secondary_button"
                   >
@@ -158,7 +163,8 @@ export default function LoginPage({ onGuestMode }: LoginPageProps) {
                     />
                   </div>
                   <Button
-                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                    className="w-full text-white hover:opacity-90 text-lg font-bold h-14"
+                    style={{ background: "oklch(0.62 0.09 66)" }}
                     onClick={login}
                     disabled={isLoggingIn}
                     data-ocid="signup.submit_button"
