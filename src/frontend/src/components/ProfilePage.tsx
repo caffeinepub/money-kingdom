@@ -49,6 +49,8 @@ const CURRENT_USER = "PPK";
 const FEE = 5;
 const TX_KEY = "wallet_transactions";
 const BALANCE_KEY = (user: string) => `wallet_${user}`;
+const APP_LOADS_KEY = "mk_app_loads";
+const ADMIN_PIN = "princepawankumar";
 
 function getBalance(user: string): number {
   return Number.parseFloat(localStorage.getItem(BALANCE_KEY(user)) || "0");
@@ -75,6 +77,18 @@ function getStoredLang() {
   return localStorage.getItem("mk_language") ?? "hi";
 }
 
+// Track app loads
+function trackAppLoad() {
+  const count = Number.parseInt(localStorage.getItem(APP_LOADS_KEY) || "0", 10);
+  localStorage.setItem(APP_LOADS_KEY, String(count + 1));
+}
+function getAppLoads(): number {
+  return Number.parseInt(localStorage.getItem(APP_LOADS_KEY) || "0", 10);
+}
+function isAdminVerified(): boolean {
+  return sessionStorage.getItem("mk_admin_verified") === "yes";
+}
+
 export default function ProfilePage({ onBack }: ProfilePageProps) {
   const [coverPhoto, setCoverPhoto] = useState<string | null>(null);
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
@@ -93,6 +107,12 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
   const [sendAmount, setSendAmount] = useState("");
   const [animating, setAnimating] = useState(false);
 
+  // Admin stats state
+  const [adminVerified, setAdminVerified] = useState<boolean>(isAdminVerified);
+  const [pinInput, setPinInput] = useState("");
+  const [appLoads, setAppLoads] = useState<number>(0);
+  const [pinError, setPinError] = useState(false);
+
   const coverInputRef = useRef<HTMLInputElement>(null);
   const profileInputRef = useRef<HTMLInputElement>(null);
 
@@ -106,6 +126,8 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
   } = useFollowers("PPK");
 
   useEffect(() => {
+    // Track app load every time ProfilePage mounts
+    trackAppLoad();
     const savedCover = localStorage.getItem("mk_cover_photo");
     const savedProfile = localStorage.getItem("mk_profile_photo");
     if (savedCover) setCoverPhoto(savedCover);
@@ -182,6 +204,22 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
     setRecipient("");
     setSendAmount("");
     toast.success(`₹${amt} सफलतापूर्वक ${recipient.trim()} को भेजे गए!`);
+  };
+
+  const handleAdminVerify = () => {
+    if (pinInput.trim().toLowerCase() === ADMIN_PIN) {
+      sessionStorage.setItem("mk_admin_verified", "yes");
+      setAdminVerified(true);
+      setAppLoads(getAppLoads());
+      setPinError(false);
+    } else {
+      setPinError(true);
+      setPinInput("");
+    }
+  };
+
+  const handleShowStats = () => {
+    setAppLoads(getAppLoads());
   };
 
   const ALL_USERS: Record<string, { name: string; initials: string }> = {
@@ -473,7 +511,7 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
             </TabsTrigger>
           </TabsList>
 
-          {/* Posts Tab — Instagram-style grid */}
+          {/* Posts Tab */}
           <TabsContent value="posts" className="mt-0">
             <div className="flex items-center justify-end gap-2 mb-3">
               <button
@@ -557,25 +595,33 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
             data-ocid="profile.settings.panel"
           >
             <Tabs defaultValue="language">
-              <TabsList className="w-full grid grid-cols-3 bg-card border border-border rounded-xl shadow-card mb-4 h-14">
+              <TabsList className="w-full grid grid-cols-4 bg-card border border-border rounded-xl shadow-card mb-4 h-14">
                 <TabsTrigger
                   value="language"
-                  className="text-base rounded-lg font-bold"
+                  className="text-sm rounded-lg font-bold"
                 >
                   🌐 भाषा
                 </TabsTrigger>
                 <TabsTrigger
                   value="englishguru"
-                  className="text-base rounded-lg font-bold"
+                  className="text-sm rounded-lg font-bold"
                 >
                   🎓 English AI
                 </TabsTrigger>
                 <TabsTrigger
                   value="wallet"
-                  className="text-base rounded-lg font-bold"
+                  className="text-sm rounded-lg font-bold"
                   data-ocid="profile.settings.wallet.tab"
                 >
                   💰 वॉलेट
+                </TabsTrigger>
+                <TabsTrigger
+                  value="admin-stats"
+                  className="text-sm rounded-lg font-bold"
+                  data-ocid="profile.settings.admin_stats.tab"
+                  onClick={handleShowStats}
+                >
+                  📊 Stats
                 </TabsTrigger>
               </TabsList>
 
@@ -737,6 +783,104 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
                 {animating && (
                   <CoinAnimation onComplete={handleAnimationComplete} />
                 )}
+              </TabsContent>
+
+              {/* Admin Stats Tab -- सिर्फ Prince Pawan Kumar को दिखेगा */}
+              <TabsContent
+                value="admin-stats"
+                className="mt-0"
+                data-ocid="profile.settings.admin_stats.panel"
+              >
+                <div className="bg-card rounded-xl border border-border shadow-card p-5 flex flex-col gap-5">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">📊</span>
+                    <div>
+                      <h3 className="font-black text-xl text-foreground">
+                        Admin Stats
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        सिर्फ Prince Pawan Kumar के लिए
+                      </p>
+                    </div>
+                  </div>
+
+                  {!adminVerified ? (
+                    /* PIN verification */
+                    <div className="flex flex-col gap-4">
+                      <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-center">
+                        <span className="text-4xl block mb-2">🔐</span>
+                        <p className="font-bold text-lg text-foreground">
+                          Admin पहचान verify करें
+                        </p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          यह section सिर्फ admin के लिए है
+                        </p>
+                      </div>
+                      <Input
+                        type="password"
+                        value={pinInput}
+                        onChange={(e) => {
+                          setPinInput(e.target.value);
+                          setPinError(false);
+                        }}
+                        placeholder="Admin password डालें"
+                        className={`text-lg h-14 ${
+                          pinError ? "border-destructive" : ""
+                        }`}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleAdminVerify();
+                        }}
+                        data-ocid="profile.settings.admin_stats.pin_input"
+                      />
+                      {pinError && (
+                        <p className="text-destructive text-sm font-semibold text-center">
+                          ❌ गलत password। फिर से कोशिश करें।
+                        </p>
+                      )}
+                      <Button
+                        onClick={handleAdminVerify}
+                        disabled={!pinInput.trim()}
+                        className="w-full text-xl font-black h-14"
+                        data-ocid="profile.settings.admin_stats.verify_button"
+                      >
+                        Verify करें 🔓
+                      </Button>
+                    </div>
+                  ) : (
+                    /* Stats dashboard */
+                    <div className="flex flex-col gap-4">
+                      <div className="grid grid-cols-1 gap-4">
+                        <div className="bg-primary/10 border border-primary/30 rounded-2xl p-6 text-center">
+                          <p className="text-base text-muted-foreground mb-2 font-semibold">
+                            कुल App Loads
+                          </p>
+                          <p className="text-6xl font-black text-primary">
+                            {appLoads}
+                          </p>
+                          <p className="text-sm text-muted-foreground mt-2">
+                            बार app खोला गया है
+                          </p>
+                        </div>
+                      </div>
+
+                      <Button
+                        variant="outline"
+                        onClick={handleShowStats}
+                        className="w-full text-base font-bold h-12"
+                        data-ocid="profile.settings.admin_stats.refresh_button"
+                      >
+                        🔄 Refresh करें
+                      </Button>
+
+                      <div className="bg-muted/50 rounded-xl p-4 border border-border">
+                        <p className="text-sm text-muted-foreground text-center leading-relaxed">
+                          यह count हर बार profile खुलने पर बढ़ता है। बाकी कोई भी
+                          user यह नहीं देख सकता।
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </TabsContent>
             </Tabs>
           </TabsContent>

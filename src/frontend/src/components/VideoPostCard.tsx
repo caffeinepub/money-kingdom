@@ -19,6 +19,7 @@ import {
   Send,
   Share2,
   ThumbsUp,
+  Trash2,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
@@ -34,17 +35,22 @@ interface Comment {
 interface VideoPostCardProps {
   post: Post;
   onToggleLike: (id: string) => void;
+  onDelete?: (id: string) => void;
   markerIndex: number;
 }
 
 export default function VideoPostCard({
   post,
   onToggleLike,
+  onDelete,
   markerIndex,
 }: VideoPostCardProps) {
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
+
+  const isOwnPost =
+    post.author === "Prince Pawan Kumar" || post.authorInitials === "PPK";
 
   const handleAddComment = () => {
     if (!newComment.trim()) return;
@@ -93,9 +99,21 @@ export default function VideoPostCard({
             <DropdownMenuContent align="end">
               <DropdownMenuItem>सेव करें</DropdownMenuItem>
               <DropdownMenuItem>शेयर करें</DropdownMenuItem>
-              <DropdownMenuItem className="text-destructive">
-                रिपोर्ट करें
-              </DropdownMenuItem>
+              {isOwnPost && onDelete && (
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onClick={() => onDelete(post.id)}
+                  data-ocid={`post.delete_button.${markerIndex}`}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  🗑️ डिलीट करें
+                </DropdownMenuItem>
+              )}
+              {!isOwnPost && (
+                <DropdownMenuItem className="text-destructive">
+                  रिपोर्ट करें
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

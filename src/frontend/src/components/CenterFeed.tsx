@@ -64,6 +64,10 @@ export default function CenterFeed() {
     );
   };
 
+  const handleDeletePost = (id: string) => {
+    setPosts((prev) => prev.filter((p) => p.id !== id));
+  };
+
   const handleStoryPost = (
     videoUrl: string,
     filterStyle: string,
@@ -174,6 +178,7 @@ export default function CenterFeed() {
                 <VideoPostCard
                   post={post}
                   onToggleLike={handleToggleLike}
+                  onDelete={handleDeletePost}
                   markerIndex={idx + 1}
                 />
               </motion.div>
@@ -216,6 +221,7 @@ export default function CenterFeed() {
               <PostCard
                 post={post}
                 onToggleLike={handleToggleLike}
+                onDelete={handleDeletePost}
                 markerIndex={idx + 1}
               />
             </motion.div>

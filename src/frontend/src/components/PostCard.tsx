@@ -22,6 +22,7 @@ import {
   Send,
   Share2,
   ThumbsUp,
+  Trash2,
   UserCheck,
   UserPlus,
 } from "lucide-react";
@@ -49,12 +50,14 @@ const REACTIONS = [
 interface PostCardProps {
   post: Post;
   onToggleLike: (id: string) => void;
+  onDelete?: (id: string) => void;
   markerIndex: number;
 }
 
 export default function PostCard({
   post,
   onToggleLike,
+  onDelete,
   markerIndex,
 }: PostCardProps) {
   const [showComments, setShowComments] = useState(false);
@@ -224,9 +227,21 @@ export default function PostCard({
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem>सेव करें</DropdownMenuItem>
                   <DropdownMenuItem>शेयर करें</DropdownMenuItem>
-                  <DropdownMenuItem className="text-destructive">
-                    रिपोर्ट करें
-                  </DropdownMenuItem>
+                  {isOwnPost && onDelete && (
+                    <DropdownMenuItem
+                      className="text-destructive focus:text-destructive"
+                      onClick={() => onDelete(post.id)}
+                      data-ocid={`post.delete_button.${markerIndex}`}
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      🗑️ डिलीट करें
+                    </DropdownMenuItem>
+                  )}
+                  {!isOwnPost && (
+                    <DropdownMenuItem className="text-destructive">
+                      रिपोर्ट करें
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
