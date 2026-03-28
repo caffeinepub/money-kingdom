@@ -1,39 +1,31 @@
 # Money Kingdom
 
 ## Current State
-- Finance social media app with posts, stories, bottom nav, profile page
-- Travel Chat and Wallet panels added (latest build)
-- No followers/following system yet
-- Profile shows static "0 मित्र"
-- RightSidebar has empty "suggested connections" list
+App has GiftCharacterPanel with single flying character animation when gift is sent. MoneyRain component shows subtle ₹ symbols falling in background. No level/title system exists.
 
 ## Requested Changes (Diff)
 
 ### Add
-- **Followers/Following system** like Facebook:
-  - Each user has followers list and following list
-  - Follow/Unfollow button on other users' post cards
-  - Profile page shows Followers count and Following count
-  - "Suggested Connections" in RightSidebar shows users to follow with Follow button
-  - When you follow someone, they appear in your "Following" list
-  - Notification when someone follows you (added to notifications)
-  - Follower/Following counts visible on profile
-  - A "Followers" and "Following" tab/section on profile page
+- **पैसों की बारिश Animation**: Full-screen dramatic gold coins + currency notes explosion when any gift character is sent. Multiple coins/notes fly in all directions with randomized trajectories, then fade out. Much more dramatic than current single character.
+- **वित्त राजा Level System**: Based on total amount transacted (sent+received), users earn titles shown on their profile and posts:
+  - ₹0–₹99: नया सदस्य 🌱
+  - ₹100–₹499: व्यापारी 💼
+  - ₹500–₹1999: करोड़पति 💰
+  - ₹2000+: वित्त राजा 👑
+  - Title shown as a badge below username on PostCard and in ProfilePage
 
 ### Modify
-- **ProfilePage.tsx**: Show Followers count, Following count below profile name. Add a section to view followers list and following list.
-- **PostCard.tsx**: Add Follow/Unfollow button on each post (if not own post)
-- **RightSidebar.tsx**: Populate suggested connections dynamically based on who user hasn't followed yet
-- **LeftSidebar.tsx**: Update "0 मित्र" to show actual following count
-- **useNotifications.ts** or notifications: Add follow notification
+- GiftCharacterPanel: After flying character animation, trigger the full-screen पैसों की बारिश (money rain explosion)
+- PostCard: Show level badge below the author name
+- ProfilePage: Show level badge/title near the user name area
 
 ### Remove
-- Static "0 मित्र" text replaced with dynamic count
+- Nothing
 
 ## Implementation Plan
-1. Create `src/frontend/src/hooks/useFollowers.ts` - localStorage-based followers state with follow/unfollow actions, counts, suggested users list
-2. Update `ProfilePage.tsx` - show followers/following counts, lists
-3. Update `PostCard.tsx` - add Follow button for non-own posts
-4. Update `RightSidebar.tsx` - show suggested users dynamically
-5. Update `LeftSidebar.tsx` - show dynamic following count
-6. Wire follow notifications
+1. Create `MoneyExplosion.tsx` component - full screen overlay with 20-30 animated coins (💰🪙💵💴💶💷) flying in random directions from center, fading out after 2s
+2. Add a `useUserLevel` hook that computes level title based on localStorage wallet transactions total
+3. Add a `LevelBadge.tsx` component to display the title with appropriate styling
+4. Wire MoneyExplosion into GiftCharacterPanel - trigger it after gift is sent
+5. Add LevelBadge to PostCard below author name
+6. Add LevelBadge to ProfilePage near name

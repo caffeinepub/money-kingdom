@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 import LoginPage from "./components/LoginPage";
 import MainLayout from "./components/MainLayout";
+import MoneyRain from "./components/MoneyRain";
 import { useInternetIdentity } from "./hooks/useInternetIdentity";
 import { useSessionTimer } from "./hooks/useSessionTimer";
 
@@ -43,8 +44,36 @@ function AppInner() {
 
   if (isInitializing) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <span className="text-4xl font-black text-primary">Money Kingdom</span>
+      <div
+        className="min-h-screen flex flex-col items-center justify-center bg-background gap-4"
+        style={{ position: "relative", overflow: "hidden" }}
+      >
+        {/* Faint rain behind */}
+        <MoneyRain />
+        <div className="relative z-10 flex flex-col items-center gap-4">
+          {/* Spinning coin */}
+          <span className="coin-spin text-6xl" aria-hidden="true">
+            💰
+          </span>
+          {/* Brand text */}
+          <span className="text-4xl font-black gold-shimmer-text">
+            Money Kingdom
+          </span>
+          {/* Tagline */}
+          <p
+            className="text-base italic text-muted-foreground"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+          >
+            आपका वित्तीय साम्राज्य...
+          </p>
+          {/* Shimmer progress bar */}
+          <div
+            className="w-48 h-1.5 rounded-full overflow-hidden mt-2"
+            style={{ background: "oklch(0.86 0.03 68)" }}
+          >
+            <div className="h-full loading-shimmer-bar rounded-full" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -55,6 +84,7 @@ function AppInner() {
 
   return (
     <>
+      <MoneyRain />
       <MainLayout />
       {showSummary && (
         <SessionSummaryDialog minutes={lastDuration} onClose={dismissSummary} />

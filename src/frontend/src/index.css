@@ -73,3 +73,232 @@
     letter-spacing: 0.01em;
   }
 }
+
+/* =============================================
+   MONEY KINGDOM — Custom Animations
+   ============================================= */
+
+/* 1. Header shimmer background */
+@keyframes headerShimmer {
+  0% {
+    background: oklch(0.62 0.09 66);
+  }
+  33% {
+    background: oklch(0.66 0.1 68);
+  }
+  66% {
+    background: oklch(0.59 0.09 64);
+  }
+  100% {
+    background: oklch(0.62 0.09 66);
+  }
+}
+.header-shimmer {
+  animation: headerShimmer 5s ease-in-out infinite;
+}
+
+/* 2. Gold shimmer text */
+@keyframes goldPulse {
+  0% {
+    text-shadow: 0 0 6px oklch(0.82 0.18 78 / 0.6), 0 0 12px
+      oklch(0.78 0.16 74 / 0.3);
+    color: #fff;
+  }
+  40% {
+    text-shadow: 0 0 14px oklch(0.88 0.22 82 / 0.9), 0 0 28px
+      oklch(0.82 0.18 78 / 0.5);
+    color: oklch(0.96 0.14 88);
+  }
+  70% {
+    text-shadow: 0 0 8px oklch(0.8 0.16 76 / 0.7), 0 0 18px
+      oklch(0.76 0.14 72 / 0.4);
+    color: oklch(0.94 0.12 86);
+  }
+  100% {
+    text-shadow: 0 0 6px oklch(0.82 0.18 78 / 0.6), 0 0 12px
+      oklch(0.78 0.16 74 / 0.3);
+    color: #fff;
+  }
+}
+.gold-shimmer-text {
+  animation: goldPulse 3s ease-in-out infinite;
+}
+
+/* 3. Coin spin */
+@keyframes coinSpin {
+  0% {
+    transform: rotateY(0deg);
+  }
+  40% {
+    transform: rotateY(360deg);
+  }
+  100% {
+    transform: rotateY(360deg);
+  }
+}
+.coin-spin {
+  display: inline-block;
+  animation: coinSpin 3s ease-in-out infinite;
+}
+
+/* 4. Bell glow */
+@keyframes bellGlow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0.35), 0 0 16px 4px
+      rgba(239, 68, 68, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+.bell-glow {
+  animation: bellGlow 1.6s ease-in-out infinite;
+}
+
+/* 5. Bell wiggle */
+@keyframes bellWiggle {
+  0% {
+    transform: rotate(0deg);
+  }
+  10% {
+    transform: rotate(14deg);
+  }
+  20% {
+    transform: rotate(-12deg);
+  }
+  30% {
+    transform: rotate(10deg);
+  }
+  40% {
+    transform: rotate(-8deg);
+  }
+  50% {
+    transform: rotate(6deg);
+  }
+  60% {
+    transform: rotate(-4deg);
+  }
+  70% {
+    transform: rotate(2deg);
+  }
+  80% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+.bell-wiggle {
+  animation: bellWiggle 2.4s ease-in-out infinite;
+}
+
+/* 6. Tab active bounce */
+@keyframes tabBounce {
+  0% {
+    transform: scale(1.25) translateY(0);
+  }
+  30% {
+    transform: scale(1.3) translateY(-4px);
+  }
+  60% {
+    transform: scale(1.22) translateY(1px);
+  }
+  80% {
+    transform: scale(1.26) translateY(-2px);
+  }
+  100% {
+    transform: scale(1.25) translateY(0);
+  }
+}
+.tab-active-bounce {
+  animation: tabBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* 7. Rupee Rain */
+@keyframes moneyFall {
+  0% {
+    transform: translateY(-2rem) rotate(0deg);
+    opacity: 0;
+  }
+  5% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(110vh) rotate(25deg);
+    opacity: 0;
+  }
+}
+
+/* 8. Story ring animation */
+@keyframes storyRingRotate {
+  0% {
+    background: conic-gradient(
+      from 0deg,
+      oklch(0.78 0.16 74),
+      oklch(0.72 0.18 30),
+      oklch(0.68 0.14 280),
+      oklch(0.8 0.16 120),
+      oklch(0.78 0.16 74)
+    );
+  }
+  100% {
+    background: conic-gradient(
+      from 360deg,
+      oklch(0.78 0.16 74),
+      oklch(0.72 0.18 30),
+      oklch(0.68 0.14 280),
+      oklch(0.8 0.16 120),
+      oklch(0.78 0.16 74)
+    );
+  }
+}
+@keyframes storyRingSpin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+.story-ring-anim {
+  position: relative;
+  background: linear-gradient(
+    45deg,
+    #f09433,
+    #e6683c,
+    #dc2743,
+    #cc2366,
+    #bc1888
+  );
+  animation: storyRingSpin 4s linear infinite;
+}
+.story-ring-anim > * {
+  /* Counter-rotate inner content so it appears still */
+  animation: storyRingSpin 4s linear infinite reverse;
+}
+
+/* 9. Loading shimmer progress bar */
+@keyframes shimmerSlide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
+.loading-shimmer-bar {
+  width: 30%;
+  background: linear-gradient(
+    90deg,
+    oklch(0.62 0.09 66 / 0),
+    oklch(0.78 0.16 74 / 0.9),
+    oklch(0.62 0.09 66 / 0)
+  );
+  animation: shimmerSlide 1.6s ease-in-out infinite;
+}

@@ -14,14 +14,14 @@ export default function Header({ onOpenNotifications }: HeaderProps) {
   const [search, setSearch] = useState("");
 
   return (
-    <header
-      className="sticky top-0 z-50 border-b border-border shadow-sm"
-      style={{ background: "oklch(0.62 0.09 66)" }}
-    >
+    <header className="sticky top-0 z-50 border-b border-border shadow-sm header-shimmer">
       <div className="max-w-[1280px] mx-auto w-full px-3 flex items-center gap-3 h-20">
         {/* Brand */}
         <div className="flex items-center gap-2 shrink-0">
-          <span className="font-black text-2xl text-white tracking-tight">
+          <span className="inline-block coin-spin text-2xl" aria-hidden="true">
+            💰
+          </span>
+          <span className="font-black text-2xl tracking-tight gold-shimmer-text">
             Money Kingdom
           </span>
         </div>
@@ -42,7 +42,9 @@ export default function Header({ onOpenNotifications }: HeaderProps) {
         <button
           type="button"
           onClick={onOpenNotifications}
-          className="shrink-0 w-12 h-12 rounded-full bg-white/20 hover:bg-white/30 transition-colors flex items-center justify-center relative"
+          className={`shrink-0 w-12 h-12 rounded-full bg-white/20 hover:bg-white/30 transition-colors flex items-center justify-center relative${
+            unreadCount > 0 ? " bell-glow bell-wiggle" : ""
+          }`}
           data-ocid="header.notifications.button"
           aria-label="नोटिफ़िकेशन"
         >

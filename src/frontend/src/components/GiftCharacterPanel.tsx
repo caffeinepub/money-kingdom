@@ -3,6 +3,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { toast } from "sonner";
+import MoneyExplosion from "./MoneyExplosion";
 
 const CURRENT_USER = "PPK";
 
@@ -104,6 +105,7 @@ export default function GiftCharacterPanel({
   creatorName,
 }: GiftCharacterPanelProps) {
   const [flyingGift, setFlyingGift] = useState<FlyingGift | null>(null);
+  const [showExplosion, setShowExplosion] = useState(false);
 
   const handleGift = (char: (typeof GIFT_CHARACTERS)[0]) => {
     const balance = getBalance(CURRENT_USER);
@@ -122,6 +124,7 @@ export default function GiftCharacterPanel({
     setBalance("admin", adminBal + char.adminFee);
 
     // Trigger flying animation
+    setShowExplosion(true);
     setFlyingGift({ id: char.id, emoji: char.emoji, note: char.note });
 
     // Show toast after animation starts
@@ -137,6 +140,10 @@ export default function GiftCharacterPanel({
 
   return (
     <>
+      <MoneyExplosion
+        active={showExplosion}
+        onDone={() => setShowExplosion(false)}
+      />
       {/* Flying character animation - full screen overlay */}
       <AnimatePresence>
         {flyingGift && (

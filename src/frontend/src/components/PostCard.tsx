@@ -30,6 +30,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useRef, useState } from "react";
 import type { Post } from "./CenterFeed";
 import GiftCharacterPanel from "./GiftCharacterPanel";
+import LevelBadge from "./LevelBadge";
 
 interface Comment {
   id: string;
@@ -168,6 +169,9 @@ export default function PostCard({
                   <p className="font-black text-xl text-foreground">
                     {post.author}
                   </p>
+                  <LevelBadge
+                    userId={post.authorInitials?.toUpperCase() ?? ""}
+                  />
                   {!isOwnPost && (
                     <button
                       type="button"

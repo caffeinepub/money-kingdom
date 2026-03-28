@@ -16,6 +16,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import CoinAnimation from "./CoinAnimation";
 import EnglishGuruAI from "./EnglishGuruAI";
+import LevelBadge from "./LevelBadge";
 
 interface ProfilePageProps {
   onBack: () => void;
@@ -442,6 +443,9 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
           <h1 className="font-black text-3xl text-foreground leading-tight">
             प्रिंस पवन कुमार
           </h1>
+          <div className="mt-1">
+            <LevelBadge userId="PPK" />
+          </div>
           <p className="text-lg text-muted-foreground mt-1">
             💰 Finance enthusiast | निवेशक | SIP lover 📈
           </p>

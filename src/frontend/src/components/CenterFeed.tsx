@@ -97,13 +97,7 @@ export default function CenterFeed() {
             className="flex flex-col items-center gap-2 shrink-0 group"
             data-ocid="stories.primary_button"
           >
-            <div
-              className="w-28 h-28 rounded-full p-0.5 shadow-md"
-              style={{
-                background:
-                  "linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)",
-              }}
-            >
+            <div className="w-28 h-28 rounded-full p-0.5 shadow-md story-ring-anim">
               <div className="w-full h-full rounded-full bg-card flex items-center justify-center border-2 border-card">
                 <span className="text-4xl font-black text-primary">+</span>
               </div>
@@ -122,13 +116,7 @@ export default function CenterFeed() {
               className="flex flex-col items-center gap-2 shrink-0"
               data-ocid="stories.card.button"
             >
-              <div
-                className="w-28 h-28 rounded-full p-0.5 shadow-md"
-                style={{
-                  background:
-                    "linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)",
-                }}
-              >
+              <div className="w-28 h-28 rounded-full p-0.5 shadow-md story-ring-anim">
                 <div className="w-full h-full rounded-full overflow-hidden border-2 border-card">
                   {/* biome-ignore lint/a11y/useMediaCaption: Story thumbnail */}
                   <video
