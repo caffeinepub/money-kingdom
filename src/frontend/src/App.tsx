@@ -5,6 +5,7 @@ import LoginPage from "./components/LoginPage";
 import MainLayout from "./components/MainLayout";
 import MoneyRain from "./components/MoneyRain";
 import { useInternetIdentity } from "./hooks/useInternetIdentity";
+import { useReminderNotification } from "./hooks/useReminderNotification";
 import { useSessionTimer } from "./hooks/useSessionTimer";
 
 const queryClient = new QueryClient();
@@ -41,6 +42,7 @@ function AppInner() {
   const { identity, isInitializing } = useInternetIdentity();
   const [guestMode, setGuestMode] = useState(false);
   const { showSummary, lastDuration, dismissSummary } = useSessionTimer();
+  const { showBanner, dismissBanner } = useReminderNotification();
 
   if (isInitializing) {
     return (
@@ -85,7 +87,10 @@ function AppInner() {
   return (
     <>
       <MoneyRain />
-      <MainLayout />
+      <MainLayout
+        showReminderBanner={showBanner}
+        onDismissReminderBanner={dismissBanner}
+      />
       {showSummary && (
         <SessionSummaryDialog minutes={lastDuration} onClose={dismissSummary} />
       )}

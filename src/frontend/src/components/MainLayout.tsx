@@ -16,7 +16,15 @@ import ReelsView from "./ReelsView";
 import RightSidebar from "./RightSidebar";
 import TravelChatPanel from "./TravelChatPanel";
 
-export default function MainLayout() {
+interface MainLayoutProps {
+  showReminderBanner?: boolean;
+  onDismissReminderBanner?: () => void;
+}
+
+export default function MainLayout({
+  showReminderBanner,
+  onDismissReminderBanner,
+}: MainLayoutProps) {
   const [currentView, setCurrentView] = useState<View>("home");
   const [notifOpen, setNotifOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
@@ -54,7 +62,12 @@ export default function MainLayout() {
               <ProfilePage onBack={() => setCurrentView("home")} />
             )}
             {currentView === "marketplace" && <MarketplaceView />}
-            {currentView === "home" && <CenterFeed />}
+            {currentView === "home" && (
+              <CenterFeed
+                showReminderBanner={showReminderBanner}
+                onDismissReminderBanner={onDismissReminderBanner}
+              />
+            )}
           </main>
           <aside className="hidden lg:block">
             {currentView === "home" && <RightSidebar />}

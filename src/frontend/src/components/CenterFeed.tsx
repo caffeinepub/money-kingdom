@@ -21,7 +21,15 @@ export interface Post {
 
 const EXPIRY_MS = 86400000; // 24 hours
 
-export default function CenterFeed() {
+interface CenterFeedProps {
+  showReminderBanner?: boolean;
+  onDismissReminderBanner?: () => void;
+}
+
+export default function CenterFeed({
+  showReminderBanner,
+  onDismissReminderBanner,
+}: CenterFeedProps) {
   const [posts, setPosts] = useState<Post[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
   const [creatorOpen, setCreatorOpen] = useState(false);
@@ -87,6 +95,47 @@ export default function CenterFeed() {
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Reminder Banner */}
+      <AnimatePresence>
+        {showReminderBanner && (
+          <motion.div
+            key="reminder-banner"
+            initial={{ opacity: 0, y: -12, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -12, scale: 0.97 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+            className="rounded-2xl px-4 py-3 flex items-center gap-3 shadow-md border"
+            style={{
+              background:
+                "linear-gradient(135deg, oklch(0.82 0.06 55), oklch(0.88 0.04 60))",
+              borderColor: "oklch(0.72 0.08 50)",
+            }}
+            data-ocid="reminder.panel"
+          >
+            <span className="text-3xl shrink-0">🎡</span>
+            <p
+              className="flex-1 text-base font-semibold leading-snug"
+              style={{ color: "oklch(0.28 0.05 40)" }}
+            >
+              आपका भाग्य चक्र इंतज़ार कर रहा है!{" "}
+              <span className="font-normal opacity-80">
+                Profile → सेटिंग में जाएं
+              </span>
+            </p>
+            <button
+              type="button"
+              onClick={onDismissReminderBanner}
+              className="shrink-0 rounded-full w-8 h-8 flex items-center justify-center font-bold text-lg transition hover:opacity-60"
+              style={{ color: "oklch(0.35 0.05 40)" }}
+              aria-label="बंद करें"
+              data-ocid="reminder.close_button"
+            >
+              ×
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Stories Section */}
       <div className="overflow-x-auto pb-2 -mx-1 px-1">
         <div className="flex gap-4 w-max px-1">
