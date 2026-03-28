@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Image, MapPin, Smile, Video, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
+import VideoEditorModal, { type VideoMetadata } from "./VideoEditorModal";
 
 interface CreatePostProps {
   onPost: (content: string, videoUrl?: string) => void;
@@ -13,8 +14,9 @@ interface CreatePostProps {
 
 export default function CreatePost({ onPost }: CreatePostProps) {
   const [content, setContent] = useState("");
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const [videoName, setVideoName] = useState("");
+  const [videoMeta, setVideoMeta] = useState<VideoMetadata | null>(null);
+  const [pendingVideoUrl, setPendingVideoUrl] = useState<string | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
@@ -23,142 +25,218 @@ export default function CreatePost({ onPost }: CreatePostProps) {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (ev) => {
-      setVideoUrl(ev.target?.result as string);
-      setVideoName(file.name);
+      setPendingVideoUrl(ev.target?.result as string);
+      setEditorOpen(true);
     };
     reader.readAsDataURL(file);
   };
 
+  const handleEditorComplete = (meta: VideoMetadata) => {
+    setVideoMeta(meta);
+    setEditorOpen(false);
+    setPendingVideoUrl(null);
+  };
+
+  const handleEditorCancel = () => {
+    setEditorOpen(false);
+    setPendingVideoUrl(null);
+    if (videoInputRef.current) videoInputRef.current.value = "";
+  };
+
   const handleSubmit = () => {
-    if (!content.trim() && !videoUrl) return;
-    onPost(content.trim(), videoUrl ?? undefined);
+    if (!content.trim() && !videoMeta) return;
+    const finalContent = videoMeta?.caption || content.trim();
+    onPost(finalContent, videoMeta?.videoUrl ?? undefined);
     setContent("");
-    setVideoUrl(null);
-    setVideoName("");
+    setVideoMeta(null);
     if (videoInputRef.current) videoInputRef.current.value = "";
     if (imageInputRef.current) imageInputRef.current.value = "";
     toast.success("पोस्ट शेयर हो गई!");
   };
 
-  return (
-    <Card className="shadow-card border-border">
-      <CardContent className="p-5">
-        {/* Input row */}
-        <div className="flex gap-4 items-start">
-          <Avatar className="w-20 h-20 shrink-0">
-            <AvatarFallback className="bg-primary text-primary-foreground font-bold text-xl">
-              PPK
-            </AvatarFallback>
-          </Avatar>
-          <Textarea
-            placeholder="आप क्या सोच रहे हैं? 💰"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            className="resize-none border-none bg-muted rounded-2xl px-5 py-4 text-2xl min-h-[130px] focus-visible:ring-1 focus-visible:ring-primary text-foreground placeholder:text-muted-foreground"
-            rows={3}
-            data-ocid="post.textarea"
-          />
-        </div>
+  const filterCssMap: Record<string, string> = {
+    Warm: "sepia(0.4) saturate(1.3)",
+    Cool: "hue-rotate(180deg) saturate(0.8)",
+    Vintage: "sepia(0.6) contrast(0.9) brightness(0.9)",
+    "B&W": "grayscale(1)",
+    Fade: "brightness(1.1) contrast(0.8) saturate(0.7)",
+    Vivid: "saturate(2) contrast(1.1)",
+    Rose: "sepia(0.3) hue-rotate(300deg) saturate(1.5)",
+    Sky: "hue-rotate(200deg) saturate(1.2) brightness(1.05)",
+    Gold: "sepia(0.5) saturate(1.8) brightness(1.1)",
+    Drama: "contrast(1.5) saturate(1.4) brightness(0.9)",
+  };
 
-        {/* Video preview */}
-        {videoUrl && (
-          <div className="relative rounded-xl overflow-hidden border border-border mt-4">
-            {/* biome-ignore lint/a11y/useMediaCaption: user-uploaded video */}
-            <video
-              src={videoUrl}
-              controls
-              preload="metadata"
-              className="w-full aspect-video object-contain bg-black"
+  return (
+    <>
+      {editorOpen && pendingVideoUrl && (
+        <VideoEditorModal
+          videoUrl={pendingVideoUrl}
+          onComplete={handleEditorComplete}
+          onCancel={handleEditorCancel}
+        />
+      )}
+
+      <Card className="shadow-card border-border">
+        <CardContent className="p-5">
+          {/* Input row */}
+          <div className="flex gap-4 items-start">
+            <Avatar className="w-20 h-20 shrink-0">
+              <AvatarFallback className="bg-primary text-primary-foreground font-bold text-xl">
+                PPK
+              </AvatarFallback>
+            </Avatar>
+            <Textarea
+              placeholder="आप क्या सोच रहे हैं? 💰"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              className="resize-none border-none bg-muted rounded-2xl px-5 py-4 text-2xl min-h-[130px] focus-visible:ring-1 focus-visible:ring-primary text-foreground placeholder:text-muted-foreground"
+              rows={3}
+              data-ocid="post.textarea"
             />
+          </div>
+
+          {/* Video preview after editor */}
+          {videoMeta && (
+            <div className="relative rounded-xl overflow-hidden border border-border mt-4">
+              {/* biome-ignore lint/a11y/useMediaCaption: user-uploaded video */}
+              <video
+                src={videoMeta.videoUrl}
+                controls
+                preload="metadata"
+                className="w-full aspect-video object-contain bg-black"
+                style={{
+                  filter: videoMeta.filter
+                    ? (filterCssMap[videoMeta.filter] ?? "")
+                    : "",
+                }}
+              />
+              {/* Text overlay */}
+              {videoMeta.textOverlay && (
+                <div
+                  className="absolute bottom-8 left-0 right-0 text-center font-black px-3 drop-shadow-lg text-2xl"
+                  style={{ color: videoMeta.textColor ?? "#fff" }}
+                >
+                  {videoMeta.textOverlay}
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  setVideoMeta(null);
+                  if (videoInputRef.current) videoInputRef.current.value = "";
+                }}
+                className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1.5 hover:bg-black/80 transition-colors"
+                data-ocid="post.close_button"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              {/* Metadata tags */}
+              <div className="px-3 py-2 flex flex-wrap gap-2">
+                {videoMeta.location && (
+                  <span className="text-sm bg-primary/20 text-primary rounded-full px-3 py-1 font-bold">
+                    📍 {videoMeta.location}
+                  </span>
+                )}
+                {videoMeta.taggedPeople?.map((p) => (
+                  <span
+                    key={p}
+                    className="text-sm bg-blue-100 text-blue-700 rounded-full px-3 py-1 font-bold"
+                  >
+                    @{p}
+                  </span>
+                ))}
+                {videoMeta.filter && (
+                  <span className="text-sm bg-amber-100 text-amber-700 rounded-full px-3 py-1 font-bold">
+                    🎨 {videoMeta.filter}
+                  </span>
+                )}
+                {videoMeta.musicName && (
+                  <span className="text-sm bg-purple-100 text-purple-700 rounded-full px-3 py-1 font-bold">
+                    🎵 {videoMeta.musicName}
+                  </span>
+                )}
+              </div>
+              {videoMeta.caption && (
+                <p className="text-base text-muted-foreground px-3 pb-2">
+                  {videoMeta.caption}
+                </p>
+              )}
+            </div>
+          )}
+
+          <Separator className="my-4" />
+
+          {/* Action buttons row */}
+          <div className="grid grid-cols-4 gap-1 mb-4">
             <button
               type="button"
-              onClick={() => {
-                setVideoUrl(null);
-                setVideoName("");
-                if (videoInputRef.current) videoInputRef.current.value = "";
-              }}
-              className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1.5 hover:bg-black/80 transition-colors"
-              data-ocid="post.close_button"
+              onClick={() => imageInputRef.current?.click()}
+              className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl hover:bg-muted transition-colors"
+              data-ocid="post.upload_button"
             >
-              <X className="w-5 h-5" />
+              <Image className="w-9 h-9 text-green-500" />
+              <span className="text-base font-bold text-muted-foreground">
+                📷 फ़ोटो
+              </span>
             </button>
-            <p className="text-base text-muted-foreground px-3 py-1 truncate">
-              {videoName}
-            </p>
+            <button
+              type="button"
+              onClick={() => videoInputRef.current?.click()}
+              className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl hover:bg-muted transition-colors"
+              data-ocid="post.upload_button"
+            >
+              <Video className="w-9 h-9 text-red-500" />
+              <span className="text-base font-bold text-muted-foreground">
+                🎬 वीडियो
+              </span>
+            </button>
+            <button
+              type="button"
+              className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl hover:bg-muted transition-colors"
+              data-ocid="post.button"
+            >
+              <Smile className="w-9 h-9 text-yellow-500" />
+              <span className="text-base font-bold text-muted-foreground">
+                😊 भावना
+              </span>
+            </button>
+            <button
+              type="button"
+              className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl hover:bg-muted transition-colors"
+              data-ocid="post.button"
+            >
+              <MapPin className="w-9 h-9 text-blue-500" />
+              <span className="text-base font-bold text-muted-foreground">
+                📍 चेक-इन
+              </span>
+            </button>
           </div>
-        )}
 
-        <Separator className="my-4" />
+          <Button
+            className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-full text-2xl font-black h-16"
+            onClick={handleSubmit}
+            disabled={!content.trim() && !videoMeta}
+            data-ocid="post.submit_button"
+          >
+            पोस्ट करें
+          </Button>
 
-        {/* Action buttons row */}
-        <div className="grid grid-cols-4 gap-1 mb-4">
-          <button
-            type="button"
-            onClick={() => videoInputRef.current?.click()}
-            className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl hover:bg-muted transition-colors"
-            data-ocid="post.upload_button"
-          >
-            <Image className="w-9 h-9 text-green-500" />
-            <span className="text-base font-bold text-muted-foreground">
-              📷 फ़ोटो
-            </span>
-          </button>
-          <button
-            type="button"
-            onClick={() => videoInputRef.current?.click()}
-            className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl hover:bg-muted transition-colors"
-            data-ocid="post.upload_button"
-          >
-            <Video className="w-9 h-9 text-red-500" />
-            <span className="text-base font-bold text-muted-foreground">
-              🎬 वीडियो
-            </span>
-          </button>
-          <button
-            type="button"
-            className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl hover:bg-muted transition-colors"
-            data-ocid="post.button"
-          >
-            <Smile className="w-9 h-9 text-yellow-500" />
-            <span className="text-base font-bold text-muted-foreground">
-              😊 भावना
-            </span>
-          </button>
-          <button
-            type="button"
-            className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl hover:bg-muted transition-colors"
-            data-ocid="post.button"
-          >
-            <MapPin className="w-9 h-9 text-blue-500" />
-            <span className="text-base font-bold text-muted-foreground">
-              📍 चेक-इन
-            </span>
-          </button>
-        </div>
-
-        <Button
-          className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-full text-2xl font-black h-16"
-          onClick={handleSubmit}
-          disabled={!content.trim() && !videoUrl}
-          data-ocid="post.submit_button"
-        >
-          पोस्ट करें
-        </Button>
-
-        <input
-          ref={videoInputRef}
-          type="file"
-          accept="video/*"
-          className="hidden"
-          onChange={handleVideoSelect}
-        />
-        <input
-          ref={imageInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-        />
-      </CardContent>
-    </Card>
+          <input
+            ref={videoInputRef}
+            type="file"
+            accept="video/*"
+            className="hidden"
+            onChange={handleVideoSelect}
+          />
+          <input
+            ref={imageInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+          />
+        </CardContent>
+      </Card>
+    </>
   );
 }

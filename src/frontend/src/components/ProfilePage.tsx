@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import CoinAnimation from "./CoinAnimation";
 import EnglishGuruAI from "./EnglishGuruAI";
 import LevelBadge from "./LevelBadge";
+import SpinWheel from "./SpinWheel";
 
 interface ProfilePageProps {
   onBack: () => void;
@@ -599,35 +600,44 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
             data-ocid="profile.settings.panel"
           >
             <Tabs defaultValue="language">
-              <TabsList className="w-full grid grid-cols-4 bg-card border border-border rounded-xl shadow-card mb-4 h-14">
-                <TabsTrigger
-                  value="language"
-                  className="text-sm rounded-lg font-bold"
-                >
-                  🌐 भाषा
-                </TabsTrigger>
-                <TabsTrigger
-                  value="englishguru"
-                  className="text-sm rounded-lg font-bold"
-                >
-                  🎓 English AI
-                </TabsTrigger>
-                <TabsTrigger
-                  value="wallet"
-                  className="text-sm rounded-lg font-bold"
-                  data-ocid="profile.settings.wallet.tab"
-                >
-                  💰 वॉलेट
-                </TabsTrigger>
-                <TabsTrigger
-                  value="admin-stats"
-                  className="text-sm rounded-lg font-bold"
-                  data-ocid="profile.settings.admin_stats.tab"
-                  onClick={handleShowStats}
-                >
-                  📊 Stats
-                </TabsTrigger>
-              </TabsList>
+              <div className="overflow-x-auto pb-1">
+                <TabsList className="w-max min-w-full grid grid-cols-5 bg-card border border-border rounded-xl shadow-card mb-4 h-14">
+                  <TabsTrigger
+                    value="language"
+                    className="text-sm rounded-lg font-bold px-3"
+                  >
+                    🌐 भाषा
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="englishguru"
+                    className="text-sm rounded-lg font-bold px-3"
+                  >
+                    🎓 English AI
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="wallet"
+                    className="text-sm rounded-lg font-bold px-3"
+                    data-ocid="profile.settings.wallet.tab"
+                  >
+                    💰 वॉलेट
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="spinwheel"
+                    className="text-sm rounded-lg font-bold px-3"
+                    data-ocid="profile.settings.spinwheel.tab"
+                  >
+                    🎡 भाग्य चक्र
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="admin-stats"
+                    className="text-sm rounded-lg font-bold px-3"
+                    data-ocid="profile.settings.admin_stats.tab"
+                    onClick={handleShowStats}
+                  >
+                    📊 Stats
+                  </TabsTrigger>
+                </TabsList>
+              </div>
 
               {/* Language */}
               <TabsContent value="language" className="mt-0">
@@ -787,6 +797,17 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
                 {animating && (
                   <CoinAnimation onComplete={handleAnimationComplete} />
                 )}
+              </TabsContent>
+
+              {/* Spin Wheel Tab */}
+              <TabsContent
+                value="spinwheel"
+                className="mt-0"
+                data-ocid="profile.settings.spinwheel.panel"
+              >
+                <div className="bg-card rounded-xl border border-border shadow-card overflow-hidden">
+                  <SpinWheel />
+                </div>
               </TabsContent>
 
               {/* Admin Stats Tab -- सिर्फ Prince Pawan Kumar को दिखेगा */}

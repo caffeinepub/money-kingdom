@@ -1,31 +1,32 @@
 # Money Kingdom
 
 ## Current State
-App has GiftCharacterPanel with single flying character animation when gift is sent. MoneyRain component shows subtle ₹ symbols falling in background. No level/title system exists.
+CreatePost.tsx has basic video/photo upload with caption. No music, filters, text overlay, stickers, trim, thumbnail, location, or tagging options for video posts.
 
 ## Requested Changes (Diff)
 
 ### Add
-- **पैसों की बारिश Animation**: Full-screen dramatic gold coins + currency notes explosion when any gift character is sent. Multiple coins/notes fly in all directions with randomized trajectories, then fade out. Much more dramatic than current single character.
-- **वित्त राजा Level System**: Based on total amount transacted (sent+received), users earn titles shown on their profile and posts:
-  - ₹0–₹99: नया सदस्य 🌱
-  - ₹100–₹499: व्यापारी 💼
-  - ₹500–₹1999: करोड़पति 💰
-  - ₹2000+: वित्त राजा 👑
-  - Title shown as a badge below username on PostCard and in ProfilePage
+- VideoEditorModal component: opens after video is selected, with full editing options
+  - 🎵 Background Music: select audio file from gallery, volume slider
+  - 🎨 Color Filters: 11 filters (Normal, Warm, Cool, Vintage, B&W, Fade, Vivid, Rose, Sky, Gold, Drama)
+  - ✍️ Text Overlay: type text, pick color, shows over video
+  - 😄 Stickers/Emoji: tap to add emoji stickers on video
+  - ✂️ Trim: start/end time sliders to trim video
+  - 📸 Thumbnail: pick a timestamp for cover frame
+  - 📍 Location Tag: text input for location
+  - 👥 Tag People: input to mention usernames
+  - 💬 Caption: text area for post description
+- All options shown as tabs or scrollable sections inside the modal
+- "तैयार है" button to proceed to post
 
 ### Modify
-- GiftCharacterPanel: After flying character animation, trigger the full-screen पैसों की बारिश (money rain explosion)
-- PostCard: Show level badge below the author name
-- ProfilePage: Show level badge/title near the user name area
+- CreatePost.tsx: when video is selected, open VideoEditorModal instead of directly previewing
+- Post data should carry optional fields: music name, filter, textOverlay, stickers, trimStart, trimEnd, thumbnailTime, location, taggedPeople
 
 ### Remove
-- Nothing
+- Nothing removed
 
 ## Implementation Plan
-1. Create `MoneyExplosion.tsx` component - full screen overlay with 20-30 animated coins (💰🪙💵💴💶💷) flying in random directions from center, fading out after 2s
-2. Add a `useUserLevel` hook that computes level title based on localStorage wallet transactions total
-3. Add a `LevelBadge.tsx` component to display the title with appropriate styling
-4. Wire MoneyExplosion into GiftCharacterPanel - trigger it after gift is sent
-5. Add LevelBadge to PostCard below author name
-6. Add LevelBadge to ProfilePage near name
+1. Create VideoEditorModal.tsx with all 9 editing tabs/sections
+2. Modify CreatePost.tsx to open modal on video select
+3. Pass edited video metadata to onPost callback
