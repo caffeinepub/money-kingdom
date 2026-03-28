@@ -6,6 +6,7 @@ import { useState } from "react";
 import EnglishGuruAI from "./EnglishGuruAI";
 
 const LANGUAGES = [
+  // भारतीय भाषाएं
   { code: "hi", name: "हिन्दी", label: "Hindi" },
   { code: "ta", name: "தமிழ்", label: "Tamil" },
   { code: "te", name: "తెలుగు", label: "Telugu" },
@@ -17,6 +18,35 @@ const LANGUAGES = [
   { code: "pa", name: "ਪੰਜਾਬੀ", label: "Punjabi" },
   { code: "or", name: "ଓଡ଼ିଆ", label: "Odia" },
   { code: "ur", name: "اردو", label: "Urdu" },
+  { code: "as", name: "অসমীয়া", label: "Assamese" },
+  { code: "mni", name: "মৈতৈলোন্", label: "Manipuri" },
+  { code: "kok", name: "कोंकणी", label: "Konkani" },
+  { code: "mai", name: "मैथिली", label: "Maithili" },
+  { code: "doi", name: "डोगरी", label: "Dogri" },
+  { code: "ks", name: "كٲشُر", label: "Kashmiri" },
+  { code: "sa", name: "संस्कृतम्", label: "Sanskrit" },
+  { code: "sd", name: "سنڌي", label: "Sindhi" },
+  { code: "bo", name: "བོད་སྐད།", label: "Bodo" },
+  { code: "sat", name: "ᱥᱟᱱᱛᱟᱲᱤ", label: "Santali" },
+  // विश्व की प्रमुख भाषाएं
+  { code: "en", name: "English", label: "English" },
+  { code: "ar", name: "العربية", label: "Arabic" },
+  { code: "zh", name: "中文", label: "Chinese" },
+  { code: "es", name: "Español", label: "Spanish" },
+  { code: "fr", name: "Français", label: "French" },
+  { code: "pt", name: "Português", label: "Portuguese" },
+  { code: "ru", name: "Русский", label: "Russian" },
+  { code: "de", name: "Deutsch", label: "German" },
+  { code: "ja", name: "日本語", label: "Japanese" },
+  { code: "ko", name: "한국어", label: "Korean" },
+  { code: "tr", name: "Türkçe", label: "Turkish" },
+  { code: "vi", name: "Tiếng Việt", label: "Vietnamese" },
+  { code: "id", name: "Bahasa Indonesia", label: "Indonesian" },
+  { code: "ms", name: "Bahasa Melayu", label: "Malay" },
+  { code: "th", name: "ภาษาไทย", label: "Thai" },
+  { code: "it", name: "Italiano", label: "Italian" },
+  { code: "nl", name: "Nederlands", label: "Dutch" },
+  { code: "pl", name: "Polski", label: "Polish" },
 ];
 
 function getStoredLang() {
@@ -101,8 +131,11 @@ export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
               >
                 <ScrollArea className="flex-1">
                   <div className="px-4 py-4">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
                       अपनी भाषा चुनें
+                    </p>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      कुल {LANGUAGES.length} भाषाएं उपलब्ध हैं
                     </p>
                     <div className="flex flex-col gap-1">
                       {LANGUAGES.map((lang) => {
