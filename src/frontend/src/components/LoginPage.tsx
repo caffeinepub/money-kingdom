@@ -1,197 +1,180 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Target, TrendingUp, Users } from "lucide-react";
 import { motion } from "motion/react";
 import { useState } from "react";
-import { useInternetIdentity } from "../hooks/useInternetIdentity";
+import MoneyRain from "./MoneyRain";
 
 interface LoginPageProps {
   onGuestMode: () => void;
+  onRegistered?: () => void;
 }
 
-export default function LoginPage({ onGuestMode }: LoginPageProps) {
-  const { login, isLoggingIn } = useInternetIdentity();
+export default function LoginPage({
+  onGuestMode,
+  onRegistered,
+}: LoginPageProps) {
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [mobile, setMobile] = useState("");
+  const [error, setError] = useState("");
 
-  const features = [
-    { icon: TrendingUp, label: "वित्तीय ट्रेंड्स" },
-    { icon: Users, label: "कनेक्शन बनाएं" },
-    { icon: Target, label: "लक्ष्य ट्रैक करें" },
-  ];
+  const handleSubmit = () => {
+    if (!name.trim()) {
+      setError("कृपया अपना नाम लिखें");
+      return;
+    }
+    if (!mobile.trim() || mobile.trim().length < 10) {
+      setError("कृपया 10 अंकों का सही मोबाइल नंबर लिखें");
+      return;
+    }
+    const profile = {
+      name: name.trim(),
+      mobile: mobile.trim(),
+      createdAt: new Date().toISOString(),
+    };
+    localStorage.setItem("mk_user_profile", JSON.stringify(profile));
+    if (onRegistered) {
+      onRegistered();
+    } else {
+      onGuestMode();
+    }
+  };
 
   return (
-    <div className="min-h-screen flex bg-background">
-      {/* Left panel - Multani Mitti clay */}
-      <div
-        className="hidden lg:flex flex-col justify-center items-start w-1/2 p-16 gap-8"
-        style={{ background: "oklch(0.62 0.09 66)" }}
+    <div
+      className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden"
+      style={{ background: "oklch(0.97 0.02 68)" }}
+    >
+      <MoneyRain />
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="relative z-10 w-full max-w-sm mx-auto px-4 flex flex-col items-center gap-6"
       >
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="flex flex-col gap-6"
-        >
-          <div className="flex items-center gap-4">
-            <div>
-              <h2 className="text-white font-black text-4xl leading-tight">
-                Money Kingdom
-              </h2>
-            </div>
-          </div>
-          <h1 className="text-white text-3xl font-bold leading-tight">
-            आर्थिक सफलता की
-            <br />
-            दुनिया में आपका स्वागत है
+        {/* Brand */}
+        <div className="flex flex-col items-center gap-2 mb-2">
+          <span className="text-5xl coin-spin" aria-hidden="true">
+            💰
+          </span>
+          <h1
+            className="text-4xl font-black gold-shimmer-text text-center"
+            style={{ color: "oklch(0.62 0.09 66)" }}
+          >
+            Money Kingdom
           </h1>
-          <p className="text-white/80 text-lg">
-            मित्रों से जुड़ें, वित्तीय ज्ञान साझा करें और अपने लक्ष्य हासिल करें।
+          <p
+            className="text-base text-center"
+            style={{ color: "oklch(0.5 0.07 66)" }}
+          >
+            आपका वित्तीय साम्राज्य शुरू करें
           </p>
-          <div className="flex flex-col gap-4 mt-4">
-            {features.map((f) => (
-              <div key={f.label} className="flex items-center gap-3">
-                <div className="bg-white/20 p-2 rounded-full">
-                  <f.icon className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-white font-medium text-lg">
-                  {f.label}
-                </span>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      </div>
+        </div>
 
-      {/* Right panel */}
-      <div className="flex flex-col justify-center items-center w-full lg:w-1/2 p-8">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4 }}
-          className="w-full max-w-md"
+        {/* Registration Card */}
+        <div
+          className="w-full rounded-2xl shadow-2xl p-6 flex flex-col gap-5"
+          style={{
+            background: "white",
+            border: "1.5px solid oklch(0.88 0.04 68)",
+          }}
+          data-ocid="onboarding.panel"
         >
-          {/* Mobile header */}
-          <div className="flex flex-col items-center justify-center mb-8 lg:hidden gap-3">
-            <div className="text-center">
-              <h1 className="font-black text-3xl text-foreground">
-                Money Kingdom
-              </h1>
-            </div>
+          <h2
+            className="text-xl font-bold text-center"
+            style={{ color: "oklch(0.35 0.07 66)" }}
+          >
+            अपना खाता बनाएं
+          </h2>
+
+          {/* Name field */}
+          <div className="flex flex-col gap-1.5">
+            <Label
+              htmlFor="reg-name"
+              style={{
+                color: "oklch(0.45 0.07 66)",
+                fontWeight: 600,
+                fontSize: "15px",
+              }}
+            >
+              आपका नाम
+            </Label>
+            <Input
+              id="reg-name"
+              type="text"
+              placeholder="जैसे: Raj Kumar"
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value);
+                setError("");
+              }}
+              className="h-12 text-base rounded-lg"
+              style={{ borderColor: "oklch(0.75 0.07 68)", fontSize: "16px" }}
+              data-ocid="onboarding.input"
+            />
           </div>
 
-          <Card className="shadow-card border-border">
-            <CardHeader className="pb-2">
-              <h2 className="text-xl font-bold text-center text-foreground">
-                शुरू करें
-              </h2>
-            </CardHeader>
-            <CardContent>
-              <Tabs defaultValue="login">
-                <TabsList className="w-full mb-6">
-                  <TabsTrigger
-                    value="login"
-                    className="flex-1"
-                    data-ocid="auth.tab"
-                  >
-                    लॉगिन
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="signup"
-                    className="flex-1"
-                    data-ocid="auth.tab"
-                  >
-                    साइनअप
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="login" className="flex flex-col gap-4">
-                  <div className="flex flex-col gap-1">
-                    <Label htmlFor="login-email">ईमेल</Label>
-                    <Input
-                      id="login-email"
-                      type="email"
-                      placeholder="आपका ईमेल"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      data-ocid="login.input"
-                    />
-                  </div>
-                  <Button
-                    className="w-full text-white hover:opacity-90 text-lg font-bold h-14"
-                    style={{ background: "oklch(0.62 0.09 66)" }}
-                    onClick={login}
-                    disabled={isLoggingIn}
-                    data-ocid="login.submit_button"
-                  >
-                    {isLoggingIn ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : null}
-                    Internet Identity से लॉगिन
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full text-lg h-14"
-                    onClick={onGuestMode}
-                    data-ocid="login.secondary_button"
-                  >
-                    अतिथि के रूप में देखें
-                  </Button>
-                </TabsContent>
-
-                <TabsContent value="signup" className="flex flex-col gap-4">
-                  <div className="flex flex-col gap-1">
-                    <Label htmlFor="signup-name">नाम</Label>
-                    <Input
-                      id="signup-name"
-                      placeholder="आपका नाम"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      data-ocid="signup.input"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <Label htmlFor="signup-email">ईमेल</Label>
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="आपका ईमेल"
-                      data-ocid="signup.input"
-                    />
-                  </div>
-                  <Button
-                    className="w-full text-white hover:opacity-90 text-lg font-bold h-14"
-                    style={{ background: "oklch(0.62 0.09 66)" }}
-                    onClick={login}
-                    disabled={isLoggingIn}
-                    data-ocid="signup.submit_button"
-                  >
-                    {isLoggingIn ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : null}
-                    Internet Identity से जुड़ें
-                  </Button>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-
-          <p className="text-center text-muted-foreground text-sm mt-6">
-            © {new Date().getFullYear()}. Built with love using{" "}
-            <a
-              href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
-              className="text-primary hover:underline"
-              target="_blank"
-              rel="noreferrer"
+          {/* Mobile field */}
+          <div className="flex flex-col gap-1.5">
+            <Label
+              htmlFor="reg-mobile"
+              style={{
+                color: "oklch(0.45 0.07 66)",
+                fontWeight: 600,
+                fontSize: "15px",
+              }}
             >
-              caffeine.ai
-            </a>
-          </p>
-        </motion.div>
-      </div>
+              मोबाइल नंबर
+            </Label>
+            <Input
+              id="reg-mobile"
+              type="tel"
+              placeholder="10 अंकों का मोबाइल नंबर"
+              value={mobile}
+              onChange={(e) => {
+                setMobile(e.target.value.replace(/\D/g, "").slice(0, 10));
+                setError("");
+              }}
+              className="h-12 text-base rounded-lg"
+              style={{ borderColor: "oklch(0.75 0.07 68)", fontSize: "16px" }}
+              data-ocid="onboarding.input"
+            />
+          </div>
+
+          {error && (
+            <p
+              className="text-sm text-red-600 text-center"
+              data-ocid="onboarding.error_state"
+            >
+              {error}
+            </p>
+          )}
+
+          <Button
+            className="w-full h-12 text-lg font-bold rounded-xl text-white mt-1"
+            style={{ background: "oklch(0.62 0.09 66)" }}
+            onClick={handleSubmit}
+            data-ocid="onboarding.submit_button"
+          >
+            शुरू करें →
+          </Button>
+        </div>
+
+        <p
+          className="text-center text-sm"
+          style={{ color: "oklch(0.6 0.05 66)" }}
+        >
+          © {new Date().getFullYear()}. Built with ❤️ using{" "}
+          <a
+            href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
+            className="underline"
+            target="_blank"
+            rel="noreferrer"
+          >
+            caffeine.ai
+          </a>
+        </p>
+      </motion.div>
     </div>
   );
 }

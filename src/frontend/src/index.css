@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    --radius: 0.75rem;
+    --radius: 0.5rem;
     /* Multani Mitti earthy clay palette */
     --background: 0.96 0.02 72;
     --foreground: 0.22 0.04 55;
@@ -89,19 +89,14 @@
   body {
     @apply bg-background text-foreground;
     font-family: "Plus Jakarta Sans", system-ui, sans-serif;
-    font-size: 18px;
-  }
-  @media (min-width: 640px) {
-    body {
-      font-size: 18px;
-    }
+    font-size: 14px;
   }
 }
 
 @layer components {
   .video-caption {
     font-family: "Playfair Display", Georgia, serif;
-    font-size: 1rem;
+    font-size: 0.875rem;
     font-weight: 600;
     line-height: 1.5;
     color: oklch(var(--primary));
@@ -153,22 +148,22 @@
 /* 2. Gold shimmer text */
 @keyframes goldPulse {
   0% {
-    text-shadow: 0 0 6px oklch(0.82 0.18 78 / 0.6), 0 0 12px
+    text-shadow: 0 0 4px oklch(0.82 0.18 78 / 0.6), 0 0 8px
       oklch(0.78 0.16 74 / 0.3);
     color: #fff;
   }
   40% {
-    text-shadow: 0 0 14px oklch(0.88 0.22 82 / 0.9), 0 0 28px
+    text-shadow: 0 0 10px oklch(0.88 0.22 82 / 0.9), 0 0 20px
       oklch(0.82 0.18 78 / 0.5);
     color: oklch(0.96 0.14 88);
   }
   70% {
-    text-shadow: 0 0 8px oklch(0.8 0.16 76 / 0.7), 0 0 18px
+    text-shadow: 0 0 6px oklch(0.8 0.16 76 / 0.7), 0 0 12px
       oklch(0.76 0.14 72 / 0.4);
     color: oklch(0.94 0.12 86);
   }
   100% {
-    text-shadow: 0 0 6px oklch(0.82 0.18 78 / 0.6), 0 0 12px
+    text-shadow: 0 0 4px oklch(0.82 0.18 78 / 0.6), 0 0 8px
       oklch(0.78 0.16 74 / 0.3);
     color: #fff;
   }
@@ -200,7 +195,7 @@
     box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
   }
   50% {
-    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0.35), 0 0 16px 4px
+    box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.35), 0 0 12px 3px
       rgba(239, 68, 68, 0.2);
   }
   100% {
@@ -251,19 +246,19 @@
 /* 6. Tab active bounce */
 @keyframes tabBounce {
   0% {
-    transform: scale(1.25) translateY(0);
+    transform: scale(1.1) translateY(0);
   }
   30% {
-    transform: scale(1.3) translateY(-4px);
+    transform: scale(1.15) translateY(-3px);
   }
   60% {
-    transform: scale(1.22) translateY(1px);
+    transform: scale(1.08) translateY(1px);
   }
   80% {
-    transform: scale(1.26) translateY(-2px);
+    transform: scale(1.12) translateY(-1px);
   }
   100% {
-    transform: scale(1.25) translateY(0);
+    transform: scale(1.1) translateY(0);
   }
 }
 .tab-active-bounce {
@@ -289,28 +284,6 @@
 }
 
 /* 8. Story ring animation */
-@keyframes storyRingRotate {
-  0% {
-    background: conic-gradient(
-      from 0deg,
-      oklch(0.78 0.16 74),
-      oklch(0.72 0.18 30),
-      oklch(0.68 0.14 280),
-      oklch(0.8 0.16 120),
-      oklch(0.78 0.16 74)
-    );
-  }
-  100% {
-    background: conic-gradient(
-      from 360deg,
-      oklch(0.78 0.16 74),
-      oklch(0.72 0.18 30),
-      oklch(0.68 0.14 280),
-      oklch(0.8 0.16 120),
-      oklch(0.78 0.16 74)
-    );
-  }
-}
 @keyframes storyRingSpin {
   0% {
     transform: rotate(0deg);
@@ -332,7 +305,6 @@
   animation: storyRingSpin 4s linear infinite;
 }
 .story-ring-anim > * {
-  /* Counter-rotate inner content so it appears still */
   animation: storyRingSpin 4s linear infinite reverse;
 }
 

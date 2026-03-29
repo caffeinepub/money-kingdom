@@ -50,7 +50,7 @@ export default function MainLayout({
           onOpenNotifications={() => setNotifOpen(true)}
         />
 
-        <div className="flex-1 max-w-[1280px] mx-auto w-full px-0 sm:px-3 py-3 pb-48 grid grid-cols-1 lg:grid-cols-[240px_1fr_260px] gap-3">
+        <div className="flex-1 max-w-[1280px] mx-auto w-full px-0 sm:px-3 py-2 pb-16 grid grid-cols-1 lg:grid-cols-[200px_1fr_220px] gap-3">
           <aside className="hidden lg:block">
             <LeftSidebar
               onNavigate={(v) => setCurrentView(v as View)}

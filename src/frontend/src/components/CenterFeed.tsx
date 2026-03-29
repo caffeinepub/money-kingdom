@@ -96,7 +96,7 @@ export default function CenterFeed({
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
       {/* Reminder Banner */}
       <AnimatePresence>
         {showReminderBanner && (
@@ -106,7 +106,7 @@ export default function CenterFeed({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -12, scale: 0.97 }}
             transition={{ duration: 0.35, ease: "easeOut" }}
-            className="rounded-2xl px-4 py-3 flex items-center gap-3 shadow-md border"
+            className="rounded-xl px-3 py-2 flex items-center gap-2 shadow-md border"
             style={{
               background:
                 "linear-gradient(135deg, oklch(0.82 0.06 55), oklch(0.88 0.04 60))",
@@ -114,9 +114,9 @@ export default function CenterFeed({
             }}
             data-ocid="reminder.panel"
           >
-            <span className="text-3xl shrink-0">🎡</span>
+            <span className="text-xl shrink-0">🎡</span>
             <p
-              className="flex-1 text-base font-semibold leading-snug"
+              className="flex-1 text-xs font-semibold leading-snug"
               style={{ color: "oklch(0.28 0.05 40)" }}
             >
               आपका भाग्य चक्र इंतज़ार कर रहा है!{" "}
@@ -127,7 +127,7 @@ export default function CenterFeed({
             <button
               type="button"
               onClick={onDismissReminderBanner}
-              className="shrink-0 rounded-full w-8 h-8 flex items-center justify-center font-bold text-lg transition hover:opacity-60"
+              className="shrink-0 rounded-full w-6 h-6 flex items-center justify-center font-bold text-base transition hover:opacity-60"
               style={{ color: "oklch(0.35 0.05 40)" }}
               aria-label="बंद करें"
               data-ocid="reminder.close_button"
@@ -139,21 +139,21 @@ export default function CenterFeed({
       </AnimatePresence>
 
       {/* Stories Section */}
-      <div className="overflow-x-auto pb-2 -mx-1 px-1">
-        <div className="flex gap-4 w-max px-1">
+      <div className="overflow-x-auto pb-1 -mx-1 px-1">
+        <div className="flex gap-3 w-max px-1">
           {/* Create Story button */}
           <button
             type="button"
             onClick={() => setCreatorOpen(true)}
-            className="flex flex-col items-center gap-2 shrink-0 group"
+            className="flex flex-col items-center gap-1 shrink-0 group"
             data-ocid="stories.primary_button"
           >
-            <div className="w-28 h-28 rounded-full p-0.5 shadow-md story-ring-anim">
+            <div className="w-16 h-16 rounded-full p-0.5 shadow-md story-ring-anim">
               <div className="w-full h-full rounded-full bg-card flex items-center justify-center border-2 border-card">
-                <span className="text-4xl font-black text-primary">+</span>
+                <span className="text-xl font-black text-primary">+</span>
               </div>
             </div>
-            <span className="text-xl font-bold text-foreground text-center leading-tight max-w-[7rem] truncate">
+            <span className="text-[10px] font-semibold text-foreground text-center leading-tight max-w-[4rem] truncate">
               {t("story")}
             </span>
           </button>
@@ -164,10 +164,10 @@ export default function CenterFeed({
               key={story.id}
               type="button"
               onClick={() => setViewerIndex(idx)}
-              className="flex flex-col items-center gap-2 shrink-0"
+              className="flex flex-col items-center gap-1 shrink-0"
               data-ocid="stories.card.button"
             >
-              <div className="w-28 h-28 rounded-full p-0.5 shadow-md story-ring-anim">
+              <div className="w-16 h-16 rounded-full p-0.5 shadow-md story-ring-anim">
                 <div className="w-full h-full rounded-full overflow-hidden border-2 border-card">
                   {/* biome-ignore lint/a11y/useMediaCaption: Story thumbnail */}
                   <video
@@ -184,7 +184,7 @@ export default function CenterFeed({
                   />
                 </div>
               </div>
-              <span className="text-xl font-bold text-foreground text-center leading-tight max-w-[7rem] truncate">
+              <span className="text-[10px] font-semibold text-foreground text-center leading-tight max-w-[4rem] truncate">
                 {story.author.split(" ")[0]}
               </span>
             </button>
@@ -200,11 +200,11 @@ export default function CenterFeed({
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="flex flex-col gap-4"
+            className="flex flex-col gap-3"
           >
-            <div className="flex items-center gap-2 px-1">
-              <span className="text-2xl">🎬</span>
-              <h2 className="text-xl font-bold text-foreground">वीडियो</h2>
+            <div className="flex items-center gap-1.5 px-1">
+              <span className="text-base">🎬</span>
+              <h2 className="text-sm font-bold text-foreground">वीडियो</h2>
             </div>
             {videoPosts.map((post, idx) => (
               <motion.div
@@ -235,15 +235,15 @@ export default function CenterFeed({
             key="empty"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex flex-col items-center justify-center py-16 gap-4 text-center"
+            className="flex flex-col items-center justify-center py-10 gap-3 text-center"
             data-ocid="feed.empty_state"
           >
-            <div className="text-7xl">📰</div>
+            <div className="text-4xl">📰</div>
             <div>
-              <p className="text-2xl font-bold text-foreground">
+              <p className="text-sm font-bold text-foreground">
                 {t("just_now")} {t("post")} नहीं
               </p>
-              <p className="text-xl text-muted-foreground mt-2">
+              <p className="text-xs text-muted-foreground mt-1">
                 पहली पोस्ट डालें और अपनी बात शेयर करें!
               </p>
             </div>
