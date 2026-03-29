@@ -1,32 +1,32 @@
 # Money Kingdom
 
 ## Current State
-CreatePost.tsx has basic video/photo upload with caption. No music, filters, text overlay, stickers, trim, thumbnail, location, or tagging options for video posts.
+Bazaar/Marketplace (MarketplaceView.tsx) allows users to list items for sale with title, price, location, category, description. No buying functionality exists -- users can only browse listings. No commission system exists.
 
 ## Requested Changes (Diff)
 
 ### Add
-- VideoEditorModal component: opens after video is selected, with full editing options
-  - 🎵 Background Music: select audio file from gallery, volume slider
-  - 🎨 Color Filters: 11 filters (Normal, Warm, Cool, Vintage, B&W, Fade, Vivid, Rose, Sky, Gold, Drama)
-  - ✍️ Text Overlay: type text, pick color, shows over video
-  - 😄 Stickers/Emoji: tap to add emoji stickers on video
-  - ✂️ Trim: start/end time sliders to trim video
-  - 📸 Thumbnail: pick a timestamp for cover frame
-  - 📍 Location Tag: text input for location
-  - 👥 Tag People: input to mention usernames
-  - 💬 Caption: text area for post description
-- All options shown as tabs or scrollable sections inside the modal
-- "तैयार है" button to proceed to post
+- "खरीदें" (Buy) button on each item card in the marketplace
+- Purchase flow: buyer pays from their virtual wallet, 50% goes to seller's wallet, 50% goes to admin (Prince Pawan Kumar)
+- Item listing should allow photo upload (from gallery)
+- Show commission breakdown clearly: "₹X seller को, ₹X Prince Pawan Kumar को"
+- After purchase, show success animation (coins/money explosion)
+- Seller can see how much they earned from sales in their wallet history
+- Items marked as "बिक गया" (Sold) after purchase and removed from listing
 
 ### Modify
-- CreatePost.tsx: when video is selected, open VideoEditorModal instead of directly previewing
-- Post data should carry optional fields: music name, filter, textOverlay, stickers, trimStart, trimEnd, thumbnailTime, location, taggedPeople
+- MarketplaceView.tsx: add buy button and purchase dialog to each item card
+- Item listing form: add photo upload option
+- WalletPanel.tsx: show transaction history including marketplace sales/purchases
 
 ### Remove
 - Nothing removed
 
 ## Implementation Plan
-1. Create VideoEditorModal.tsx with all 9 editing tabs/sections
-2. Modify CreatePost.tsx to open modal on video select
-3. Pass edited video metadata to onPost callback
+1. Add wallet state management for marketplace transactions (buyer deducted full price, seller gets 50%, admin gets 50%)
+2. Add "खरीदें" button on each item card showing price breakdown
+3. Purchase confirmation dialog with wallet balance check
+4. Mark item as sold after purchase, remove from active listings
+5. Add photo upload to item listing form
+6. Show money explosion animation on successful purchase
+7. Update transaction history to include marketplace buy/sell entries
