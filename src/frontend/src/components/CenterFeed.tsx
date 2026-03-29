@@ -22,6 +22,24 @@ export interface Post {
 
 const EXPIRY_MS = 86400000; // 24 hours
 
+function getUserProfile(): { name: string; mobile: string } | null {
+  try {
+    const raw = localStorage.getItem("mk_user_profile");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function getInitials(name: string): string {
+  return name
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 3);
+}
+
 interface CenterFeedProps {
   showReminderBanner?: boolean;
   onDismissReminderBanner?: () => void;
@@ -41,14 +59,13 @@ export default function CenterFeed({
     (s) => Date.now() - s.createdAt < EXPIRY_MS,
   );
 
-  const videoPosts = posts.filter((p) => p.videoUrl);
-  const textPosts = posts.filter((p) => !p.videoUrl);
-
   const handleNewPost = (content: string, videoUrl?: string) => {
+    const userProfile = getUserProfile();
+    const authorName = userProfile?.name ?? "Prince Pawan Kumar";
     const newPost: Post = {
       id: Date.now().toString(),
-      author: "Prince Pawan Kumar",
-      authorInitials: "PPK",
+      author: authorName,
+      authorInitials: getInitials(authorName),
       timeAgo: t("just_now"),
       content,
       hashtags: [],
@@ -83,10 +100,12 @@ export default function CenterFeed({
     filterStyle: string,
     filterName: string,
   ) => {
+    const userProfile = getUserProfile();
+    const authorName = userProfile?.name ?? "Prince Pawan Kumar";
     const newStory: Story = {
       id: Date.now().toString(),
-      author: "प्रिंस पवन कुमार",
-      authorInitials: "PPK",
+      author: authorName,
+      authorInitials: getInitials(authorName),
       videoUrl,
       filterStyle,
       filterName,
@@ -192,45 +211,11 @@ export default function CenterFeed({
         </div>
       </div>
 
-      {/* Video Section — only shows when videos exist */}
-      <AnimatePresence>
-        {videoPosts.length > 0 && (
-          <motion.div
-            key="video-section"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="flex flex-col gap-3"
-          >
-            <div className="flex items-center gap-1.5 px-1">
-              <span className="text-base">🎬</span>
-              <h2 className="text-sm font-bold text-foreground">वीडियो</h2>
-            </div>
-            {videoPosts.map((post, idx) => (
-              <motion.div
-                key={post.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3, delay: idx * 0.05 }}
-              >
-                <VideoPostCard
-                  post={post}
-                  onToggleLike={handleToggleLike}
-                  onDelete={handleDeletePost}
-                  markerIndex={idx + 1}
-                />
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       <CreatePost onPost={handleNewPost} />
 
-      {/* Text Posts */}
+      {/* Unified Feed — all posts (video + text) in chronological order */}
       <AnimatePresence initial={false}>
-        {textPosts.length === 0 ? (
+        {posts.length === 0 ? (
           <motion.div
             key="empty"
             initial={{ opacity: 0 }}
@@ -241,7 +226,7 @@ export default function CenterFeed({
             <div className="text-4xl">📰</div>
             <div>
               <p className="text-sm font-bold text-foreground">
-                {t("just_now")} {t("post")} नहीं
+                अभी कोई पोस्ट नहीं
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 पहली पोस्ट डालें और अपनी बात शेयर करें!
@@ -249,20 +234,29 @@ export default function CenterFeed({
             </div>
           </motion.div>
         ) : (
-          textPosts.map((post, idx) => (
+          posts.map((post, idx) => (
             <motion.div
               key={post.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3, delay: idx * 0.05 }}
+              transition={{ duration: 0.3, delay: idx * 0.03 }}
             >
-              <PostCard
-                post={post}
-                onToggleLike={handleToggleLike}
-                onDelete={handleDeletePost}
-                markerIndex={idx + 1}
-              />
+              {post.videoUrl ? (
+                <VideoPostCard
+                  post={post}
+                  onToggleLike={handleToggleLike}
+                  onDelete={handleDeletePost}
+                  markerIndex={idx + 1}
+                />
+              ) : (
+                <PostCard
+                  post={post}
+                  onToggleLike={handleToggleLike}
+                  onDelete={handleDeletePost}
+                  markerIndex={idx + 1}
+                />
+              )}
             </motion.div>
           ))
         )}

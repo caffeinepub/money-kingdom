@@ -1,32 +1,24 @@
 # Money Kingdom
 
 ## Current State
-Bazaar/Marketplace (MarketplaceView.tsx) allows users to list items for sale with title, price, location, category, description. No buying functionality exists -- users can only browse listings. No commission system exists.
+Users onboard via LoginPage (name + mobile stored in localStorage as mk_user_profile). ProfilePage only shows admin user Prince Pawan Kumar data. Posts are created with hardcoded author. Video posts are split from text posts into separate arrays causing videos to not appear in main feed.
 
 ## Requested Changes (Diff)
 
 ### Add
-- "खरीदें" (Buy) button on each item card in the marketplace
-- Purchase flow: buyer pays from their virtual wallet, 50% goes to seller's wallet, 50% goes to admin (Prince Pawan Kumar)
-- Item listing should allow photo upload (from gallery)
-- Show commission breakdown clearly: "₹X seller को, ₹X Prince Pawan Kumar को"
-- After purchase, show success animation (coins/money explosion)
-- Seller can see how much they earned from sales in their wallet history
-- Items marked as "बिक गया" (Sold) after purchase and removed from listing
+- Each user has their own profile: profile photo, cover photo, bio stored in localStorage
+- Profile edit mode: tap to change profile photo, cover photo, bio
 
 ### Modify
-- MarketplaceView.tsx: add buy button and purchase dialog to each item card
-- Item listing form: add photo upload option
-- WalletPanel.tsx: show transaction history including marketplace sales/purchases
+- CenterFeed handleNewPost: use logged-in user name from mk_user_profile localStorage as post author
+- ProfilePage: show current logged-in user profile data (name, photo, bio) not just hardcoded admin data
+- Unify the feed: all posts (video + text) appear in ONE feed in order. Do not split into videoPosts and textPosts sections.
 
 ### Remove
-- Nothing removed
+- The videoPosts/textPosts split logic for display
 
 ## Implementation Plan
-1. Add wallet state management for marketplace transactions (buyer deducted full price, seller gets 50%, admin gets 50%)
-2. Add "खरीदें" button on each item card showing price breakdown
-3. Purchase confirmation dialog with wallet balance check
-4. Mark item as sold after purchase, remove from active listings
-5. Add photo upload to item listing form
-6. Show money explosion animation on successful purchase
-7. Update transaction history to include marketplace buy/sell entries
+1. Create useUserProfile hook reading/writing profile data to localStorage
+2. Update ProfilePage to use logged-in user data with edit capability
+3. Update CenterFeed to use real user name for new posts
+4. Unify feed rendering -- all posts in one array, VideoPostCard for video posts, PostCard for text posts

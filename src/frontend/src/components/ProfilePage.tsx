@@ -10,8 +10,17 @@ import {
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { useFollowers } from "@/hooks/useFollowers";
-import { Camera, Check, Grid3X3, List, UserPlus } from "lucide-react";
+import {
+  Camera,
+  Check,
+  Grid3X3,
+  List,
+  Pencil,
+  Save,
+  UserPlus,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useDarkMode } from "../hooks/useDarkMode";
@@ -77,13 +86,12 @@ const LANGUAGES = [
   { code: "nl", name: "Nederlands", label: "Dutch" },
 ];
 
-const ADMIN_USER = "प्रिंस पवन कुमार";
-const CURRENT_USER = "PPK";
 const FEE = 5;
 const TX_KEY = "wallet_transactions";
 const BALANCE_KEY = (user: string) => `wallet_${user}`;
 const APP_LOADS_KEY = "mk_app_loads";
 const ADMIN_PIN = "princepawankumar";
+const ADMIN_NAME = "Prince Pawan Kumar";
 
 function getBalance(user: string): number {
   return Number.parseFloat(localStorage.getItem(BALANCE_KEY(user)) || "0");
@@ -109,8 +117,6 @@ function nowTime() {
 function getStoredLang() {
   return localStorage.getItem("mk_language") ?? "hi";
 }
-
-// Track app loads
 function trackAppLoad() {
   const count = Number.parseInt(localStorage.getItem(APP_LOADS_KEY) || "0", 10);
   localStorage.setItem(APP_LOADS_KEY, String(count + 1));
@@ -122,10 +128,67 @@ function isAdminVerified(): boolean {
   return sessionStorage.getItem("mk_admin_verified") === "yes";
 }
 
+// Load logged-in user's base profile
+function getUserProfile(): { name: string; mobile: string } | null {
+  try {
+    const raw = localStorage.getItem("mk_user_profile");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+// Load per-user extras (photo, cover, bio) keyed by mobile
+function getUserExtras(mobile: string): {
+  profilePhoto: string | null;
+  coverPhoto: string | null;
+  bio: string;
+} {
+  try {
+    const raw = localStorage.getItem(`mk_profile_${mobile}`);
+    return raw
+      ? JSON.parse(raw)
+      : { profilePhoto: null, coverPhoto: null, bio: "" };
+  } catch {
+    return { profilePhoto: null, coverPhoto: null, bio: "" };
+  }
+}
+function saveUserExtras(
+  mobile: string,
+  data: { profilePhoto: string | null; coverPhoto: string | null; bio: string },
+) {
+  localStorage.setItem(`mk_profile_${mobile}`, JSON.stringify(data));
+}
+
+function getInitials(name: string): string {
+  return name
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 3);
+}
+
 export default function ProfilePage({ onBack }: ProfilePageProps) {
   const { t } = useLanguage();
-  const [coverPhoto, setCoverPhoto] = useState<string | null>(null);
-  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+
+  // Load user profile from onboarding data
+  const userProfile = getUserProfile();
+  const displayName = userProfile?.name ?? ADMIN_NAME;
+  const userMobile = userProfile?.mobile ?? "admin";
+  const isAdmin = displayName === ADMIN_NAME;
+
+  // Per-user photo/bio extras
+  const [coverPhoto, setCoverPhoto] = useState<string | null>(
+    () => getUserExtras(userMobile).coverPhoto,
+  );
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(
+    () => getUserExtras(userMobile).profilePhoto,
+  );
+  const [bio, setBio] = useState<string>(() => getUserExtras(userMobile).bio);
+  const [editingBio, setEditingBio] = useState(false);
+  const [bioDraft, setBioDraft] = useState(bio);
+
   const [showFollowersModal, setShowFollowersModal] = useState(false);
   const [showFollowingModal, setShowFollowingModal] = useState(false);
   const [selectedLang, setSelectedLang] = useState<string>(getStoredLang);
@@ -134,7 +197,7 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
 
   // Wallet state
   const [walletBalance, setWalletBalance] = useState(() =>
-    getBalance(CURRENT_USER),
+    getBalance(userMobile),
   );
   const [adminBalance, setAdminBalance] = useState(() => getBalance("admin"));
   const [transactions, setTransactions] = useState<any[]>(loadTxs);
@@ -158,16 +221,23 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
     followingCount,
     isFollowing,
     toggleFollow,
-  } = useFollowers("PPK");
+  } = useFollowers(userMobile);
 
   useEffect(() => {
-    // Track app load every time ProfilePage mounts
     trackAppLoad();
-    const savedCover = localStorage.getItem("mk_cover_photo");
-    const savedProfile = localStorage.getItem("mk_profile_photo");
-    if (savedCover) setCoverPhoto(savedCover);
-    if (savedProfile) setProfilePhoto(savedProfile);
   }, []);
+
+  const persistExtras = (
+    updates: Partial<{
+      profilePhoto: string | null;
+      coverPhoto: string | null;
+      bio: string;
+    }>,
+  ) => {
+    const current = getUserExtras(userMobile);
+    const updated = { ...current, ...updates };
+    saveUserExtras(userMobile, updated);
+  };
 
   const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -176,7 +246,7 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
     reader.onload = (ev) => {
       const dataUrl = ev.target?.result as string;
       setCoverPhoto(dataUrl);
-      localStorage.setItem("mk_cover_photo", dataUrl);
+      persistExtras({ coverPhoto: dataUrl });
     };
     reader.readAsDataURL(file);
   };
@@ -188,9 +258,16 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
     reader.onload = (ev) => {
       const dataUrl = ev.target?.result as string;
       setProfilePhoto(dataUrl);
-      localStorage.setItem("mk_profile_photo", dataUrl);
+      persistExtras({ profilePhoto: dataUrl });
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleSaveBio = () => {
+    setBio(bioDraft);
+    persistExtras({ bio: bioDraft });
+    setEditingBio(false);
+    toast.success("Bio सहेजा गया!");
   };
 
   const handleLangSelect = (code: string) => {
@@ -221,13 +298,13 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
     const total = amt + FEE;
     const newBal = walletBalance - total;
     const newAdminBal = adminBalance + FEE;
-    setBalanceLS(CURRENT_USER, newBal);
+    setBalanceLS(userMobile, newBal);
     setBalanceLS("admin", newAdminBal);
     setWalletBalance(newBal);
     setAdminBalance(newAdminBal);
     const tx = {
       id: Date.now().toString(),
-      sender: ADMIN_USER,
+      sender: displayName,
       recipient: recipient.trim(),
       amount: amt,
       time: nowTime(),
@@ -386,7 +463,7 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
         </DialogContent>
       </Dialog>
 
-      {/* Facebook-style Cover Photo */}
+      {/* Cover Photo */}
       <div className="relative w-full h-56 sm:h-72 rounded-xl overflow-hidden">
         {coverPhoto ? (
           <img
@@ -439,7 +516,7 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
                   <AvatarImage src={profilePhoto} alt="Profile" />
                 )}
                 <AvatarFallback className="bg-primary text-primary-foreground text-3xl font-black rounded-full">
-                  PPK
+                  {getInitials(displayName)}
                 </AvatarFallback>
               </Avatar>
             </div>
@@ -457,8 +534,13 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
               variant="outline"
               size="sm"
               className="rounded-full text-base h-10 px-4"
+              onClick={() => {
+                setEditingBio(true);
+                setBioDraft(bio);
+              }}
               data-ocid="profile.edit_button"
             >
+              <Pencil className="w-4 h-4 mr-1" />
               संपादित करें
             </Button>
             <Button
@@ -475,11 +557,51 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
         {/* Name & Bio */}
         <div className="mb-3">
           <h1 className="font-black text-3xl text-foreground leading-tight">
-            प्रिंस पवन कुमार
+            {displayName}
           </h1>
-          <p className="text-lg text-muted-foreground mt-1">
-            💰 Finance enthusiast | निवेशक | SIP lover 📈
-          </p>
+          {userProfile?.mobile && (
+            <p className="text-sm text-muted-foreground mt-0.5">
+              📱 {userProfile.mobile}
+            </p>
+          )}
+
+          {/* Bio section */}
+          {editingBio ? (
+            <div className="mt-2 flex flex-col gap-2">
+              <Textarea
+                value={bioDraft}
+                onChange={(e) => setBioDraft(e.target.value)}
+                placeholder="अपने बारे में लिखें..."
+                className="text-base resize-none"
+                rows={3}
+                data-ocid="profile.bio.textarea"
+              />
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={handleSaveBio}
+                  className="rounded-full gap-1"
+                  data-ocid="profile.bio.save_button"
+                >
+                  <Save className="w-4 h-4" />
+                  सहेजें
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setEditingBio(false)}
+                  className="rounded-full"
+                  data-ocid="profile.bio.cancel_button"
+                >
+                  रद्द करें
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-lg text-muted-foreground mt-1">
+              {bio || "💰 Finance enthusiast | निवेशक | SIP lover 📈"}
+            </p>
+          )}
         </div>
 
         {/* Stats row */}
@@ -512,9 +634,11 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
             <span className="font-black text-2xl text-foreground">0</span>
             <span className="text-base text-muted-foreground">पोस्ट</span>
           </div>
-          <Badge variant="secondary" className="text-sm px-2 py-0.5 ml-auto">
-            👑 Admin
-          </Badge>
+          {isAdmin && (
+            <Badge variant="secondary" className="text-sm px-2 py-0.5 ml-auto">
+              👑 Admin
+            </Badge>
+          )}
         </div>
       </div>
 
@@ -890,7 +1014,6 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
                   </div>
 
                   {!adminVerified ? (
-                    /* PIN verification */
                     <div className="flex flex-col gap-4">
                       <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-center">
                         <span className="text-4xl block mb-2">🔐</span>
@@ -909,9 +1032,7 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
                           setPinError(false);
                         }}
                         placeholder="Admin password डालें"
-                        className={`text-lg h-14 ${
-                          pinError ? "border-destructive" : ""
-                        }`}
+                        className={`text-lg h-14 ${pinError ? "border-destructive" : ""}`}
                         onKeyDown={(e) => {
                           if (e.key === "Enter") handleAdminVerify();
                         }}
@@ -932,7 +1053,6 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
                       </Button>
                     </div>
                   ) : (
-                    /* Stats dashboard */
                     <div className="flex flex-col gap-4">
                       <div className="grid grid-cols-1 gap-4">
                         <div className="bg-primary/10 border border-primary/30 rounded-2xl p-6 text-center">
@@ -947,7 +1067,6 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
                           </p>
                         </div>
                       </div>
-
                       <Button
                         variant="outline"
                         onClick={handleShowStats}
@@ -956,7 +1075,6 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
                       >
                         🔄 Refresh करें
                       </Button>
-
                       <div className="bg-muted/50 rounded-xl p-4 border border-border">
                         <p className="text-sm text-muted-foreground text-center leading-relaxed">
                           यह count हर बार profile खुलने पर बढ़ता है। बाकी कोई भी
