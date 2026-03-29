@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useRef, useState } from "react";
+import { useLanguage } from "../utils/i18n";
 import type { Post } from "./CenterFeed";
 import GiftCharacterPanel from "./GiftCharacterPanel";
 import LevelBadge from "./LevelBadge";
@@ -70,6 +71,7 @@ export default function PostCard({
   >(null);
   const [saved, setSaved] = useState(false);
   const [showHeartAnim, setShowHeartAnim] = useState(false);
+  const { t } = useLanguage();
   const [showGiftPanel, setShowGiftPanel] = useState(false);
   const reactionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -186,12 +188,12 @@ export default function PostCard({
                       {following ? (
                         <>
                           <UserCheck className="w-4 h-4" />
-                          फॉलोइंग
+                          {t("following")}
                         </>
                       ) : (
                         <>
                           <UserPlus className="w-4 h-4" />
-                          फॉलो करें
+                          {t("follow")}
                         </>
                       )}
                     </button>
@@ -230,7 +232,7 @@ export default function PostCard({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem>सेव करें</DropdownMenuItem>
-                  <DropdownMenuItem>शेयर करें</DropdownMenuItem>
+                  <DropdownMenuItem>{t("share")}</DropdownMenuItem>
                   {isOwnPost && onDelete && (
                     <DropdownMenuItem
                       className="text-destructive focus:text-destructive"
@@ -429,7 +431,7 @@ export default function PostCard({
                     <div className="flex-1 flex gap-2">
                       <Input
                         className="rounded-2xl bg-muted border-none text-lg h-14"
-                        placeholder="टिप्पणी लिखें…"
+                        placeholder={`${t("comment")}…`}
                         value={newComment}
                         onChange={(e) => setNewComment(e.target.value)}
                         onKeyDown={(e) =>

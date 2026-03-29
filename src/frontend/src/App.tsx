@@ -4,6 +4,7 @@ import { useState } from "react";
 import LoginPage from "./components/LoginPage";
 import MainLayout from "./components/MainLayout";
 import MoneyRain from "./components/MoneyRain";
+import { useDarkMode } from "./hooks/useDarkMode";
 import { useInternetIdentity } from "./hooks/useInternetIdentity";
 import { useReminderNotification } from "./hooks/useReminderNotification";
 import { useSessionTimer } from "./hooks/useSessionTimer";
@@ -43,6 +44,8 @@ function AppInner() {
   const [guestMode, setGuestMode] = useState(false);
   const { showSummary, lastDuration, dismissSummary } = useSessionTimer();
   const { showBanner, dismissBanner } = useReminderNotification();
+  // Initialize dark mode on app start
+  useDarkMode();
 
   if (isInitializing) {
     return (

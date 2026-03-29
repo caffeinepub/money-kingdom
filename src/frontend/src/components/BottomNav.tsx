@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Home, MessageCircle, ShoppingBag, User, Video } from "lucide-react";
+import { useLanguage } from "../utils/i18n";
 
 export type View =
   | "home"
@@ -19,10 +20,11 @@ export default function BottomNav({
   onNavigate,
   onOpenChat,
 }: BottomNavProps) {
+  const { t } = useLanguage();
   const tabs = [
-    { id: "home" as View, icon: Home, label: "होम" },
-    { id: "marketplace" as View, icon: ShoppingBag, label: "बाज़ार" },
-    { id: "reels" as View, icon: Video, label: "रील्स" },
+    { id: "home" as View, icon: Home, label: t("home") },
+    { id: "marketplace" as View, icon: ShoppingBag, label: t("bazaar") },
+    { id: "reels" as View, icon: Video, label: t("reels") },
   ];
 
   return (
@@ -85,7 +87,7 @@ export default function BottomNav({
           data-ocid="bottomnav.chat.button"
         >
           <MessageCircle className="w-14 h-14" strokeWidth={1.8} />
-          <span className="text-2xl font-bold leading-none">चैट</span>
+          <span className="text-2xl font-bold leading-none">{t("chat")}</span>
         </button>
 
         {/* Profile button - far right corner */}
@@ -128,7 +130,9 @@ export default function BottomNav({
               }}
             />
           )}
-          <span className="text-2xl font-bold leading-none">प्रोफ़ाइल</span>
+          <span className="text-2xl font-bold leading-none">
+            {t("profile")}
+          </span>
         </button>
       </div>
     </nav>

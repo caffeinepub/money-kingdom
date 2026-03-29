@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Check } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
+import { setLanguage, useLanguage } from "../utils/i18n";
 import EnglishGuruAI from "./EnglishGuruAI";
 
 const LANGUAGES = [
@@ -28,6 +29,7 @@ const LANGUAGES = [
   { code: "sd", name: "سنڌي", label: "Sindhi" },
   { code: "bo", name: "བོད་སྐད།", label: "Bodo" },
   { code: "sat", name: "ᱥᱟᱱᱛᱟᱲᱤ", label: "Santali" },
+  { code: "ne", name: "नेपाली", label: "Nepali" },
   // विश्व की प्रमुख भाषाएं
   { code: "en", name: "English", label: "English" },
   { code: "ar", name: "العربية", label: "Arabic" },
@@ -60,10 +62,11 @@ interface SettingsPanelProps {
 
 export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
   const [selected, setSelected] = useState<string>(getStoredLang);
+  const { t } = useLanguage();
 
   const handleSelect = (code: string) => {
     setSelected(code);
-    localStorage.setItem("mk_language", code);
+    setLanguage(code);
   };
 
   return (
@@ -95,7 +98,9 @@ export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
             <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
               <div className="flex items-center gap-2">
                 <span className="text-xl">⚙️</span>
-                <h2 className="font-bold text-base text-foreground">सेटिंग्स</h2>
+                <h2 className="font-bold text-base text-foreground">
+                  {t("settings")}
+                </h2>
               </div>
               <button
                 type="button"
@@ -114,7 +119,7 @@ export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
             >
               <TabsList className="mx-4 mt-3 shrink-0 grid grid-cols-2">
                 <TabsTrigger value="language" data-ocid="settings.language.tab">
-                  🌐 भाषा चुनें
+                  🌐 {t("select_language")}
                 </TabsTrigger>
                 <TabsTrigger
                   value="english-guru"
@@ -132,7 +137,7 @@ export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
                 <ScrollArea className="flex-1">
                   <div className="px-4 py-4">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                      अपनी भाषा चुनें
+                      {t("select_language")}
                     </p>
                     <p className="text-xs text-muted-foreground mb-3">
                       कुल {LANGUAGES.length} भाषाएं उपलब्ध हैं

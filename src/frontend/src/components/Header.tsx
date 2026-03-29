@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Bell, Search } from "lucide-react";
 import { useState } from "react";
 import { useNotifications } from "../hooks/useNotifications";
+import { useLanguage } from "../utils/i18n";
 
 interface HeaderProps {
   onOpenChat?: () => void;
@@ -11,6 +12,7 @@ interface HeaderProps {
 
 export default function Header({ onOpenNotifications }: HeaderProps) {
   const { unreadCount } = useNotifications();
+  const { t } = useLanguage();
   const [search, setSearch] = useState("");
 
   return (
@@ -31,7 +33,7 @@ export default function Header({ onOpenNotifications }: HeaderProps) {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60" />
           <Input
             className="pl-11 bg-white/20 border-none rounded-full text-lg h-12 text-white placeholder:text-white/60 focus-visible:ring-white/50"
-            placeholder="खोजें…"
+            placeholder={`${t("search")}…`}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             data-ocid="header.search_input"
@@ -46,7 +48,7 @@ export default function Header({ onOpenNotifications }: HeaderProps) {
             unreadCount > 0 ? " bell-glow bell-wiggle" : ""
           }`}
           data-ocid="header.notifications.button"
-          aria-label="नोटिफ़िकेशन"
+          aria-label={t("notifications")}
         >
           <Bell className="w-7 h-7 text-white" />
           {unreadCount > 0 && (

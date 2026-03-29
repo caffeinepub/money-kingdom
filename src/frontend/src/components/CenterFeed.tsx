@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
+import { useLanguage } from "../utils/i18n";
 import CreatePost from "./CreatePost";
 import PostCard from "./PostCard";
 import StoryCreator from "./StoryCreator";
@@ -30,6 +31,7 @@ export default function CenterFeed({
   showReminderBanner,
   onDismissReminderBanner,
 }: CenterFeedProps) {
+  const { t } = useLanguage();
   const [posts, setPosts] = useState<Post[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
   const [creatorOpen, setCreatorOpen] = useState(false);
@@ -47,7 +49,7 @@ export default function CenterFeed({
       id: Date.now().toString(),
       author: "Prince Pawan Kumar",
       authorInitials: "PPK",
-      timeAgo: "अभी",
+      timeAgo: t("just_now"),
       content,
       hashtags: [],
       likes: 0,
@@ -152,7 +154,7 @@ export default function CenterFeed({
               </div>
             </div>
             <span className="text-xl font-bold text-foreground text-center leading-tight max-w-[7rem] truncate">
-              स्टोरी
+              {t("story")}
             </span>
           </button>
 
@@ -239,7 +241,7 @@ export default function CenterFeed({
             <div className="text-7xl">📰</div>
             <div>
               <p className="text-2xl font-bold text-foreground">
-                अभी कोई पोस्ट नहीं
+                {t("just_now")} {t("post")} नहीं
               </p>
               <p className="text-xl text-muted-foreground mt-2">
                 पहली पोस्ट डालें और अपनी बात शेयर करें!

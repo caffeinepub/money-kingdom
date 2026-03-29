@@ -14,9 +14,10 @@ import { useFollowers } from "@/hooks/useFollowers";
 import { Camera, Check, Grid3X3, List, UserPlus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { useDarkMode } from "../hooks/useDarkMode";
+import { setLanguage, useLanguage } from "../utils/i18n";
 import CoinAnimation from "./CoinAnimation";
 import EnglishGuruAI from "./EnglishGuruAI";
-import LevelBadge from "./LevelBadge";
 import SpinWheel from "./SpinWheel";
 
 interface ProfilePageProps {
@@ -33,6 +34,7 @@ const FRIENDS = [
 ];
 
 const LANGUAGES = [
+  // भारतीय भाषाएं
   { code: "hi", name: "हिन्दी", label: "Hindi" },
   { code: "ta", name: "தமிழ்", label: "Tamil" },
   { code: "te", name: "తెలుగు", label: "Telugu" },
@@ -44,6 +46,35 @@ const LANGUAGES = [
   { code: "pa", name: "ਪੰਜਾਬੀ", label: "Punjabi" },
   { code: "or", name: "ଓଡ଼ିଆ", label: "Odia" },
   { code: "ur", name: "اردو", label: "Urdu" },
+  { code: "as", name: "অসমীয়া", label: "Assamese" },
+  { code: "mni", name: "মৈতৈলোন্", label: "Manipuri" },
+  { code: "kok", name: "कोंकणी", label: "Konkani" },
+  { code: "mai", name: "मैथिली", label: "Maithili" },
+  { code: "doi", name: "डोगरी", label: "Dogri" },
+  { code: "ks", name: "كٲشُر", label: "Kashmiri" },
+  { code: "sa", name: "संस्कृतम्", label: "Sanskrit" },
+  { code: "sd", name: "سنڌي", label: "Sindhi" },
+  { code: "bo", name: "བོད་སྐད།", label: "Bodo" },
+  { code: "sat", name: "ᱥᱟᱱᱛᱟᱲᱤ", label: "Santali" },
+  { code: "ne", name: "नेपाली", label: "Nepali" },
+  // विश्व की भाषाएं
+  { code: "en", name: "English", label: "English" },
+  { code: "ar", name: "العربية", label: "Arabic" },
+  { code: "zh", name: "中文", label: "Chinese" },
+  { code: "es", name: "Español", label: "Spanish" },
+  { code: "fr", name: "Français", label: "French" },
+  { code: "pt", name: "Português", label: "Portuguese" },
+  { code: "ru", name: "Русский", label: "Russian" },
+  { code: "de", name: "Deutsch", label: "German" },
+  { code: "ja", name: "日本語", label: "Japanese" },
+  { code: "ko", name: "한국어", label: "Korean" },
+  { code: "tr", name: "Türkçe", label: "Turkish" },
+  { code: "vi", name: "Tiếng Việt", label: "Vietnamese" },
+  { code: "id", name: "Bahasa Indonesia", label: "Indonesian" },
+  { code: "ms", name: "Bahasa Melayu", label: "Malay" },
+  { code: "th", name: "ภาษาไทย", label: "Thai" },
+  { code: "it", name: "Italiano", label: "Italian" },
+  { code: "nl", name: "Nederlands", label: "Dutch" },
 ];
 
 const ADMIN_USER = "प्रिंस पवन कुमार";
@@ -92,11 +123,13 @@ function isAdminVerified(): boolean {
 }
 
 export default function ProfilePage({ onBack }: ProfilePageProps) {
+  const { t } = useLanguage();
   const [coverPhoto, setCoverPhoto] = useState<string | null>(null);
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const [showFollowersModal, setShowFollowersModal] = useState(false);
   const [showFollowingModal, setShowFollowingModal] = useState(false);
   const [selectedLang, setSelectedLang] = useState<string>(getStoredLang);
+  const { dark, toggle: toggleDark } = useDarkMode();
   const [postViewMode, setPostViewMode] = useState<"grid" | "list">("grid");
 
   // Wallet state
@@ -162,7 +195,7 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
 
   const handleLangSelect = (code: string) => {
     setSelectedLang(code);
-    localStorage.setItem("mk_language", code);
+    setLanguage(code);
   };
 
   const handleSend = () => {
@@ -254,7 +287,7 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
         <DialogContent data-ocid="profile.followers.dialog">
           <DialogHeader>
             <DialogTitle className="text-2xl font-black">
-              फॉलोअर्स ({followersCount})
+              {t("followers")} ({followersCount})
             </DialogTitle>
           </DialogHeader>
           {followers.length === 0 ? (
@@ -262,7 +295,7 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
               className="text-lg text-muted-foreground text-center py-4"
               data-ocid="profile.followers.empty_state"
             >
-              अभी कोई फॉलोअर्स नहीं है
+              {t("followers")} 0
             </p>
           ) : (
             <div className="flex flex-col gap-3 mt-2">
@@ -291,7 +324,7 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
                       onClick={() => toggleFollow(uid, user?.name ?? uid)}
                       data-ocid={`profile.followers.toggle.${idx + 1}`}
                     >
-                      {isFollowing(uid) ? "फॉलोइंग ✓" : "फॉलो करें"}
+                      {isFollowing(uid) ? `${t("following")} ✓` : t("follow")}
                     </Button>
                   </div>
                 );
@@ -444,9 +477,6 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
           <h1 className="font-black text-3xl text-foreground leading-tight">
             प्रिंस पवन कुमार
           </h1>
-          <div className="mt-1">
-            <LevelBadge userId="PPK" />
-          </div>
           <p className="text-lg text-muted-foreground mt-1">
             💰 Finance enthusiast | निवेशक | SIP lover 📈
           </p>
@@ -599,6 +629,36 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
             className="mt-0"
             data-ocid="profile.settings.panel"
           >
+            {/* Dark Mode Toggle -- सिर्फ Prince Pawan Kumar (admin) को दिखेगा */}
+            {adminVerified && (
+              <div className="bg-card border border-border rounded-xl shadow-card p-4 mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl">{dark ? "🌙" : "☀️"}</span>
+                  <div>
+                    <p className="font-bold text-lg text-foreground">
+                      डार्क मोड
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {dark ? "रात का थीम चालू है" : "दिन का थीम चालू है"}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={toggleDark}
+                  data-ocid="profile.settings.darkmode.toggle"
+                  className={`relative w-16 h-8 rounded-full transition-colors duration-300 focus:outline-none ${
+                    dark ? "bg-primary" : "bg-muted"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white shadow-md transition-transform duration-300 ${
+                      dark ? "translate-x-8" : "translate-x-0"
+                    }`}
+                  />
+                </button>
+              </div>
+            )}
             <Tabs defaultValue="language">
               <div className="overflow-x-auto pb-1">
                 <TabsList className="w-max min-w-full grid grid-cols-5 bg-card border border-border rounded-xl shadow-card mb-4 h-14">
