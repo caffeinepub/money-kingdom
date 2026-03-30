@@ -25,9 +25,31 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useDarkMode } from "../hooks/useDarkMode";
 import { setLanguage, useLanguage } from "../utils/i18n";
+import type { Post } from "./CenterFeed";
 import CoinAnimation from "./CoinAnimation";
 import EnglishGuruAI from "./EnglishGuruAI";
 import SpinWheel from "./SpinWheel";
+
+function loadUserPosts(mobile: string): Post[] {
+  try {
+    const raw = localStorage.getItem("mk_all_posts");
+    const all: Post[] = raw ? JSON.parse(raw) : [];
+    return all.filter((p) => p.authorMobile === mobile);
+  } catch {
+    return [];
+  }
+}
+
+function deletePostFromStorage(id: string) {
+  try {
+    const raw = localStorage.getItem("mk_all_posts");
+    const all: Post[] = raw ? JSON.parse(raw) : [];
+    localStorage.setItem(
+      "mk_all_posts",
+      JSON.stringify(all.filter((p) => p.id !== id)),
+    );
+  } catch {}
+}
 
 interface ProfilePageProps {
   onBack: () => void;
@@ -198,6 +220,9 @@ export default function ProfilePage({
   const [selectedLang, setSelectedLang] = useState<string>(getStoredLang);
   const { dark, toggle: toggleDark } = useDarkMode();
   const [postViewMode, setPostViewMode] = useState<"grid" | "list">("grid");
+  const [userPosts, setUserPosts] = useState<Post[]>(() =>
+    loadUserPosts(userMobile),
+  );
 
   // Wallet state
   const [walletBalance, setWalletBalance] = useState(() =>
@@ -689,7 +714,7 @@ export default function ProfilePage({
                 }`}
                 data-ocid="profile.toggle"
               >
-                <Grid3X3 className="w-6 h-6" />
+                <Grid3X3 className="w-4 h-4" />
               </button>
               <button
                 type="button"
@@ -701,21 +726,117 @@ export default function ProfilePage({
                 }`}
                 data-ocid="profile.toggle"
               >
-                <List className="w-6 h-6" />
+                <List className="w-4 h-4" />
               </button>
             </div>
-            <div
-              className="bg-card rounded-xl border border-border shadow-card p-8 text-center"
-              data-ocid="profile.posts.empty_state"
-            >
-              <div className="text-6xl mb-4">📸</div>
-              <p className="text-xl font-bold text-foreground">
-                अभी कोई पोस्ट नहीं
-              </p>
-              <p className="text-lg text-muted-foreground mt-2">
-                होम फीड से अपनी पहली पोस्ट डालें!
-              </p>
-            </div>
+            {userPosts.length === 0 ? (
+              <div
+                className="bg-card rounded-xl border border-border shadow-card p-8 text-center"
+                data-ocid="profile.posts.empty_state"
+              >
+                <div className="text-4xl mb-3">📸</div>
+                <p className="text-sm font-bold text-foreground">
+                  अभी कोई पोस्ट नहीं
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  होम फीड से अपनी पहली पोस्ट डालें!
+                </p>
+              </div>
+            ) : postViewMode === "grid" ? (
+              <div className="grid grid-cols-3 gap-1">
+                {userPosts.map((post) => (
+                  <div
+                    key={post.id}
+                    className="relative aspect-square bg-card rounded-lg overflow-hidden border border-border"
+                  >
+                    {post.videoUrl ? (
+                      <div className="relative w-full h-full">
+                        {/* biome-ignore lint/a11y/useMediaCaption: Profile grid thumbnail */}
+                        <video
+                          src={post.videoUrl}
+                          muted
+                          playsInline
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute top-1 right-1 bg-black/60 rounded-full p-0.5">
+                          <span className="text-[10px]">🎬</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center p-2 bg-muted">
+                        <p className="text-[10px] text-foreground text-center line-clamp-4 leading-tight">
+                          {post.content}
+                        </p>
+                      </div>
+                    )}
+                    {isOwnProfile && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          deletePostFromStorage(post.id);
+                          setUserPosts((prev) =>
+                            prev.filter((p) => p.id !== post.id),
+                          );
+                        }}
+                        className="absolute bottom-1 right-1 bg-red-500/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px]"
+                        aria-label="डिलीट करें"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {userPosts.map((post) => (
+                  <div
+                    key={post.id}
+                    className="bg-card rounded-xl border border-border p-3 flex gap-3 items-start"
+                  >
+                    {post.videoUrl ? (
+                      <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-muted">
+                        {/* biome-ignore lint/a11y/useMediaCaption: Profile list thumbnail */}
+                        <video
+                          src={post.videoUrl}
+                          muted
+                          playsInline
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                        <span className="text-xl">📝</span>
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-foreground line-clamp-3 leading-snug">
+                        {post.content ||
+                          (post.videoUrl ? "🎬 वीडियो पोस्ट" : "")}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        ❤️ {post.likes} · 💬 {post.comments}
+                      </p>
+                    </div>
+                    {isOwnProfile && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          deletePostFromStorage(post.id);
+                          setUserPosts((prev) =>
+                            prev.filter((p) => p.id !== post.id),
+                          );
+                        }}
+                        className="text-red-500 hover:text-red-700 text-sm font-bold shrink-0"
+                        aria-label="डिलीट करें"
+                      >
+                        🗑️
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           {/* Friends Tab */}

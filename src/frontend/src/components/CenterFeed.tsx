@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "motion/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLanguage } from "../utils/i18n";
 import CreatePost from "./CreatePost";
 import PostCard from "./PostCard";
@@ -10,6 +10,7 @@ import VideoPostCard from "./VideoPostCard";
 export interface Post {
   id: string;
   author: string;
+  authorMobile: string;
   authorInitials: string;
   timeAgo: string;
   content: string;
@@ -18,9 +19,12 @@ export interface Post {
   comments: number;
   liked: boolean;
   videoUrl?: string;
+  createdAt: number;
 }
 
 const EXPIRY_MS = 86400000; // 24 hours
+const POSTS_KEY = "mk_all_posts";
+const STORIES_KEY = "mk_all_stories";
 
 function getUserProfile(): { name: string; mobile: string } | null {
   try {
@@ -40,6 +44,40 @@ function getInitials(name: string): string {
     .slice(0, 3);
 }
 
+function loadPostsFromStorage(): Post[] {
+  try {
+    const raw = localStorage.getItem(POSTS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function savePostsToStorage(posts: Post[]) {
+  try {
+    localStorage.setItem(POSTS_KEY, JSON.stringify(posts));
+  } catch {
+    // storage full
+  }
+}
+
+function loadStoriesFromStorage(): Story[] {
+  try {
+    const raw = localStorage.getItem(STORIES_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveStoriesToStorage(stories: Story[]) {
+  try {
+    localStorage.setItem(STORIES_KEY, JSON.stringify(stories));
+  } catch {
+    // storage full
+  }
+}
+
 interface CenterFeedProps {
   showReminderBanner?: boolean;
   onDismissReminderBanner?: () => void;
@@ -50,10 +88,22 @@ export default function CenterFeed({
   onDismissReminderBanner,
 }: CenterFeedProps) {
   const { t } = useLanguage();
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [stories, setStories] = useState<Story[]>([]);
+  const [posts, setPosts] = useState<Post[]>(() => loadPostsFromStorage());
+  const [stories, setStories] = useState<Story[]>(() =>
+    loadStoriesFromStorage(),
+  );
   const [creatorOpen, setCreatorOpen] = useState(false);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
+
+  // Persist posts to localStorage whenever they change
+  useEffect(() => {
+    savePostsToStorage(posts);
+  }, [posts]);
+
+  // Persist stories to localStorage whenever they change
+  useEffect(() => {
+    saveStoriesToStorage(stories);
+  }, [stories]);
 
   const activeStories = stories.filter(
     (s) => Date.now() - s.createdAt < EXPIRY_MS,
@@ -62,9 +112,11 @@ export default function CenterFeed({
   const handleNewPost = (content: string, videoUrl?: string) => {
     const userProfile = getUserProfile();
     const authorName = userProfile?.name ?? "Prince Pawan Kumar";
+    const authorMobile = userProfile?.mobile ?? "admin";
     const newPost: Post = {
       id: Date.now().toString(),
       author: authorName,
+      authorMobile,
       authorInitials: getInitials(authorName),
       timeAgo: t("just_now"),
       content,
@@ -73,6 +125,7 @@ export default function CenterFeed({
       comments: 0,
       liked: false,
       videoUrl,
+      createdAt: Date.now(),
     };
     setPosts((prev) => [newPost, ...prev]);
   };
@@ -115,7 +168,7 @@ export default function CenterFeed({
   };
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-2">
       {/* Reminder Banner */}
       <AnimatePresence>
         {showReminderBanner && (
@@ -159,7 +212,7 @@ export default function CenterFeed({
 
       {/* Stories Section */}
       <div className="overflow-x-auto pb-1 -mx-1 px-1">
-        <div className="flex gap-3 w-max px-1">
+        <div className="flex gap-2 w-max px-1">
           {/* Create Story button */}
           <button
             type="button"
@@ -167,12 +220,12 @@ export default function CenterFeed({
             className="flex flex-col items-center gap-1 shrink-0 group"
             data-ocid="stories.primary_button"
           >
-            <div className="w-16 h-16 rounded-full p-0.5 shadow-md story-ring-anim">
+            <div className="w-14 h-14 rounded-full p-0.5 shadow-md story-ring-anim">
               <div className="w-full h-full rounded-full bg-card flex items-center justify-center border-2 border-card">
-                <span className="text-xl font-black text-primary">+</span>
+                <span className="text-lg font-black text-primary">+</span>
               </div>
             </div>
-            <span className="text-[10px] font-semibold text-foreground text-center leading-tight max-w-[4rem] truncate">
+            <span className="text-[10px] font-semibold text-foreground text-center leading-tight max-w-[3.5rem] truncate">
               {t("story")}
             </span>
           </button>
@@ -186,7 +239,7 @@ export default function CenterFeed({
               className="flex flex-col items-center gap-1 shrink-0"
               data-ocid="stories.card.button"
             >
-              <div className="w-16 h-16 rounded-full p-0.5 shadow-md story-ring-anim">
+              <div className="w-14 h-14 rounded-full p-0.5 shadow-md story-ring-anim">
                 <div className="w-full h-full rounded-full overflow-hidden border-2 border-card">
                   {/* biome-ignore lint/a11y/useMediaCaption: Story thumbnail */}
                   <video
@@ -203,7 +256,7 @@ export default function CenterFeed({
                   />
                 </div>
               </div>
-              <span className="text-[10px] font-semibold text-foreground text-center leading-tight max-w-[4rem] truncate">
+              <span className="text-[10px] font-semibold text-foreground text-center leading-tight max-w-[3.5rem] truncate">
                 {story.author.split(" ")[0]}
               </span>
             </button>
@@ -220,7 +273,7 @@ export default function CenterFeed({
             key="empty"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex flex-col items-center justify-center py-10 gap-3 text-center"
+            className="flex flex-col items-center justify-center py-8 gap-3 text-center"
             data-ocid="feed.empty_state"
           >
             <div className="text-4xl">📰</div>
