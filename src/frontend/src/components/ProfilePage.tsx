@@ -31,6 +31,7 @@ import SpinWheel from "./SpinWheel";
 
 interface ProfilePageProps {
   onBack: () => void;
+  isOwnProfile?: boolean;
 }
 
 const FRIENDS = [
@@ -169,7 +170,10 @@ function getInitials(name: string): string {
     .slice(0, 3);
 }
 
-export default function ProfilePage({ onBack }: ProfilePageProps) {
+export default function ProfilePage({
+  onBack,
+  isOwnProfile = true,
+}: ProfilePageProps) {
   const { t } = useLanguage();
 
   // Load user profile from onboarding data
@@ -661,13 +665,15 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
             >
               मित्र ({FRIENDS.length})
             </TabsTrigger>
-            <TabsTrigger
-              value="settings"
-              className="flex-1 text-lg rounded-lg font-bold"
-              data-ocid="profile.settings.tab"
-            >
-              सेटिंग ⚙️
-            </TabsTrigger>
+            {isOwnProfile && (
+              <TabsTrigger
+                value="settings"
+                className="flex-1 text-lg rounded-lg font-bold"
+                data-ocid="profile.settings.tab"
+              >
+                सेटिंग ⚙️
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* Posts Tab */}
@@ -747,346 +753,350 @@ export default function ProfilePage({ onBack }: ProfilePageProps) {
             </div>
           </TabsContent>
 
-          {/* Settings Tab */}
-          <TabsContent
-            value="settings"
-            className="mt-0"
-            data-ocid="profile.settings.panel"
-          >
-            {/* Dark Mode Toggle -- सिर्फ Prince Pawan Kumar (admin) को दिखेगा */}
-            {adminVerified && (
-              <div className="bg-card border border-border rounded-xl shadow-card p-4 mb-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-3xl">{dark ? "🌙" : "☀️"}</span>
-                  <div>
-                    <p className="font-bold text-lg text-foreground">
-                      डार्क मोड
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {dark ? "रात का थीम चालू है" : "दिन का थीम चालू है"}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={toggleDark}
-                  data-ocid="profile.settings.darkmode.toggle"
-                  className={`relative w-16 h-8 rounded-full transition-colors duration-300 focus:outline-none ${
-                    dark ? "bg-primary" : "bg-muted"
-                  }`}
-                >
-                  <span
-                    className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white shadow-md transition-transform duration-300 ${
-                      dark ? "translate-x-8" : "translate-x-0"
-                    }`}
-                  />
-                </button>
-              </div>
-            )}
-            <Tabs defaultValue="language">
-              <div className="overflow-x-auto pb-1">
-                <TabsList className="w-max min-w-full grid grid-cols-5 bg-card border border-border rounded-xl shadow-card mb-4 h-14">
-                  <TabsTrigger
-                    value="language"
-                    className="text-sm rounded-lg font-bold px-3"
-                  >
-                    🌐 भाषा
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="englishguru"
-                    className="text-sm rounded-lg font-bold px-3"
-                  >
-                    🎓 English AI
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="wallet"
-                    className="text-sm rounded-lg font-bold px-3"
-                    data-ocid="profile.settings.wallet.tab"
-                  >
-                    💰 वॉलेट
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="spinwheel"
-                    className="text-sm rounded-lg font-bold px-3"
-                    data-ocid="profile.settings.spinwheel.tab"
-                  >
-                    🎡 भाग्य चक्र
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="admin-stats"
-                    className="text-sm rounded-lg font-bold px-3"
-                    data-ocid="profile.settings.admin_stats.tab"
-                    onClick={handleShowStats}
-                  >
-                    📊 Stats
-                  </TabsTrigger>
-                </TabsList>
-              </div>
-
-              {/* Language */}
-              <TabsContent value="language" className="mt-0">
-                <div className="bg-card rounded-xl border border-border shadow-card p-4">
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="text-2xl">🌐</span>
-                    <h3 className="font-black text-xl text-foreground">
-                      भाषा चुनें
-                    </h3>
-                  </div>
-                  <ScrollArea className="h-72">
-                    <div className="flex flex-col gap-2 pr-2">
-                      {LANGUAGES.map((lang) => {
-                        const isActive = selectedLang === lang.code;
-                        return (
-                          <button
-                            key={lang.code}
-                            type="button"
-                            onClick={() => handleLangSelect(lang.code)}
-                            data-ocid="profile.settings.language.button"
-                            className={`flex items-center justify-between px-4 py-3 rounded-xl transition-colors text-left ${
-                              isActive
-                                ? "bg-primary/10 border border-primary/30"
-                                : "hover:bg-muted border border-transparent"
-                            }`}
-                          >
-                            <div className="flex flex-col">
-                              <span
-                                className={`text-xl font-bold leading-tight ${isActive ? "text-primary" : "text-foreground"}`}
-                              >
-                                {lang.name}
-                              </span>
-                              <span className="text-base text-muted-foreground mt-0.5">
-                                {lang.label}
-                              </span>
-                            </div>
-                            {isActive && (
-                              <Check className="w-6 h-6 text-primary shrink-0" />
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </ScrollArea>
-                </div>
-              </TabsContent>
-
-              {/* English Guru AI */}
-              <TabsContent value="englishguru" className="mt-0">
-                <div className="bg-card rounded-xl border border-border shadow-card p-4">
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="text-2xl">🎓</span>
-                    <h3 className="font-black text-xl text-foreground">
-                      English Guru AI
-                    </h3>
-                  </div>
-                  <EnglishGuruAI />
-                </div>
-              </TabsContent>
-
-              {/* Wallet */}
-              <TabsContent
-                value="wallet"
-                className="mt-0"
-                data-ocid="profile.settings.wallet.panel"
-              >
-                <div className="bg-card rounded-xl border border-border shadow-card p-4 flex flex-col gap-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 text-center">
-                      <p className="text-base text-muted-foreground mb-1">
-                        मेरा बैलेंस
-                      </p>
-                      <p className="text-3xl font-black text-primary">
-                        ₹{walletBalance.toFixed(2)}
-                      </p>
-                    </div>
-                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-center">
-                      <p className="text-base text-muted-foreground mb-1">
-                        Admin फ़ीस
-                      </p>
-                      <p className="text-3xl font-black text-amber-600">
-                        ₹{adminBalance.toFixed(2)}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="bg-muted/50 rounded-xl p-4 border border-border flex flex-col gap-3">
-                    <h3 className="font-black text-xl text-foreground">
-                      💸 पैसे भेजें
-                    </h3>
-                    <Input
-                      value={recipient}
-                      onChange={(e) => setRecipient(e.target.value)}
-                      placeholder="प्राप्तकर्ता का नाम"
-                      className="text-lg h-14"
-                      data-ocid="profile.wallet.recipient.input"
-                    />
-                    <Input
-                      value={sendAmount}
-                      onChange={(e) => setSendAmount(e.target.value)}
-                      placeholder="राशि (₹)"
-                      type="number"
-                      min="1"
-                      className="text-lg h-14"
-                      data-ocid="profile.wallet.amount.input"
-                    />
-                    <p className="text-base text-muted-foreground">
-                      ₹5 शुल्क हर लेनदेन पर लगेगा
-                    </p>
-                    <Button
-                      onClick={handleSend}
-                      disabled={animating || !recipient.trim() || !sendAmount}
-                      className="w-full text-xl font-black h-14"
-                      data-ocid="profile.wallet.send.button"
-                    >
-                      {animating ? "भेज रहा है..." : "भेजें 🚀"}
-                    </Button>
-                  </div>
-
-                  <div className="flex flex-col gap-2">
-                    <h3 className="font-black text-xl text-foreground">
-                      📜 लेनदेन इतिहास
-                    </h3>
-                    {transactions.length === 0 ? (
-                      <div
-                        className="text-center py-8 text-muted-foreground"
-                        data-ocid="profile.wallet.empty_state"
-                      >
-                        <span className="text-4xl block mb-3">🏦</span>
-                        <p className="text-xl font-bold">कोई लेनदेन नहीं</p>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col gap-2">
-                        {transactions.map((tx: any, idx: number) => (
-                          <div
-                            key={tx.id}
-                            data-ocid={`profile.wallet.item.${idx + 1}`}
-                            className="bg-card border border-border rounded-lg px-4 py-3 flex items-center justify-between"
-                          >
-                            <div>
-                              <p className="text-base font-bold text-foreground">
-                                {tx.sender} → {tx.recipient}
-                              </p>
-                              <p className="text-base text-muted-foreground">
-                                {tx.time}
-                              </p>
-                            </div>
-                            <span className="text-xl font-black text-destructive">
-                              -₹{tx.amount + 5}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                {animating && (
-                  <CoinAnimation onComplete={handleAnimationComplete} />
-                )}
-              </TabsContent>
-
-              {/* Spin Wheel Tab */}
-              <TabsContent
-                value="spinwheel"
-                className="mt-0"
-                data-ocid="profile.settings.spinwheel.panel"
-              >
-                <div className="bg-card rounded-xl border border-border shadow-card overflow-hidden">
-                  <SpinWheel />
-                </div>
-              </TabsContent>
-
-              {/* Admin Stats Tab -- सिर्फ Prince Pawan Kumar को दिखेगा */}
-              <TabsContent
-                value="admin-stats"
-                className="mt-0"
-                data-ocid="profile.settings.admin_stats.panel"
-              >
-                <div className="bg-card rounded-xl border border-border shadow-card p-5 flex flex-col gap-5">
+          {/* Settings Tab -- सिर्फ profile owner को दिखेगा */}
+          {isOwnProfile && (
+            <TabsContent
+              value="settings"
+              className="mt-0"
+              data-ocid="profile.settings.panel"
+            >
+              {/* Dark Mode Toggle -- सिर्फ Prince Pawan Kumar (admin) को दिखेगा */}
+              {adminVerified && (
+                <div className="bg-card border border-border rounded-xl shadow-card p-4 mb-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <span className="text-3xl">📊</span>
+                    <span className="text-3xl">{dark ? "🌙" : "☀️"}</span>
                     <div>
-                      <h3 className="font-black text-xl text-foreground">
-                        Admin Stats
-                      </h3>
+                      <p className="font-bold text-lg text-foreground">
+                        डार्क मोड
+                      </p>
                       <p className="text-sm text-muted-foreground">
-                        सिर्फ Prince Pawan Kumar के लिए
+                        {dark ? "रात का थीम चालू है" : "दिन का थीम चालू है"}
                       </p>
                     </div>
                   </div>
+                  <button
+                    type="button"
+                    onClick={toggleDark}
+                    data-ocid="profile.settings.darkmode.toggle"
+                    className={`relative w-16 h-8 rounded-full transition-colors duration-300 focus:outline-none ${
+                      dark ? "bg-primary" : "bg-muted"
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white shadow-md transition-transform duration-300 ${
+                        dark ? "translate-x-8" : "translate-x-0"
+                      }`}
+                    />
+                  </button>
+                </div>
+              )}
+              <Tabs defaultValue="language">
+                <div className="overflow-x-auto pb-1">
+                  <TabsList className="w-max min-w-full grid grid-cols-5 bg-card border border-border rounded-xl shadow-card mb-4 h-14">
+                    <TabsTrigger
+                      value="language"
+                      className="text-sm rounded-lg font-bold px-3"
+                    >
+                      🌐 भाषा
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="englishguru"
+                      className="text-sm rounded-lg font-bold px-3"
+                    >
+                      🎓 English AI
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="wallet"
+                      className="text-sm rounded-lg font-bold px-3"
+                      data-ocid="profile.settings.wallet.tab"
+                    >
+                      💰 वॉलेट
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="spinwheel"
+                      className="text-sm rounded-lg font-bold px-3"
+                      data-ocid="profile.settings.spinwheel.tab"
+                    >
+                      🎡 भाग्य चक्र
+                    </TabsTrigger>
+                    {isAdmin && (
+                      <TabsTrigger
+                        value="admin-stats"
+                        className="text-sm rounded-lg font-bold px-3"
+                        data-ocid="profile.settings.admin_stats.tab"
+                        onClick={handleShowStats}
+                      >
+                        📊 Stats
+                      </TabsTrigger>
+                    )}
+                  </TabsList>
+                </div>
 
-                  {!adminVerified ? (
-                    <div className="flex flex-col gap-4">
-                      <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-center">
-                        <span className="text-4xl block mb-2">🔐</span>
-                        <p className="font-bold text-lg text-foreground">
-                          Admin पहचान verify करें
+                {/* Language */}
+                <TabsContent value="language" className="mt-0">
+                  <div className="bg-card rounded-xl border border-border shadow-card p-4">
+                    <div className="flex items-center gap-2 mb-4">
+                      <span className="text-2xl">🌐</span>
+                      <h3 className="font-black text-xl text-foreground">
+                        भाषा चुनें
+                      </h3>
+                    </div>
+                    <ScrollArea className="h-72">
+                      <div className="flex flex-col gap-2 pr-2">
+                        {LANGUAGES.map((lang) => {
+                          const isActive = selectedLang === lang.code;
+                          return (
+                            <button
+                              key={lang.code}
+                              type="button"
+                              onClick={() => handleLangSelect(lang.code)}
+                              data-ocid="profile.settings.language.button"
+                              className={`flex items-center justify-between px-4 py-3 rounded-xl transition-colors text-left ${
+                                isActive
+                                  ? "bg-primary/10 border border-primary/30"
+                                  : "hover:bg-muted border border-transparent"
+                              }`}
+                            >
+                              <div className="flex flex-col">
+                                <span
+                                  className={`text-xl font-bold leading-tight ${isActive ? "text-primary" : "text-foreground"}`}
+                                >
+                                  {lang.name}
+                                </span>
+                                <span className="text-base text-muted-foreground mt-0.5">
+                                  {lang.label}
+                                </span>
+                              </div>
+                              {isActive && (
+                                <Check className="w-6 h-6 text-primary shrink-0" />
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                </TabsContent>
+
+                {/* English Guru AI */}
+                <TabsContent value="englishguru" className="mt-0">
+                  <div className="bg-card rounded-xl border border-border shadow-card p-4">
+                    <div className="flex items-center gap-2 mb-4">
+                      <span className="text-2xl">🎓</span>
+                      <h3 className="font-black text-xl text-foreground">
+                        English Guru AI
+                      </h3>
+                    </div>
+                    <EnglishGuruAI />
+                  </div>
+                </TabsContent>
+
+                {/* Wallet */}
+                <TabsContent
+                  value="wallet"
+                  className="mt-0"
+                  data-ocid="profile.settings.wallet.panel"
+                >
+                  <div className="bg-card rounded-xl border border-border shadow-card p-4 flex flex-col gap-4">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 text-center">
+                        <p className="text-base text-muted-foreground mb-1">
+                          मेरा बैलेंस
                         </p>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          यह section सिर्फ admin के लिए है
+                        <p className="text-3xl font-black text-primary">
+                          ₹{walletBalance.toFixed(2)}
                         </p>
                       </div>
-                      <Input
-                        type="password"
-                        value={pinInput}
-                        onChange={(e) => {
-                          setPinInput(e.target.value);
-                          setPinError(false);
-                        }}
-                        placeholder="Admin password डालें"
-                        className={`text-lg h-14 ${pinError ? "border-destructive" : ""}`}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") handleAdminVerify();
-                        }}
-                        data-ocid="profile.settings.admin_stats.pin_input"
-                      />
-                      {pinError && (
-                        <p className="text-destructive text-sm font-semibold text-center">
-                          ❌ गलत password। फिर से कोशिश करें।
+                      <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-center">
+                        <p className="text-base text-muted-foreground mb-1">
+                          Admin फ़ीस
                         </p>
-                      )}
+                        <p className="text-3xl font-black text-amber-600">
+                          ₹{adminBalance.toFixed(2)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="bg-muted/50 rounded-xl p-4 border border-border flex flex-col gap-3">
+                      <h3 className="font-black text-xl text-foreground">
+                        💸 पैसे भेजें
+                      </h3>
+                      <Input
+                        value={recipient}
+                        onChange={(e) => setRecipient(e.target.value)}
+                        placeholder="प्राप्तकर्ता का नाम"
+                        className="text-lg h-14"
+                        data-ocid="profile.wallet.recipient.input"
+                      />
+                      <Input
+                        value={sendAmount}
+                        onChange={(e) => setSendAmount(e.target.value)}
+                        placeholder="राशि (₹)"
+                        type="number"
+                        min="1"
+                        className="text-lg h-14"
+                        data-ocid="profile.wallet.amount.input"
+                      />
+                      <p className="text-base text-muted-foreground">
+                        ₹5 शुल्क हर लेनदेन पर लगेगा
+                      </p>
                       <Button
-                        onClick={handleAdminVerify}
-                        disabled={!pinInput.trim()}
+                        onClick={handleSend}
+                        disabled={animating || !recipient.trim() || !sendAmount}
                         className="w-full text-xl font-black h-14"
-                        data-ocid="profile.settings.admin_stats.verify_button"
+                        data-ocid="profile.wallet.send.button"
                       >
-                        Verify करें 🔓
+                        {animating ? "भेज रहा है..." : "भेजें 🚀"}
                       </Button>
                     </div>
-                  ) : (
-                    <div className="flex flex-col gap-4">
-                      <div className="grid grid-cols-1 gap-4">
-                        <div className="bg-primary/10 border border-primary/30 rounded-2xl p-6 text-center">
-                          <p className="text-base text-muted-foreground mb-2 font-semibold">
-                            कुल App Loads
+
+                    <div className="flex flex-col gap-2">
+                      <h3 className="font-black text-xl text-foreground">
+                        📜 लेनदेन इतिहास
+                      </h3>
+                      {transactions.length === 0 ? (
+                        <div
+                          className="text-center py-8 text-muted-foreground"
+                          data-ocid="profile.wallet.empty_state"
+                        >
+                          <span className="text-4xl block mb-3">🏦</span>
+                          <p className="text-xl font-bold">कोई लेनदेन नहीं</p>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-2">
+                          {transactions.map((tx: any, idx: number) => (
+                            <div
+                              key={tx.id}
+                              data-ocid={`profile.wallet.item.${idx + 1}`}
+                              className="bg-card border border-border rounded-lg px-4 py-3 flex items-center justify-between"
+                            >
+                              <div>
+                                <p className="text-base font-bold text-foreground">
+                                  {tx.sender} → {tx.recipient}
+                                </p>
+                                <p className="text-base text-muted-foreground">
+                                  {tx.time}
+                                </p>
+                              </div>
+                              <span className="text-xl font-black text-destructive">
+                                -₹{tx.amount + 5}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {animating && (
+                    <CoinAnimation onComplete={handleAnimationComplete} />
+                  )}
+                </TabsContent>
+
+                {/* Spin Wheel Tab */}
+                <TabsContent
+                  value="spinwheel"
+                  className="mt-0"
+                  data-ocid="profile.settings.spinwheel.panel"
+                >
+                  <div className="bg-card rounded-xl border border-border shadow-card overflow-hidden">
+                    <SpinWheel />
+                  </div>
+                </TabsContent>
+
+                {/* Admin Stats Tab -- सिर्फ Prince Pawan Kumar को दिखेगा */}
+                <TabsContent
+                  value="admin-stats"
+                  className="mt-0"
+                  data-ocid="profile.settings.admin_stats.panel"
+                >
+                  <div className="bg-card rounded-xl border border-border shadow-card p-5 flex flex-col gap-5">
+                    <div className="flex items-center gap-3">
+                      <span className="text-3xl">📊</span>
+                      <div>
+                        <h3 className="font-black text-xl text-foreground">
+                          Admin Stats
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          सिर्फ Prince Pawan Kumar के लिए
+                        </p>
+                      </div>
+                    </div>
+
+                    {!adminVerified ? (
+                      <div className="flex flex-col gap-4">
+                        <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-center">
+                          <span className="text-4xl block mb-2">🔐</span>
+                          <p className="font-bold text-lg text-foreground">
+                            Admin पहचान verify करें
                           </p>
-                          <p className="text-6xl font-black text-primary">
-                            {appLoads}
+                          <p className="text-sm text-muted-foreground mt-1">
+                            यह section सिर्फ admin के लिए है
                           </p>
-                          <p className="text-sm text-muted-foreground mt-2">
-                            बार app खोला गया है
+                        </div>
+                        <Input
+                          type="password"
+                          value={pinInput}
+                          onChange={(e) => {
+                            setPinInput(e.target.value);
+                            setPinError(false);
+                          }}
+                          placeholder="Admin password डालें"
+                          className={`text-lg h-14 ${pinError ? "border-destructive" : ""}`}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") handleAdminVerify();
+                          }}
+                          data-ocid="profile.settings.admin_stats.pin_input"
+                        />
+                        {pinError && (
+                          <p className="text-destructive text-sm font-semibold text-center">
+                            ❌ गलत password। फिर से कोशिश करें।
+                          </p>
+                        )}
+                        <Button
+                          onClick={handleAdminVerify}
+                          disabled={!pinInput.trim()}
+                          className="w-full text-xl font-black h-14"
+                          data-ocid="profile.settings.admin_stats.verify_button"
+                        >
+                          Verify करें 🔓
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-4">
+                        <div className="grid grid-cols-1 gap-4">
+                          <div className="bg-primary/10 border border-primary/30 rounded-2xl p-6 text-center">
+                            <p className="text-base text-muted-foreground mb-2 font-semibold">
+                              कुल App Loads
+                            </p>
+                            <p className="text-6xl font-black text-primary">
+                              {appLoads}
+                            </p>
+                            <p className="text-sm text-muted-foreground mt-2">
+                              बार app खोला गया है
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          onClick={handleShowStats}
+                          className="w-full text-base font-bold h-12"
+                          data-ocid="profile.settings.admin_stats.refresh_button"
+                        >
+                          🔄 Refresh करें
+                        </Button>
+                        <div className="bg-muted/50 rounded-xl p-4 border border-border">
+                          <p className="text-sm text-muted-foreground text-center leading-relaxed">
+                            यह count हर बार profile खुलने पर बढ़ता है। बाकी कोई भी
+                            user यह नहीं देख सकता।
                           </p>
                         </div>
                       </div>
-                      <Button
-                        variant="outline"
-                        onClick={handleShowStats}
-                        className="w-full text-base font-bold h-12"
-                        data-ocid="profile.settings.admin_stats.refresh_button"
-                      >
-                        🔄 Refresh करें
-                      </Button>
-                      <div className="bg-muted/50 rounded-xl p-4 border border-border">
-                        <p className="text-sm text-muted-foreground text-center leading-relaxed">
-                          यह count हर बार profile खुलने पर बढ़ता है। बाकी कोई भी
-                          user यह नहीं देख सकता।
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </TabsContent>
-            </Tabs>
-          </TabsContent>
+                    )}
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </TabsContent>
+          )}
         </Tabs>
       </div>
 
