@@ -62,8 +62,8 @@ const GIFT_CHARACTERS = [
     emoji: "🧙‍♂️",
     note: "💷",
     noteValue: 50,
-    purchasePrice: 57,
-    adminFee: 7,
+    purchasePrice: 55,
+    adminFee: 5,
     label: "₹50 वाला",
     color: "from-orange-400 to-amber-500",
     textColor: "text-amber-700",
@@ -221,7 +221,7 @@ export default function GiftCharacterPanel({
               <ScrollArea className="flex-1">
                 <div className="p-4">
                   <p className="text-xs text-muted-foreground mb-4 text-center">
-                    💡 खरीदें और creator को सीधे भेजें! ₹5 Admin fee लगेगी
+                    💡 खरीदें और creator को सीधे भेजें! हर बार भेजने पर ₹5 Admin fee
                   </p>
 
                   <div className="grid grid-cols-1 gap-3">
