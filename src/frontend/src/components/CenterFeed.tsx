@@ -1,10 +1,15 @@
+import { useFollowers } from "@/hooks/useFollowers";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { useLanguage } from "../utils/i18n";
+import BackgroundMusicPlayer from "./BackgroundMusicPlayer";
 import CreatePost from "./CreatePost";
+import HindiQuotesCard from "./HindiQuotesCard";
+import KingdomClockWidget from "./KingdomClockWidget";
 import PostCard from "./PostCard";
 import StoryCreator from "./StoryCreator";
 import StoryViewer, { type Story } from "./StoryViewer";
+import TaskBoard from "./TaskBoard";
 import VideoPostCard from "./VideoPostCard";
 
 export interface Post {
@@ -81,11 +86,17 @@ function saveStoriesToStorage(stories: Story[]) {
 interface CenterFeedProps {
   showReminderBanner?: boolean;
   onDismissReminderBanner?: () => void;
+  onNavigateProfile?: () => void;
+  onOpenWallet?: () => void;
+  onOpenSettings?: () => void;
 }
 
 export default function CenterFeed({
   showReminderBanner,
   onDismissReminderBanner,
+  onNavigateProfile,
+  onOpenWallet,
+  onOpenSettings,
 }: CenterFeedProps) {
   const { t } = useLanguage();
   const [posts, setPosts] = useState<Post[]>(() => loadPostsFromStorage());
@@ -94,6 +105,10 @@ export default function CenterFeed({
   );
   const [creatorOpen, setCreatorOpen] = useState(false);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
+  const [feedFilter, setFeedFilter] = useState<"all" | "following">("all");
+
+  const userProfile = getUserProfile();
+  const { following } = useFollowers("PPK");
 
   // Persist posts to localStorage whenever they change
   useEffect(() => {
@@ -109,10 +124,19 @@ export default function CenterFeed({
     (s) => Date.now() - s.createdAt < EXPIRY_MS,
   );
 
+  const filteredPosts =
+    feedFilter === "all"
+      ? posts
+      : posts.filter(
+          (p) =>
+            following.includes(p.authorInitials?.toUpperCase() ?? "") ||
+            p.authorMobile === userProfile?.mobile,
+        );
+
   const handleNewPost = (content: string, videoUrl?: string) => {
-    const userProfile = getUserProfile();
-    const authorName = userProfile?.name ?? "Prince Pawan Kumar";
-    const authorMobile = userProfile?.mobile ?? "admin";
+    const profile = getUserProfile();
+    const authorName = profile?.name ?? "Prince Pawan Kumar";
+    const authorMobile = profile?.mobile ?? "admin";
     const newPost: Post = {
       id: Date.now().toString(),
       author: authorName,
@@ -153,8 +177,8 @@ export default function CenterFeed({
     filterStyle: string,
     filterName: string,
   ) => {
-    const userProfile = getUserProfile();
-    const authorName = userProfile?.name ?? "Prince Pawan Kumar";
+    const profile = getUserProfile();
+    const authorName = profile?.name ?? "Prince Pawan Kumar";
     const newStory: Story = {
       id: Date.now().toString(),
       author: authorName,
@@ -169,6 +193,22 @@ export default function CenterFeed({
 
   return (
     <div className="flex flex-col gap-2">
+      {/* Background Music Player (fixed positioned) */}
+      <BackgroundMusicPlayer />
+
+      {/* Kingdom Clock Widget */}
+      <KingdomClockWidget
+        onNavigateProfile={onNavigateProfile ?? (() => {})}
+        onOpenWallet={onOpenWallet ?? (() => {})}
+        onOpenSettings={onOpenSettings ?? (() => {})}
+      />
+
+      {/* Hindi Quotes Card */}
+      <HindiQuotesCard />
+
+      {/* Task Board */}
+      <TaskBoard />
+
       {/* Reminder Banner */}
       <AnimatePresence>
         {showReminderBanner && (
@@ -241,7 +281,6 @@ export default function CenterFeed({
             >
               <div className="w-14 h-14 rounded-full p-0.5 shadow-md story-ring-anim">
                 <div className="w-full h-full rounded-full overflow-hidden border-2 border-card">
-                  {/* biome-ignore lint/a11y/useMediaCaption: Story thumbnail */}
                   <video
                     src={story.videoUrl}
                     muted
@@ -266,9 +305,49 @@ export default function CenterFeed({
 
       <CreatePost onPost={handleNewPost} />
 
+      {/* Feed filter tabs */}
+      <div className="flex gap-2 px-1" data-ocid="feed.filter.tab">
+        <button
+          type="button"
+          onClick={() => setFeedFilter("all")}
+          className="flex-1 py-1.5 rounded-full text-xs font-bold transition-all"
+          style={{
+            background:
+              feedFilter === "all"
+                ? "oklch(0.62 0.09 66)"
+                : "oklch(0.92 0.02 70)",
+            color:
+              feedFilter === "all"
+                ? "oklch(0.98 0.01 72)"
+                : "oklch(0.45 0.05 58)",
+          }}
+          data-ocid="feed.all.tab"
+        >
+          सभी
+        </button>
+        <button
+          type="button"
+          onClick={() => setFeedFilter("following")}
+          className="flex-1 py-1.5 rounded-full text-xs font-bold transition-all"
+          style={{
+            background:
+              feedFilter === "following"
+                ? "oklch(0.62 0.09 66)"
+                : "oklch(0.92 0.02 70)",
+            color:
+              feedFilter === "following"
+                ? "oklch(0.98 0.01 72)"
+                : "oklch(0.45 0.05 58)",
+          }}
+          data-ocid="feed.following.tab"
+        >
+          फ़ॉलोइंग
+        </button>
+      </div>
+
       {/* Unified Feed — all posts (video + text) in chronological order */}
       <AnimatePresence initial={false}>
-        {posts.length === 0 ? (
+        {filteredPosts.length === 0 ? (
           <motion.div
             key="empty"
             initial={{ opacity: 0 }}
@@ -279,15 +358,19 @@ export default function CenterFeed({
             <div className="text-4xl">📰</div>
             <div>
               <p className="text-sm font-bold text-foreground">
-                अभी कोई पोस्ट नहीं
+                {feedFilter === "following"
+                  ? "फ़ॉलोइंग में कोई पोस्ट नहीं"
+                  : "अभी कोई पोस्ट नहीं"}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                पहली पोस्ट डालें और अपनी बात शेयर करें!
+                {feedFilter === "following"
+                  ? "किसी को follow करें या 'सभी' tab देखें"
+                  : "पहली पोस्ट डालें और अपनी बात शेयर करें!"}
               </p>
             </div>
           </motion.div>
         ) : (
-          posts.map((post, idx) => (
+          filteredPosts.map((post, idx) => (
             <motion.div
               key={post.id}
               initial={{ opacity: 0, y: 20 }}

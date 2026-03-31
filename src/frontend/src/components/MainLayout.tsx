@@ -14,7 +14,9 @@ import NotificationsPanel from "./NotificationsPanel";
 import ProfilePage from "./ProfilePage";
 import ReelsView from "./ReelsView";
 import RightSidebar from "./RightSidebar";
+import SettingsPanel from "./SettingsPanel";
 import TravelChatPanel from "./TravelChatPanel";
+import WalletPanel from "./WalletPanel";
 
 interface MainLayoutProps {
   showReminderBanner?: boolean;
@@ -28,6 +30,8 @@ export default function MainLayout({
   const [currentView, setCurrentView] = useState<View>("home");
   const [notifOpen, setNotifOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [walletOpen, setWalletOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const notificationsValue = useNotificationsState();
 
   const handleNavigate = (view: View) => {
@@ -66,6 +70,9 @@ export default function MainLayout({
               <CenterFeed
                 showReminderBanner={showReminderBanner}
                 onDismissReminderBanner={onDismissReminderBanner}
+                onNavigateProfile={() => setCurrentView("profile")}
+                onOpenWallet={() => setWalletOpen(true)}
+                onOpenSettings={() => setSettingsOpen(true)}
               />
             )}
           </main>
@@ -87,6 +94,15 @@ export default function MainLayout({
         />
 
         <TravelChatPanel open={chatOpen} onClose={() => setChatOpen(false)} />
+
+        {/* Wallet panel from clock/home navigation */}
+        <WalletPanel open={walletOpen} onClose={() => setWalletOpen(false)} />
+
+        {/* Settings panel from clock/home navigation */}
+        <SettingsPanel
+          open={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+        />
       </div>
     </NotificationsContext.Provider>
   );

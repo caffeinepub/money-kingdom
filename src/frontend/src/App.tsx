@@ -7,6 +7,7 @@ import MoneyRain from "./components/MoneyRain";
 import { useDarkMode } from "./hooks/useDarkMode";
 import { useReminderNotification } from "./hooks/useReminderNotification";
 import { useSessionTimer } from "./hooks/useSessionTimer";
+import { useTheme } from "./hooks/useTheme";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +62,8 @@ function AppInner() {
   const { showBanner, dismissBanner } = useReminderNotification();
   // Initialize dark mode on app start
   useDarkMode();
+  // Initialize theme on app start (applies saved theme to CSS variables)
+  useTheme();
 
   if (!loggedIn) {
     return (

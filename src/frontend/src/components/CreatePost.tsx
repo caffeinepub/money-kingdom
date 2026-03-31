@@ -1,12 +1,24 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { Image, MapPin, Smile, Video, X } from "lucide-react";
+import { Image, MapPin, Music, Smile, Video, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import VideoEditorModal, { type VideoMetadata } from "./VideoEditorModal";
+
+const MUSIC_STICKERS = [
+  "🎵 पैसा बोलता है...",
+  "🎵 किंगडम की राह...",
+  "🎵 मेहनत की धूप...",
+];
 
 interface CreatePostProps {
   onPost: (content: string, videoUrl?: string) => void;
@@ -41,6 +53,11 @@ export default function CreatePost({ onPost }: CreatePostProps) {
     setEditorOpen(false);
     setPendingVideoUrl(null);
     if (videoInputRef.current) videoInputRef.current.value = "";
+  };
+
+  const handleMusicSticker = (lyric: string) => {
+    setContent((prev) => (prev.trim() ? `${prev}\n${lyric}` : lyric));
+    toast.success("🎵 संगीत जुड़ गया!");
   };
 
   const handleSubmit = () => {
@@ -167,16 +184,16 @@ export default function CreatePost({ onPost }: CreatePostProps) {
 
           <Separator className="my-4" />
 
-          {/* Action buttons row */}
-          <div className="grid grid-cols-4 gap-1 mb-4">
+          {/* Action buttons row — 5 columns */}
+          <div className="grid grid-cols-5 gap-1 mb-4">
             <button
               type="button"
               onClick={() => imageInputRef.current?.click()}
               className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl hover:bg-muted transition-colors"
               data-ocid="post.upload_button"
             >
-              <Image className="w-9 h-9 text-green-500" />
-              <span className="text-base font-bold text-muted-foreground">
+              <Image className="w-7 h-7 text-green-500" />
+              <span className="text-xs font-bold text-muted-foreground">
                 📷 फ़ोटो
               </span>
             </button>
@@ -186,9 +203,9 @@ export default function CreatePost({ onPost }: CreatePostProps) {
               className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl hover:bg-muted transition-colors"
               data-ocid="post.upload_button"
             >
-              <Video className="w-9 h-9 text-red-500" />
-              <span className="text-base font-bold text-muted-foreground">
-                🎬 वीडियो
+              <Video className="w-7 h-7 text-red-500" />
+              <span className="text-xs font-bold text-muted-foreground">
+                🎥 वीडियो
               </span>
             </button>
             <button
@@ -196,8 +213,8 @@ export default function CreatePost({ onPost }: CreatePostProps) {
               className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl hover:bg-muted transition-colors"
               data-ocid="post.button"
             >
-              <Smile className="w-9 h-9 text-yellow-500" />
-              <span className="text-base font-bold text-muted-foreground">
+              <Smile className="w-7 h-7 text-yellow-500" />
+              <span className="text-xs font-bold text-muted-foreground">
                 😊 भावना
               </span>
             </button>
@@ -206,11 +223,38 @@ export default function CreatePost({ onPost }: CreatePostProps) {
               className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl hover:bg-muted transition-colors"
               data-ocid="post.button"
             >
-              <MapPin className="w-9 h-9 text-blue-500" />
-              <span className="text-base font-bold text-muted-foreground">
+              <MapPin className="w-7 h-7 text-blue-500" />
+              <span className="text-xs font-bold text-muted-foreground">
                 📍 चेक-इन
               </span>
             </button>
+
+            {/* Music Sticker button */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl hover:bg-muted transition-colors"
+                  data-ocid="post.button"
+                >
+                  <Music className="w-7 h-7 text-purple-500" />
+                  <span className="text-xs font-bold text-muted-foreground">
+                    🎵 संगीत
+                  </span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52">
+                {MUSIC_STICKERS.map((lyric) => (
+                  <DropdownMenuItem
+                    key={lyric}
+                    onClick={() => handleMusicSticker(lyric)}
+                    className="text-sm font-medium cursor-pointer"
+                  >
+                    {lyric}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           <Button

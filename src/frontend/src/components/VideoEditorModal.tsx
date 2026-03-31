@@ -223,7 +223,6 @@ export default function VideoEditorModal({
 
       {/* Video Preview */}
       <div className="relative bg-black shrink-0">
-        {/* biome-ignore lint/a11y/useMediaCaption: user-uploaded video */}
         <video
           src={videoUrl}
           className="w-full aspect-video object-contain"

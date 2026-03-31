@@ -751,7 +751,6 @@ export default function ProfilePage({
                   >
                     {post.videoUrl ? (
                       <div className="relative w-full h-full">
-                        {/* biome-ignore lint/a11y/useMediaCaption: Profile grid thumbnail */}
                         <video
                           src={post.videoUrl}
                           muted
@@ -796,7 +795,6 @@ export default function ProfilePage({
                   >
                     {post.videoUrl ? (
                       <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-muted">
-                        {/* biome-ignore lint/a11y/useMediaCaption: Profile list thumbnail */}
                         <video
                           src={post.videoUrl}
                           muted

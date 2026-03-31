@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Check } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
+import { type ThemeName, useTheme } from "../hooks/useTheme";
 import { setLanguage, useLanguage } from "../utils/i18n";
 import EnglishGuruAI from "./EnglishGuruAI";
 
@@ -20,15 +21,15 @@ const LANGUAGES = [
   { code: "or", name: "ଓଡ଼ିଆ", label: "Odia" },
   { code: "ur", name: "اردو", label: "Urdu" },
   { code: "as", name: "অসমীয়া", label: "Assamese" },
-  { code: "mni", name: "মৈতৈলোন্", label: "Manipuri" },
+  { code: "mni", name: "মৈতৈলোন্‌", label: "Manipuri" },
   { code: "kok", name: "कोंकणी", label: "Konkani" },
   { code: "mai", name: "मैथिली", label: "Maithili" },
   { code: "doi", name: "डोगरी", label: "Dogri" },
-  { code: "ks", name: "كٲشُر", label: "Kashmiri" },
+  { code: "ks", name: "كۂشُر", label: "Kashmiri" },
   { code: "sa", name: "संस्कृतम्", label: "Sanskrit" },
   { code: "sd", name: "سنڌي", label: "Sindhi" },
-  { code: "bo", name: "བོད་སྐད།", label: "Bodo" },
-  { code: "sat", name: "ᱥᱟᱱᱛᱟᱲᱤ", label: "Santali" },
+  { code: "bo", name: "བོད་སཀད་", label: "Bodo" },
+  { code: "sat", name: "ᱥᱟᱬᱟᱱᱟᱜᱩ", label: "Santali" },
   { code: "ne", name: "नेपाली", label: "Nepali" },
   // विश्व की प्रमुख भाषाएं
   { code: "en", name: "English", label: "English" },
@@ -51,6 +52,36 @@ const LANGUAGES = [
   { code: "pl", name: "Polski", label: "Polish" },
 ];
 
+const THEMES: {
+  id: ThemeName;
+  icon: string;
+  name: string;
+  desc: string;
+  preview: string;
+}[] = [
+  {
+    id: "royal-gold",
+    icon: "🌟",
+    name: "Royal Gold",
+    desc: "गर्म earthy tones — डिफ़ॉल्ट",
+    preview: "oklch(0.96 0.02 72)",
+  },
+  {
+    id: "night-black",
+    icon: "🌙",
+    name: "Night Black",
+    desc: "गहरा काला और सोना",
+    preview: "oklch(0.12 0.02 40)",
+  },
+  {
+    id: "diamond-silver",
+    icon: "📎",
+    name: "Diamond Silver",
+    desc: "ठंडा silver और blue",
+    preview: "oklch(0.97 0.005 240)",
+  },
+];
+
 function getStoredLang() {
   return localStorage.getItem("mk_language") ?? "hi";
 }
@@ -63,6 +94,7 @@ interface SettingsPanelProps {
 export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
   const [selected, setSelected] = useState<string>(getStoredLang);
   const { t } = useLanguage();
+  const { theme, setTheme } = useTheme();
 
   const handleSelect = (code: string) => {
     setSelected(code);
@@ -117,7 +149,7 @@ export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
               defaultValue="language"
               className="flex flex-col flex-1 min-h-0"
             >
-              <TabsList className="mx-4 mt-3 shrink-0 grid grid-cols-2">
+              <TabsList className="mx-4 mt-3 shrink-0 grid grid-cols-3">
                 <TabsTrigger value="language" data-ocid="settings.language.tab">
                   🌐 {t("select_language")}
                 </TabsTrigger>
@@ -125,7 +157,10 @@ export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
                   value="english-guru"
                   data-ocid="settings.english_guru.tab"
                 >
-                  🎓 English Guru AI
+                  🎓 English Guru
+                </TabsTrigger>
+                <TabsTrigger value="theme" data-ocid="settings.theme.tab">
+                  🎨 थीम
                 </TabsTrigger>
               </TabsList>
 
@@ -177,7 +212,7 @@ export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
                       })}
                     </div>
                     <p className="text-xs text-muted-foreground mt-4 text-center leading-relaxed">
-                      यह सेटिंग सिर्फ आपके लिए है। ऐप की भाषा बदलेगी।
+                      यह सेटिंग सिर्फ आपके लिए है। एप्प की भाषा बदलेगी।
                     </p>
                   </div>
                 </ScrollArea>
@@ -189,6 +224,65 @@ export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
                 className="flex-1 min-h-0 data-[state=active]:flex data-[state=active]:flex-col"
               >
                 <EnglishGuruAI />
+              </TabsContent>
+
+              {/* Theme Tab */}
+              <TabsContent
+                value="theme"
+                className="flex-1 min-h-0 data-[state=active]:flex data-[state=active]:flex-col"
+              >
+                <ScrollArea className="flex-1">
+                  <div className="px-4 py-4 flex flex-col gap-3">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      थीम चुनें
+                    </p>
+                    <p className="text-xs text-muted-foreground -mt-1">
+                      अपने Money Kingdom का रंग बदलें
+                    </p>
+                    {THEMES.map((t_item) => {
+                      const isActive = theme === t_item.id;
+                      return (
+                        <button
+                          key={t_item.id}
+                          type="button"
+                          onClick={() => setTheme(t_item.id)}
+                          data-ocid={`settings.theme.${t_item.id}.button`}
+                          className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left ${
+                            isActive
+                              ? "border-primary shadow-md"
+                              : "border-border hover:border-primary/40"
+                          }`}
+                        >
+                          {/* Color preview swatch */}
+                          <div
+                            className="w-12 h-12 rounded-xl shrink-0 border border-border shadow-sm flex items-center justify-center text-xl"
+                            style={{ background: t_item.preview }}
+                          >
+                            {t_item.icon}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p
+                              className={`font-bold text-sm ${
+                                isActive ? "text-primary" : "text-foreground"
+                              }`}
+                            >
+                              {t_item.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {t_item.desc}
+                            </p>
+                          </div>
+                          {isActive && (
+                            <Check className="w-5 h-5 text-primary shrink-0" />
+                          )}
+                        </button>
+                      );
+                    })}
+                    <p className="text-xs text-muted-foreground mt-2 text-center">
+                      थीम चुनने से आपका पूरा app तुरंत बदलेगा
+                    </p>
+                  </div>
+                </ScrollArea>
               </TabsContent>
             </Tabs>
           </motion.div>

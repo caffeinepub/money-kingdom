@@ -47,6 +47,7 @@ const REACTIONS = [
   { emoji: "😮", label: "वाह", color: "text-yellow-400" },
   { emoji: "😢", label: "दुख", color: "text-blue-400" },
   { emoji: "😠", label: "गुस्सा", color: "text-orange-500" },
+  { emoji: "👑", label: "किंगडम", color: "text-yellow-500" },
 ];
 
 interface PostCardProps {
@@ -54,6 +55,31 @@ interface PostCardProps {
   onToggleLike: (id: string) => void;
   onDelete?: (id: string) => void;
   markerIndex: number;
+}
+
+function renderPostContent(content: string) {
+  const lines = content.split("\n");
+  const musicLines = lines.filter((l) => l.startsWith("🎵 "));
+  const textLines = lines.filter((l) => !l.startsWith("🎵 "));
+  const textContent = textLines.join("\n").trim();
+
+  return (
+    <>
+      {textContent && (
+        <p className="text-sm text-foreground leading-normal whitespace-pre-line">
+          {textContent}
+        </p>
+      )}
+      {musicLines.map((line) => (
+        <div
+          key={line}
+          className="mt-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border-l-2 border-primary bg-primary/10 text-primary"
+        >
+          {line}
+        </div>
+      ))}
+    </>
+  );
 }
 
 export default function PostCard({
@@ -71,6 +97,7 @@ export default function PostCard({
   >(null);
   const [saved, setSaved] = useState(false);
   const [showHeartAnim, setShowHeartAnim] = useState(false);
+  const [showCrownAnim, setShowCrownAnim] = useState(false);
   const { t } = useLanguage();
   const [showGiftPanel, setShowGiftPanel] = useState(false);
   const reactionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -102,6 +129,11 @@ export default function PostCard({
     setShowReactions(false);
     playLikeSound();
     if (!post.liked) onToggleLike(post.id);
+    // Crown animation
+    if (reaction.emoji === "👑") {
+      setShowCrownAnim(true);
+      setTimeout(() => setShowCrownAnim(false), 900);
+    }
   };
 
   const handleLikePress = () => {
@@ -257,9 +289,9 @@ export default function PostCard({
             className="text-left relative"
             onClick={handleImageDoubleTap}
           >
-            <p className="text-sm text-foreground leading-normal whitespace-pre-line">
-              {post.content}
-            </p>
+            {renderPostContent(post.content)}
+
+            {/* Heart double-tap animation */}
             <AnimatePresence>
               {showHeartAnim && (
                 <motion.div
@@ -270,6 +302,21 @@ export default function PostCard({
                   transition={{ duration: 0.8 }}
                 >
                   <span className="text-5xl">❤️</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Crown reaction animation */}
+            <AnimatePresence>
+              {showCrownAnim && (
+                <motion.div
+                  className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                  initial={{ scale: 0, opacity: 1 }}
+                  animate={{ scale: [0, 1.6, 1.0], opacity: [1, 1, 0] }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.9, times: [0, 0.5, 1] }}
+                >
+                  <span className="text-5xl">👑</span>
                 </motion.div>
               )}
             </AnimatePresence>
