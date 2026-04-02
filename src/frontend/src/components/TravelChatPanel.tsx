@@ -45,10 +45,16 @@ export default function TravelChatPanel({
 }: TravelChatPanelProps) {
   const [messages, setMessages] = useState<Message[]>(loadMessages);
   const [text, setText] = useState("");
+  const [dragY, setDragY] = useState(0);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (open) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (open) {
+      setTimeout(
+        () => bottomRef.current?.scrollIntoView({ behavior: "smooth" }),
+        100,
+      );
+    }
   }, [open]);
 
   const handleSend = () => {
@@ -87,21 +93,34 @@ export default function TravelChatPanel({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/50"
+            className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm"
             onClick={onClose}
           />
 
-          {/* Panel */}
+          {/* Full-screen panel */}
           <motion.div
             key="chat-panel"
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
+            drag="y"
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0, bottom: 0.3 }}
+            onDrag={(_, info) => setDragY(info.offset.y)}
+            onDragEnd={(_, info) => {
+              setDragY(0);
+              if (info.offset.y > 100) onClose();
+            }}
             transition={{ type: "spring", damping: 28, stiffness: 280 }}
-            className="fixed bottom-0 inset-x-0 z-[110] sm:inset-auto sm:bottom-6 sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-lg bg-card border border-border rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col"
-            style={{ height: "88vh" }}
+            className="fixed inset-0 z-[110] bg-card flex flex-col"
+            style={{ height: "100dvh" }}
             data-ocid="travel_chat.panel"
           >
+            {/* Drag handle */}
+            <div className="flex justify-center pt-3 pb-1 shrink-0">
+              <div className="w-10 h-1.5 rounded-full bg-muted-foreground/30" />
+            </div>
+
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
               <div className="flex items-center gap-2">
@@ -117,11 +136,20 @@ export default function TravelChatPanel({
                 type="button"
                 onClick={onClose}
                 data-ocid="travel_chat.close_button"
-                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors text-lg"
+                className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors text-lg"
               >
                 ✕
               </button>
             </div>
+
+            {/* Swipe hint */}
+            {dragY > 30 && (
+              <div className="absolute top-16 left-0 right-0 flex justify-center pointer-events-none">
+                <span className="text-xs text-muted-foreground bg-muted/80 px-3 py-1 rounded-full">
+                  ↓ नीचे खींचें बंद करने के लिए
+                </span>
+              </div>
+            )}
 
             {/* Messages */}
             <ScrollArea className="flex-1 px-3 py-2">

@@ -5,53 +5,94 @@ import {
   Heart,
   MessageCircle,
   Music2,
-  Play,
   Send,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { Post } from "./CenterFeed";
 
-interface Reel {
-  id: string;
-  user: string;
-  initials: string;
-  caption: string;
-  song: string;
-  likes: number;
-  comments: number;
-  liked: boolean;
-  saved: boolean;
+const POSTS_KEY = "mk_all_posts";
+
+function loadVideoPosts(): Post[] {
+  try {
+    const raw = localStorage.getItem(POSTS_KEY);
+    const all: Post[] = raw ? JSON.parse(raw) : [];
+    return all.filter((p) => !!p.videoUrl);
+  } catch {
+    return [];
+  }
 }
 
-const EMPTY_REELS: Reel[] = [];
+function buildLikesMap(posts: Post[]): Record<string, number> {
+  const map: Record<string, number> = {};
+  for (const p of posts) {
+    map[p.id] = p.likes;
+  }
+  return map;
+}
 
 interface ReelsViewProps {
   onBack: () => void;
 }
 
 export default function ReelsView({ onBack }: ReelsViewProps) {
-  const [reels, setReels] = useState<Reel[]>(EMPTY_REELS);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [reels, setReels] = useState<Post[]>(() => loadVideoPosts());
+  const [likedMap, setLikedMap] = useState<Record<string, boolean>>({});
+  const [savedMap, setSavedMap] = useState<Record<string, boolean>>({});
+  const [likesMap, setLikesMap] = useState<Record<string, number>>(() =>
+    buildLikesMap(loadVideoPosts()),
+  );
   const containerRef = useRef<HTMLDivElement>(null);
+  const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
+
+  // Reload posts when component mounts
+  useEffect(() => {
+    const posts = loadVideoPosts();
+    setReels(posts);
+    setLikesMap(buildLikesMap(posts));
+  }, []);
+
+  // Intersection observer to auto-play visible video
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const vid = entry.target as HTMLVideoElement;
+          if (entry.isIntersecting) {
+            vid.play().catch(() => {});
+          } else {
+            vid.pause();
+          }
+        }
+      },
+      { threshold: 0.7 },
+    );
+    const vids = Object.values(videoRefs.current).filter(Boolean);
+    for (const v of vids) {
+      if (v) observer.observe(v);
+    }
+    return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleLike = (id: string) => {
-    setReels((prev) =>
-      prev.map((r) =>
-        r.id === id
-          ? {
-              ...r,
-              liked: !r.liked,
-              likes: r.liked ? r.likes - 1 : r.likes + 1,
-            }
-          : r,
-      ),
-    );
+    const wasLiked = likedMap[id] ?? false;
+    setLikedMap((prev) => ({ ...prev, [id]: !wasLiked }));
+    setLikesMap((prev) => ({
+      ...prev,
+      [id]: wasLiked ? (prev[id] ?? 0) - 1 : (prev[id] ?? 0) + 1,
+    }));
   };
 
   const handleSave = (id: string) => {
-    setReels((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, saved: !r.saved } : r)),
-    );
+    setSavedMap((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleShare = (post: Post) => {
+    const text = `Money Kingdom पर देखें: ${post.author} की वीडियो! 👑\n${post.content}`;
+    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(url, "_blank");
   };
 
   if (reels.length === 0) {
@@ -60,8 +101,7 @@ export default function ReelsView({ onBack }: ReelsViewProps) {
         className="fixed inset-0 z-50 bg-black flex flex-col"
         data-ocid="reels.page"
       >
-        {/* Top bar */}
-        <div className="absolute top-0 inset-x-0 z-10 flex items-center justify-between px-4 pt-safe pt-4">
+        <div className="absolute top-0 inset-x-0 z-10 flex items-center justify-between px-4 pt-4">
           <button
             type="button"
             onClick={onBack}
@@ -73,8 +113,6 @@ export default function ReelsView({ onBack }: ReelsViewProps) {
           <span className="text-white text-3xl font-black">रील्स</span>
           <div className="w-14" />
         </div>
-
-        {/* Empty state */}
         <div
           className="flex-1 flex flex-col items-center justify-center gap-6"
           data-ocid="reels.empty_state"
@@ -89,7 +127,7 @@ export default function ReelsView({ onBack }: ReelsViewProps) {
             <p className="text-white text-3xl font-black mb-3">
               अभी कोई रील नहीं है
             </p>
-            <p className="text-white/60 text-xl">रील्स अपलोड होने पर यहाँ दिखेंगी</p>
+            <p className="text-white/60 text-xl">वीडियो पोस्ट करें, यहाँ दिखेंगी</p>
           </motion.div>
           <button
             type="button"
@@ -104,133 +142,160 @@ export default function ReelsView({ onBack }: ReelsViewProps) {
     );
   }
 
-  const reel = reels[currentIndex];
-
   return (
     <div
-      ref={containerRef}
-      className="fixed inset-0 z-50 bg-black overflow-hidden"
+      className="fixed inset-0 z-50 bg-black"
+      style={{ overscrollBehavior: "contain" }}
       data-ocid="reels.page"
     >
       {/* Top bar */}
-      <div className="absolute top-0 inset-x-0 z-10 flex items-center justify-between px-4 pt-4">
+      <div className="absolute top-0 inset-x-0 z-20 flex items-center justify-between px-4 pt-4 pointer-events-none">
         <button
           type="button"
           onClick={onBack}
-          className="w-14 h-14 rounded-full bg-black/40 backdrop-blur flex items-center justify-center text-white"
+          className="w-12 h-12 rounded-full bg-black/50 backdrop-blur flex items-center justify-center text-white pointer-events-auto"
           data-ocid="reels.close_button"
         >
-          <ArrowLeft className="w-8 h-8" />
+          <ArrowLeft className="w-6 h-6" />
         </button>
-        <span className="text-white text-3xl font-black">रील्स</span>
-        <div className="w-14" />
+        <span className="text-white text-2xl font-black">रील्स</span>
+        <div className="w-12" />
       </div>
 
-      {/* Reel content */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={reel.id}
-          className="absolute inset-0 flex items-center justify-center bg-zinc-900"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          {/* Video placeholder */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Play className="w-24 h-24 text-white/40" />
-          </div>
+      {/* Snap scroll container */}
+      <div
+        ref={containerRef}
+        className="h-full w-full overflow-y-scroll"
+        style={{ scrollSnapType: "y mandatory" }}
+      >
+        {reels.map((reel) => (
+          <div
+            key={reel.id}
+            className="relative w-full flex items-center justify-center bg-black"
+            style={{ height: "100dvh", scrollSnapAlign: "start" }}
+          >
+            {/* Video */}
+            <video
+              ref={(el) => {
+                videoRefs.current[reel.id] = el;
+              }}
+              src={reel.videoUrl}
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="absolute inset-0 w-full h-full object-cover"
+            />
 
-          {/* Bottom overlay */}
-          <div className="absolute bottom-0 inset-x-0 pb-6 px-4 bg-gradient-to-t from-black/80 to-transparent">
-            <div className="flex items-end gap-3 mb-4">
-              <Avatar className="w-14 h-14 border-2 border-white">
-                <AvatarFallback className="bg-primary text-primary-foreground font-bold">
-                  {reel.initials}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <p className="text-white text-xl font-black">{reel.user}</p>
-                <p className="text-white/80 text-lg">{reel.caption}</p>
-                <div className="flex items-center gap-2 mt-1">
-                  <Music2 className="w-5 h-5 text-white/60" />
-                  <span className="text-white/60 text-base truncate">
-                    {reel.song}
-                  </span>
-                </div>
+            {/* Gradient overlays */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
+
+            {/* Bottom info */}
+            <div className="absolute bottom-0 left-0 right-16 pb-6 px-4 z-10">
+              <div className="flex items-center gap-2 mb-2">
+                <Avatar className="w-10 h-10 border-2 border-white shrink-0">
+                  <AvatarFallback className="bg-primary text-primary-foreground font-bold text-sm">
+                    {reel.authorInitials}
+                  </AvatarFallback>
+                </Avatar>
+                <p className="text-white font-black text-base">{reel.author}</p>
+              </div>
+              {reel.content && (
+                <p className="text-white/90 text-sm mb-2 line-clamp-2">
+                  {reel.content}
+                </p>
+              )}
+              <div className="flex items-center gap-2 mt-1">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{
+                    duration: 3,
+                    repeat: Number.POSITIVE_INFINITY,
+                    ease: "linear",
+                  }}
+                  className="w-8 h-8 rounded-full bg-white/20 border border-white/40 flex items-center justify-center"
+                >
+                  <Music2 className="w-4 h-4 text-white" />
+                </motion.div>
+                <span className="text-white/70 text-xs">
+                  Money Kingdom Theme 🎵
+                </span>
               </div>
             </div>
-          </div>
 
-          {/* Right action buttons */}
-          <div className="absolute right-4 bottom-32 flex flex-col items-center gap-6">
-            <button
-              type="button"
-              onClick={() => handleLike(reel.id)}
-              className="flex flex-col items-center gap-1"
-              data-ocid="reels.toggle"
-            >
-              <Heart
-                className={`w-10 h-10 ${
-                  reel.liked ? "fill-red-500 text-red-500" : "text-white"
-                }`}
-              />
-              <span className="text-white text-lg font-bold">{reel.likes}</span>
-            </button>
-            <button
-              type="button"
-              className="flex flex-col items-center gap-1"
-              data-ocid="reels.button"
-            >
-              <MessageCircle className="w-10 h-10 text-white" />
-              <span className="text-white text-lg font-bold">
-                {reel.comments}
-              </span>
-            </button>
-            <button
-              type="button"
-              className="flex flex-col items-center gap-1"
-              data-ocid="reels.button"
-            >
-              <Send className="w-10 h-10 text-white" />
-              <span className="text-white text-lg font-bold">शेयर</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSave(reel.id)}
-              className="flex flex-col items-center gap-1"
-              data-ocid="reels.toggle"
-            >
-              <Bookmark
-                className={`w-10 h-10 ${
-                  reel.saved ? "fill-white text-white" : "text-white"
-                }`}
-              />
-            </button>
-          </div>
-        </motion.div>
-      </AnimatePresence>
+            {/* Right action buttons */}
+            <div className="absolute right-3 bottom-16 flex flex-col items-center gap-5 z-10">
+              {/* Like */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleLike(reel.id);
+                }}
+                className="flex flex-col items-center gap-0.5"
+                data-ocid="reels.toggle"
+              >
+                <motion.div whileTap={{ scale: 1.3 }}>
+                  <Heart
+                    className={`w-8 h-8 ${
+                      likedMap[reel.id]
+                        ? "fill-red-500 text-red-500"
+                        : "text-white"
+                    }`}
+                  />
+                </motion.div>
+                <span className="text-white text-xs font-bold">
+                  {likesMap[reel.id] ?? 0}
+                </span>
+              </button>
 
-      {/* Navigation arrows */}
-      {currentIndex > 0 && (
-        <button
-          type="button"
-          onClick={() => setCurrentIndex((i) => i - 1)}
-          className="absolute top-1/2 left-4 -translate-y-1/2 w-14 h-14 rounded-full bg-black/40 flex items-center justify-center text-white"
-          data-ocid="reels.pagination_prev"
-        >
-          ▲
-        </button>
-      )}
-      {currentIndex < reels.length - 1 && (
-        <button
-          type="button"
-          onClick={() => setCurrentIndex((i) => i + 1)}
-          className="absolute bottom-32 left-4 w-14 h-14 rounded-full bg-black/40 flex items-center justify-center text-white"
-          data-ocid="reels.pagination_next"
-        >
-          ▼
-        </button>
-      )}
+              {/* Comment */}
+              <button
+                type="button"
+                onClick={(e) => e.stopPropagation()}
+                className="flex flex-col items-center gap-0.5"
+                data-ocid="reels.button"
+              >
+                <MessageCircle className="w-8 h-8 text-white" />
+                <span className="text-white text-xs font-bold">
+                  {reel.comments}
+                </span>
+              </button>
+
+              {/* Share */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleShare(reel);
+                }}
+                className="flex flex-col items-center gap-0.5"
+                data-ocid="reels.button"
+              >
+                <Send className="w-8 h-8 text-white" />
+                <span className="text-white text-xs font-bold">शेयर</span>
+              </button>
+
+              {/* Save */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSave(reel.id);
+                }}
+                className="flex flex-col items-center gap-0.5"
+                data-ocid="reels.toggle"
+              >
+                <Bookmark
+                  className={`w-8 h-8 ${
+                    savedMap[reel.id] ? "fill-white text-white" : "text-white"
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

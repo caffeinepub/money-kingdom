@@ -14,16 +14,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { useFollowers } from "@/hooks/useFollowers";
 import {
   Camera,
-  Check,
+  ChevronDown,
+  ChevronUp,
   Grid3X3,
-  List,
-  Pencil,
-  Save,
+  Link,
+  Play,
+  Settings,
+  Share2,
+  Tag,
   UserPlus,
+  Wallet,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useDarkMode } from "../hooks/useDarkMode";
+import { type ThemeName, useTheme } from "../hooks/useTheme";
 import { setLanguage, useLanguage } from "../utils/i18n";
 import type { Post } from "./CenterFeed";
 import CoinAnimation from "./CoinAnimation";
@@ -56,17 +61,7 @@ interface ProfilePageProps {
   isOwnProfile?: boolean;
 }
 
-const FRIENDS = [
-  { id: "f1", name: "Rahul Sharma", initials: "RS", mutual: "15 साझा मित्र" },
-  { id: "f2", name: "Priya Patel", initials: "PP", mutual: "8 साझा मित्र" },
-  { id: "f3", name: "Amit Verma", initials: "AV", mutual: "23 साझा मित्र" },
-  { id: "f4", name: "Sunita Gupta", initials: "SG", mutual: "5 साझा मित्र" },
-  { id: "f5", name: "Vikram Singh", initials: "VS", mutual: "11 साझा मित्र" },
-  { id: "f6", name: "Kavita Nair", initials: "KN", mutual: "7 साझा मित्र" },
-];
-
 const LANGUAGES = [
-  // भारतीय भाषाएं
   { code: "hi", name: "हिन्दी", label: "Hindi" },
   { code: "ta", name: "தமிழ்", label: "Tamil" },
   { code: "te", name: "తెలుగు", label: "Telugu" },
@@ -76,20 +71,11 @@ const LANGUAGES = [
   { code: "mr", name: "मराठी", label: "Marathi" },
   { code: "gu", name: "ગુજરાતી", label: "Gujarati" },
   { code: "pa", name: "ਪੰਜਾਬੀ", label: "Punjabi" },
-  { code: "or", name: "ଓଡ଼ିଆ", label: "Odia" },
+  { code: "or", name: "ଓଡ௃ଆ", label: "Odia" },
   { code: "ur", name: "اردو", label: "Urdu" },
   { code: "as", name: "অসমীয়া", label: "Assamese" },
-  { code: "mni", name: "মৈতৈলোন্", label: "Manipuri" },
-  { code: "kok", name: "कोंकणी", label: "Konkani" },
-  { code: "mai", name: "मैथिली", label: "Maithili" },
-  { code: "doi", name: "डोगरी", label: "Dogri" },
-  { code: "ks", name: "كٲشُر", label: "Kashmiri" },
-  { code: "sa", name: "संस्कृतम्", label: "Sanskrit" },
-  { code: "sd", name: "سنڌي", label: "Sindhi" },
-  { code: "bo", name: "བོད་སྐད།", label: "Bodo" },
-  { code: "sat", name: "ᱥᱟᱱᱛᱟᱲᱤ", label: "Santali" },
   { code: "ne", name: "नेपाली", label: "Nepali" },
-  // विश्व की भाषाएं
+  { code: "sa", name: "संस्कृतम्", label: "Sanskrit" },
   { code: "en", name: "English", label: "English" },
   { code: "ar", name: "العربية", label: "Arabic" },
   { code: "zh", name: "中文", label: "Chinese" },
@@ -101,12 +87,7 @@ const LANGUAGES = [
   { code: "ja", name: "日本語", label: "Japanese" },
   { code: "ko", name: "한국어", label: "Korean" },
   { code: "tr", name: "Türkçe", label: "Turkish" },
-  { code: "vi", name: "Tiếng Việt", label: "Vietnamese" },
   { code: "id", name: "Bahasa Indonesia", label: "Indonesian" },
-  { code: "ms", name: "Bahasa Melayu", label: "Malay" },
-  { code: "th", name: "ภาษาไทย", label: "Thai" },
-  { code: "it", name: "Italiano", label: "Italian" },
-  { code: "nl", name: "Nederlands", label: "Dutch" },
 ];
 
 const FEE = 5;
@@ -115,6 +96,12 @@ const BALANCE_KEY = (user: string) => `wallet_${user}`;
 const APP_LOADS_KEY = "mk_app_loads";
 const ADMIN_PIN = "princepawankumar";
 const ADMIN_NAME = "Prince Pawan Kumar";
+
+const HINDI_LYRICS = [
+  "पैसों की बारिश तब होती है जब मेहनत की धूप निकलती है 👑",
+  "मैं वो राजा हूँ जिसका किंगडम मेरे सपनों में है 💰",
+  "Money Kingdom में स्वागत है, यहाँ सब राजा हैं 🏆",
+];
 
 function getBalance(user: string): number {
   return Number.parseFloat(localStorage.getItem(BALANCE_KEY(user)) || "0");
@@ -151,7 +138,6 @@ function isAdminVerified(): boolean {
   return sessionStorage.getItem("mk_admin_verified") === "yes";
 }
 
-// Load logged-in user's base profile
 function getUserProfile(): { name: string; mobile: string } | null {
   try {
     const raw = localStorage.getItem("mk_user_profile");
@@ -161,7 +147,6 @@ function getUserProfile(): { name: string; mobile: string } | null {
   }
 }
 
-// Load per-user extras (photo, cover, bio) keyed by mobile
 function getUserExtras(mobile: string): {
   profilePhoto: string | null;
   coverPhoto: string | null;
@@ -192,39 +177,202 @@ function getInitials(name: string): string {
     .slice(0, 3);
 }
 
+function deriveUsername(name: string): string {
+  return `@${name
+    .toLowerCase()
+    .replace(/\s+/g, "_")
+    .replace(/[^a-z0-9_]/g, "")
+    .slice(0, 20)}`;
+}
+
+function getStoredUsername(mobile: string): string {
+  return localStorage.getItem(`mk_username_${mobile}`) || "";
+}
+function saveUsername(mobile: string, uname: string) {
+  localStorage.setItem(`mk_username_${mobile}`, uname);
+}
+function getStoredBio(mobile: string): string {
+  return localStorage.getItem(`mk_user_bio_${mobile}`) || "";
+}
+function saveBioLS(mobile: string, bio: string) {
+  localStorage.setItem(`mk_user_bio_${mobile}`, bio);
+}
+function getStoredWebsite(mobile: string): string {
+  return localStorage.getItem(`mk_user_website_${mobile}`) || "";
+}
+function saveWebsiteLS(mobile: string, website: string) {
+  localStorage.setItem(`mk_user_website_${mobile}`, website);
+}
+
+const ALL_USERS: Record<string, { name: string; initials: string }> = {
+  RAJ: { name: "राज शर्मा", initials: "RS" },
+  ANI: { name: "अनिता गुप्ता", initials: "AG" },
+  VIK: { name: "विकास मेहता", initials: "VM" },
+  PRI: { name: "प्रिया सिंह", initials: "PS" },
+  SUH: { name: "सुहास जोशी", initials: "SJ" },
+};
+
+// ── Helper: Collapsible Settings Section ──────────────────────────────────
+interface SettingsSectionProps {
+  icon: string;
+  title: string;
+  sectionKey: string;
+  openSections: Set<string>;
+  toggleSection: (key: string) => void;
+  ocid?: string;
+  children: ReactNode;
+}
+function SettingsSection({
+  icon,
+  title,
+  sectionKey,
+  openSections,
+  toggleSection,
+  ocid,
+  children,
+}: SettingsSectionProps) {
+  const isOpen = openSections.has(sectionKey);
+  return (
+    <div
+      className="bg-card border border-border rounded-xl overflow-hidden shadow-sm"
+      data-ocid={ocid}
+    >
+      <button
+        type="button"
+        onClick={() => toggleSection(sectionKey)}
+        className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/40 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-base">{icon}</span>
+          <span className="text-sm font-bold text-foreground">{title}</span>
+        </div>
+        {isOpen ? (
+          <ChevronUp className="w-4 h-4 text-muted-foreground" />
+        ) : (
+          <ChevronDown className="w-4 h-4 text-muted-foreground" />
+        )}
+      </button>
+      {isOpen && (
+        <div className="px-4 pb-3 pt-0 flex flex-col gap-0 border-t border-border/50">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Helper: Toggle Row ─────────────────────────────────────────────────────
+function ToggleRow({
+  label,
+  desc,
+  value,
+  onToggle,
+  ocid,
+}: {
+  label: string;
+  desc: string;
+  value: boolean;
+  onToggle: () => void;
+  ocid?: string;
+}) {
+  return (
+    <div className="flex items-center justify-between py-2.5">
+      <div>
+        <p className="text-sm font-semibold text-foreground">{label}</p>
+        <p className="text-xs text-muted-foreground">{desc}</p>
+      </div>
+      <button
+        type="button"
+        onClick={onToggle}
+        className={`relative w-12 h-6 rounded-full transition-all duration-300 ${value ? "bg-primary" : "bg-muted"}`}
+        data-ocid={ocid}
+      >
+        <div
+          className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-300 ${value ? "left-6" : "left-0.5"}`}
+        />
+      </button>
+    </div>
+  );
+}
+
 export default function ProfilePage({
   onBack,
   isOwnProfile = true,
 }: ProfilePageProps) {
   const { t } = useLanguage();
 
-  // Load user profile from onboarding data
   const userProfile = getUserProfile();
   const displayName = userProfile?.name ?? ADMIN_NAME;
   const userMobile = userProfile?.mobile ?? "admin";
   const isAdmin = displayName === ADMIN_NAME;
 
-  // Per-user photo/bio extras
+  // Profile extras
   const [coverPhoto, setCoverPhoto] = useState<string | null>(
     () => getUserExtras(userMobile).coverPhoto,
   );
   const [profilePhoto, setProfilePhoto] = useState<string | null>(
     () => getUserExtras(userMobile).profilePhoto,
   );
-  const [bio, setBio] = useState<string>(() => getUserExtras(userMobile).bio);
-  const [editingBio, setEditingBio] = useState(false);
-  const [bioDraft, setBioDraft] = useState(bio);
 
-  const [showFollowersModal, setShowFollowersModal] = useState(false);
-  const [showFollowingModal, setShowFollowingModal] = useState(false);
-  const [selectedLang, setSelectedLang] = useState<string>(getStoredLang);
-  const { dark, toggle: toggleDark } = useDarkMode();
-  const [postViewMode, setPostViewMode] = useState<"grid" | "list">("grid");
+  // @username
+  const [username, setUsername] = useState<string>(() => {
+    const stored = getStoredUsername(userMobile);
+    if (stored) return stored;
+    const derived = deriveUsername(displayName);
+    saveUsername(userMobile, derived);
+    return derived;
+  });
+
+  // Bio & website
+  const [bio, setBio] = useState<string>(() => {
+    const stored = getStoredBio(userMobile);
+    if (stored) return stored;
+    return getUserExtras(userMobile).bio || "";
+  });
+  const [website, setWebsite] = useState<string>(() =>
+    getStoredWebsite(userMobile),
+  );
+
+  // Edit profile modal
+  const [editOpen, setEditOpen] = useState(false);
+  const [editName, setEditName] = useState(displayName);
+  const [editUsername, setEditUsername] = useState(username);
+  const [editBio, setEditBio] = useState(bio);
+  const [editWebsite, setEditWebsite] = useState(website);
+
+  // Posts
   const [userPosts, setUserPosts] = useState<Post[]>(() =>
     loadUserPosts(userMobile),
   );
 
-  // Wallet state
+  // Refresh posts when profile mounts
+  useEffect(() => {
+    setUserPosts(loadUserPosts(userMobile));
+  }, [userMobile]);
+
+  const videoPosts = userPosts.filter((p) => !!p.videoUrl);
+
+  // Followers/following
+  const [showFollowersModal, setShowFollowersModal] = useState(false);
+  const [showFollowingModal, setShowFollowingModal] = useState(false);
+  const {
+    followers,
+    following,
+    followersCount,
+    followingCount,
+    isFollowing,
+    toggleFollow,
+  } = useFollowers(userMobile);
+
+  // Language
+  const [selectedLang, setSelectedLang] = useState<string>(getStoredLang);
+
+  // Dark mode — available to ALL users
+  const { dark, toggle: toggleDark } = useDarkMode();
+  // Theme
+  const { theme: appTheme, setTheme } = useTheme();
+
+  // Wallet
   const [walletBalance, setWalletBalance] = useState(() =>
     getBalance(userMobile),
   );
@@ -234,23 +382,54 @@ export default function ProfilePage({
   const [sendAmount, setSendAmount] = useState("");
   const [animating, setAnimating] = useState(false);
 
-  // Admin stats state
+  // Admin stats — still password-protected
   const [adminVerified, setAdminVerified] = useState<boolean>(isAdminVerified);
   const [pinInput, setPinInput] = useState("");
   const [appLoads, setAppLoads] = useState<number>(0);
   const [pinError, setPinError] = useState(false);
 
+  // Settings accordion open sections
+  const [openSections, setOpenSections] = useState<Set<string>>(
+    () => new Set(["account"]),
+  );
+  const toggleSection = (key: string) => {
+    setOpenSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  // New settings state
+  const [accountType, setAccountType] = useState<string>(
+    () => localStorage.getItem("mk_account_type") || "public",
+  );
+  const [pinChangeMode, setPinChangeMode] = useState(false);
+  const [newPin, setNewPin] = useState("");
+  const [confirmPin, setConfirmPin] = useState("");
+  const [notifPush, setNotifPush] = useState(
+    () => localStorage.getItem("mk_notif_push") !== "false",
+  );
+  const [notifPayment, setNotifPayment] = useState(
+    () => localStorage.getItem("mk_notif_payment") !== "false",
+  );
+  const [notifMute, setNotifMute] = useState(
+    () => localStorage.getItem("mk_notif_mute") === "true",
+  );
+  const [dataSaver, setDataSaver] = useState(
+    () => localStorage.getItem("mk_data_saver") === "true",
+  );
+  const [autoPlay, setAutoPlay] = useState(
+    () => localStorage.getItem("mk_autoplay") !== "false",
+  );
+  const [reportText, setReportText] = useState("");
+  const [reportSent, setReportSent] = useState(false);
+  const [helpExpanded, setHelpExpanded] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+
   const coverInputRef = useRef<HTMLInputElement>(null);
   const profileInputRef = useRef<HTMLInputElement>(null);
-
-  const {
-    followers,
-    following,
-    followersCount,
-    followingCount,
-    isFollowing,
-    toggleFollow,
-  } = useFollowers(userMobile);
 
   useEffect(() => {
     trackAppLoad();
@@ -292,11 +471,30 @@ export default function ProfilePage({
     reader.readAsDataURL(file);
   };
 
-  const handleSaveBio = () => {
-    setBio(bioDraft);
-    persistExtras({ bio: bioDraft });
-    setEditingBio(false);
-    toast.success("Bio सहेजा गया!");
+  const handleSaveEditProfile = () => {
+    const trimmedUsername = editUsername.startsWith("@")
+      ? editUsername
+      : `@${editUsername}`;
+    setUsername(trimmedUsername);
+    saveUsername(userMobile, trimmedUsername);
+    setBio(editBio);
+    saveBioLS(userMobile, editBio);
+    persistExtras({ bio: editBio });
+    setWebsite(editWebsite);
+    saveWebsiteLS(userMobile, editWebsite);
+    setEditOpen(false);
+    toast.success("प्रोफाइल अपडेट हो गया!");
+  };
+
+  const handleShareProfile = () => {
+    const text = `Money Kingdom पर ${displayName} (${username}) की प्रोफाइल देखें! 👑\n${window.location.href}`;
+    if (navigator.share) {
+      navigator.share({ title: displayName, text });
+    } else {
+      navigator.clipboard.writeText(text).then(() => {
+        toast.success("लिंक कॉपी हो गया!");
+      });
+    }
   };
 
   const handleLangSelect = (code: string) => {
@@ -363,14 +561,6 @@ export default function ProfilePage({
     setAppLoads(getAppLoads());
   };
 
-  const ALL_USERS: Record<string, { name: string; initials: string }> = {
-    RAJ: { name: "राज शर्मा", initials: "RS" },
-    ANI: { name: "अनिता गुप्ता", initials: "AG" },
-    VIK: { name: "विकास मेहता", initials: "VM" },
-    PRI: { name: "प्रिया सिंह", initials: "PS" },
-    SUH: { name: "सुहास जोशी", initials: "SJ" },
-  };
-
   return (
     <div className="flex flex-col gap-0" data-ocid="profile.page">
       <input
@@ -388,20 +578,101 @@ export default function ProfilePage({
         onChange={handleProfileUpload}
       />
 
+      {/* Edit Profile Modal */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent data-ocid="profile.edit.dialog">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-black">
+              ✉️ प्रोफाइल संपादित करें
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-3 mt-2">
+            <div>
+              <p className="text-sm font-semibold text-muted-foreground mb-1">
+                नाम
+              </p>
+              <Input
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="आपका नाम"
+                className="h-11"
+                data-ocid="profile.edit.name.input"
+              />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-muted-foreground mb-1">
+                @यूजरनेम
+              </p>
+              <Input
+                value={editUsername}
+                onChange={(e) => setEditUsername(e.target.value)}
+                placeholder="@your_username"
+                className="h-11"
+                data-ocid="profile.edit.username.input"
+              />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-muted-foreground mb-1">
+                Bio
+              </p>
+              <Textarea
+                value={editBio}
+                onChange={(e) => setEditBio(e.target.value)}
+                placeholder="अपने बारे में लिखें..."
+                rows={3}
+                data-ocid="profile.edit.bio.textarea"
+              />
+              {/* Hindi lyric suggestions */}
+              <div className="flex flex-col gap-1 mt-2">
+                {HINDI_LYRICS.map((lyric) => (
+                  <button
+                    key={lyric}
+                    type="button"
+                    onClick={() => setEditBio(lyric)}
+                    className="text-left text-xs text-primary/80 hover:text-primary px-2 py-1 rounded bg-primary/5 hover:bg-primary/10 transition-colors"
+                  >
+                    {lyric}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-muted-foreground mb-1">
+                वेबसाइट लिंक
+              </p>
+              <Input
+                value={editWebsite}
+                onChange={(e) => setEditWebsite(e.target.value)}
+                placeholder="https://..."
+                className="h-11"
+                data-ocid="profile.edit.website.input"
+              />
+            </div>
+            <Button
+              onClick={handleSaveEditProfile}
+              className="w-full font-black h-12"
+              data-ocid="profile.edit.save_button"
+            >
+              सहेजें ✓
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Followers Modal */}
       <Dialog open={showFollowersModal} onOpenChange={setShowFollowersModal}>
         <DialogContent data-ocid="profile.followers.dialog">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-black">
+            <DialogTitle className="text-xl font-black">
               {t("followers")} ({followersCount})
             </DialogTitle>
           </DialogHeader>
           {followers.length === 0 ? (
             <p
-              className="text-lg text-muted-foreground text-center py-4"
+              className="text-base text-muted-foreground text-center py-4"
               data-ocid="profile.followers.empty_state"
             >
-              {t("followers")} 0
+              अभी कोई फोल्लोअर नहीं
             </p>
           ) : (
             <div className="flex flex-col gap-3 mt-2">
@@ -413,20 +684,20 @@ export default function ProfilePage({
                     className="flex items-center gap-3"
                     data-ocid={`profile.followers.item.${idx + 1}`}
                   >
-                    <Avatar className="w-14 h-14">
+                    <Avatar className="w-12 h-12">
                       <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                         {user?.initials ?? uid.slice(0, 2)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
-                      <p className="font-bold text-lg text-foreground">
+                      <p className="font-bold text-foreground">
                         {user?.name ?? uid}
                       </p>
                     </div>
                     <Button
                       variant={isFollowing(uid) ? "outline" : "default"}
                       size="sm"
-                      className="rounded-full text-base h-10 px-5"
+                      className="rounded-full"
                       onClick={() => toggleFollow(uid, user?.name ?? uid)}
                       data-ocid={`profile.followers.toggle.${idx + 1}`}
                     >
@@ -444,16 +715,16 @@ export default function ProfilePage({
       <Dialog open={showFollowingModal} onOpenChange={setShowFollowingModal}>
         <DialogContent data-ocid="profile.following.dialog">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-black">
-              फॉलोइंग ({followingCount})
+            <DialogTitle className="text-xl font-black">
+              फ़ॉलोइंग ({followingCount})
             </DialogTitle>
           </DialogHeader>
           {following.length === 0 ? (
             <p
-              className="text-lg text-muted-foreground text-center py-4"
+              className="text-base text-muted-foreground text-center py-4"
               data-ocid="profile.following.empty_state"
             >
-              अभी किसी को फॉलो नहीं किया
+              अभी किसी को फ़ॉलो नहीं किया
             </p>
           ) : (
             <div className="flex flex-col gap-3 mt-2">
@@ -465,24 +736,24 @@ export default function ProfilePage({
                     className="flex items-center gap-3"
                     data-ocid={`profile.following.item.${idx + 1}`}
                   >
-                    <Avatar className="w-14 h-14">
+                    <Avatar className="w-12 h-12">
                       <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                         {user?.initials ?? uid.slice(0, 2)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
-                      <p className="font-bold text-lg text-foreground">
+                      <p className="font-bold text-foreground">
                         {user?.name ?? uid}
                       </p>
                     </div>
                     <Button
                       variant="outline"
                       size="sm"
-                      className="rounded-full text-base h-10 px-5"
+                      className="rounded-full"
                       onClick={() => toggleFollow(uid, user?.name ?? uid)}
                       data-ocid={`profile.following.toggle.${idx + 1}`}
                     >
-                      अनफॉलो
+                      अनफ़ॉलो
                     </Button>
                   </div>
                 );
@@ -493,7 +764,7 @@ export default function ProfilePage({
       </Dialog>
 
       {/* Cover Photo */}
-      <div className="relative w-full h-56 sm:h-72 rounded-xl overflow-hidden">
+      <div className="relative w-full h-40 rounded-xl overflow-hidden">
         {coverPhoto ? (
           <img
             src={coverPhoto}
@@ -501,237 +772,251 @@ export default function ProfilePage({
             className="absolute inset-0 w-full h-full object-cover"
           />
         ) : (
-          <>
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  "linear-gradient(135deg, oklch(55% 0.12 45), oklch(42% 0.09 30), oklch(35% 0.07 25))",
-              }}
-            />
-            <div
-              className="absolute inset-0 opacity-10"
-              style={{
-                backgroundImage:
-                  "radial-gradient(circle at 20% 50%, oklch(85% 0.08 50) 0%, transparent 50%), radial-gradient(circle at 80% 20%, oklch(75% 0.10 40) 0%, transparent 40%)",
-              }}
-            />
-          </>
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(135deg, oklch(55% 0.12 45), oklch(42% 0.09 30), oklch(35% 0.07 25))",
+            }}
+          />
         )}
-        <button
-          type="button"
-          onClick={() => coverInputRef.current?.click()}
-          className="absolute bottom-3 right-3 flex items-center gap-2 bg-black/50 text-white text-base px-3 py-2 rounded-full backdrop-blur-sm hover:bg-black/70 transition-colors"
-          data-ocid="profile.upload_button"
-        >
-          <Camera className="w-5 h-5" />
-          कवर बदलें
-        </button>
+        {isOwnProfile && (
+          <button
+            type="button"
+            onClick={() => coverInputRef.current?.click()}
+            className="absolute bottom-2 right-2 flex items-center gap-1.5 bg-black/50 text-white text-xs px-2.5 py-1.5 rounded-full backdrop-blur-sm"
+            data-ocid="profile.upload_button"
+          >
+            <Camera className="w-3.5 h-3.5" />
+            कवर बदलें
+          </button>
+        )}
       </div>
 
-      {/* Avatar + Info row */}
-      <div className="bg-card border border-border rounded-b-xl px-4 pb-4 shadow-card relative">
-        <div className="relative -mt-16 mb-3 flex items-end justify-between">
+      {/* Profile header card */}
+      <div className="bg-card border border-border rounded-b-xl px-4 pb-4 shadow-card">
+        {/* Avatar + Action buttons row */}
+        <div className="flex items-end justify-between -mt-10 mb-3">
+          {/* Profile photo with gold ring */}
           <div className="relative">
             <div
-              className="w-32 h-32 rounded-full p-0.5 border-4 border-card shadow-lg"
+              className="w-24 h-24 rounded-full p-0.5 shadow-lg"
               style={{
                 background:
-                  "linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)",
+                  "linear-gradient(45deg, #f5c518, #e6983c, #f5c518, #ffd700)",
               }}
             >
               <Avatar className="w-full h-full">
                 {profilePhoto && (
                   <AvatarImage src={profilePhoto} alt="Profile" />
                 )}
-                <AvatarFallback className="bg-primary text-primary-foreground text-3xl font-black rounded-full">
+                <AvatarFallback className="bg-primary text-primary-foreground text-xl font-black rounded-full">
                   {getInitials(displayName)}
                 </AvatarFallback>
               </Avatar>
             </div>
-            <button
-              type="button"
-              onClick={() => profileInputRef.current?.click()}
-              className="absolute bottom-1 right-1 w-10 h-10 bg-muted border-2 border-card rounded-full flex items-center justify-center hover:bg-accent transition-colors shadow"
-              data-ocid="profile.button"
-            >
-              <Camera className="w-5 h-5 text-muted-foreground" />
-            </button>
+            {isOwnProfile && (
+              <button
+                type="button"
+                onClick={() => profileInputRef.current?.click()}
+                className="absolute bottom-0 right-0 w-7 h-7 bg-muted border-2 border-card rounded-full flex items-center justify-center shadow"
+                data-ocid="profile.button"
+              >
+                <Camera className="w-3.5 h-3.5 text-muted-foreground" />
+              </button>
+            )}
           </div>
-          <div className="flex gap-2 pb-1">
+
+          {/* Action buttons */}
+          {isOwnProfile && (
+            <div className="flex gap-1.5 pb-1">
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-lg text-xs h-8 px-2.5 gap-1"
+                onClick={() => {
+                  setEditName(displayName);
+                  setEditUsername(username);
+                  setEditBio(bio);
+                  setEditWebsite(website);
+                  setEditOpen(true);
+                }}
+                data-ocid="profile.edit_button"
+              >
+                ✏️ संपादित
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-lg text-xs h-8 px-2.5 gap-1"
+                onClick={handleShareProfile}
+                data-ocid="profile.share_button"
+              >
+                <Share2 className="w-3 h-3" />
+                शेयर
+              </Button>
+            </div>
+          )}
+          {!isOwnProfile && (
             <Button
-              variant="outline"
               size="sm"
-              className="rounded-full text-base h-10 px-4"
-              onClick={() => {
-                setEditingBio(true);
-                setBioDraft(bio);
-              }}
-              data-ocid="profile.edit_button"
-            >
-              <Pencil className="w-4 h-4 mr-1" />
-              संपादित करें
-            </Button>
-            <Button
-              size="sm"
-              className="rounded-full text-base h-10 px-4 gap-1"
+              className="rounded-full text-xs h-8 px-3 gap-1"
               data-ocid="profile.primary_button"
             >
-              <UserPlus className="w-4 h-4" />
-              जोड़ें
+              <UserPlus className="w-3.5 h-3.5" />
+              फ़ॉलो करें
             </Button>
-          </div>
+          )}
         </div>
 
-        {/* Name & Bio */}
-        <div className="mb-3">
-          <h1 className="font-black text-3xl text-foreground leading-tight">
+        {/* Name & username */}
+        <div className="mb-2">
+          <h1 className="font-black text-xl text-foreground leading-tight">
             {displayName}
           </h1>
-          {userProfile?.mobile && (
-            <p className="text-sm text-muted-foreground mt-0.5">
-              📱 {userProfile.mobile}
-            </p>
-          )}
-
-          {/* Bio section */}
-          {editingBio ? (
-            <div className="mt-2 flex flex-col gap-2">
-              <Textarea
-                value={bioDraft}
-                onChange={(e) => setBioDraft(e.target.value)}
-                placeholder="अपने बारे में लिखें..."
-                className="text-base resize-none"
-                rows={3}
-                data-ocid="profile.bio.textarea"
-              />
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  onClick={handleSaveBio}
-                  className="rounded-full gap-1"
-                  data-ocid="profile.bio.save_button"
-                >
-                  <Save className="w-4 h-4" />
-                  सहेजें
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setEditingBio(false)}
-                  className="rounded-full"
-                  data-ocid="profile.bio.cancel_button"
-                >
-                  रद्द करें
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <p className="text-lg text-muted-foreground mt-1">
-              {bio || "💰 Finance enthusiast | निवेशक | SIP lover 📈"}
-            </p>
-          )}
+          <p className="text-sm text-muted-foreground">{username}</p>
         </div>
 
-        {/* Stats row */}
-        <div className="flex items-center gap-6 text-center">
+        {/* Stats row: Posts | Followers | Following */}
+        <div className="flex items-center gap-4 mb-3">
+          <div className="flex flex-col items-center">
+            <span className="font-black text-lg text-foreground">
+              {userPosts.length}
+            </span>
+            <span className="text-xs text-muted-foreground">पोस्ट</span>
+          </div>
+          <div className="w-px h-8 bg-border" />
           <button
             type="button"
             onClick={() => setShowFollowersModal(true)}
             className="flex flex-col items-center hover:text-primary transition-colors"
             data-ocid="profile.followers.button"
           >
-            <span className="font-black text-2xl text-foreground">
+            <span className="font-black text-lg text-foreground">
               {followersCount}
             </span>
-            <span className="text-base text-muted-foreground">फॉलोअर्स</span>
+            <span className="text-xs text-muted-foreground">फ़ॉलोअर्स</span>
           </button>
-          <div className="w-px h-10 bg-border" />
+          <div className="w-px h-8 bg-border" />
           <button
             type="button"
             onClick={() => setShowFollowingModal(true)}
             className="flex flex-col items-center hover:text-primary transition-colors"
             data-ocid="profile.following.button"
           >
-            <span className="font-black text-2xl text-foreground">
+            <span className="font-black text-lg text-foreground">
               {followingCount}
             </span>
-            <span className="text-base text-muted-foreground">फॉलोइंग</span>
+            <span className="text-xs text-muted-foreground">फ़ॉलोइंग</span>
           </button>
-          <div className="w-px h-10 bg-border" />
-          <div className="flex flex-col items-center">
-            <span className="font-black text-2xl text-foreground">0</span>
-            <span className="text-base text-muted-foreground">पोस्ट</span>
-          </div>
           {isAdmin && (
-            <Badge variant="secondary" className="text-sm px-2 py-0.5 ml-auto">
+            <Badge variant="secondary" className="text-xs px-2 py-0.5 ml-auto">
               👑 Admin
             </Badge>
           )}
         </div>
+
+        {/* Bio */}
+        {bio && (
+          <p className="text-sm text-foreground mb-1 leading-snug">{bio}</p>
+        )}
+        {!bio && (
+          <p className="text-sm text-muted-foreground mb-1">
+            💰 Finance enthusiast | निवेशक | SIP lover 📈
+          </p>
+        )}
+        {website && (
+          <a
+            href={website}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-xs text-primary hover:underline"
+          >
+            <Link className="w-3 h-3" />
+            {website.replace(/https?:\/\//i, "")}
+          </a>
+        )}
+
+        {/* Wallet quick button */}
+        {isOwnProfile && (
+          <div className="mt-3">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full rounded-lg text-sm h-9 gap-2 font-semibold"
+              onClick={() => {}}
+              data-ocid="profile.wallet.button"
+            >
+              <Wallet className="w-4 h-4" />
+              बैलेंस: ₹{walletBalance.toFixed(2)}
+            </Button>
+          </div>
+        )}
       </div>
 
-      {/* Tabs */}
-      <div className="mt-4">
-        <Tabs defaultValue="posts">
+      {/* Story Highlights */}
+      <div className="bg-card border border-border rounded-xl px-4 py-3 mt-2">
+        <div className="flex items-center gap-3 overflow-x-auto">
+          {/* Add highlight */}
+          <button
+            type="button"
+            className="flex flex-col items-center gap-1 shrink-0"
+            data-ocid="profile.button"
+          >
+            <div className="w-14 h-14 rounded-full border-2 border-dashed border-muted-foreground/40 flex items-center justify-center">
+              <span className="text-xl text-muted-foreground">+</span>
+            </div>
+            <span className="text-[10px] text-muted-foreground">
+              Highlights
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {/* Main content tabs: Grid | Reels | Tagged | Settings */}
+      <div className="mt-2">
+        <Tabs defaultValue="grid">
           <TabsList
-            className="w-full bg-card border border-border rounded-xl shadow-card mb-4 h-14"
+            className="w-full bg-card border border-border rounded-xl shadow-card mb-3 h-12"
             data-ocid="profile.tab"
           >
             <TabsTrigger
-              value="posts"
-              className="flex-1 text-lg rounded-lg font-bold"
+              value="grid"
+              className="flex-1 rounded-lg"
+              data-ocid="profile.grid.tab"
             >
-              पोस्ट
+              <Grid3X3 className="w-4 h-4" />
             </TabsTrigger>
             <TabsTrigger
-              value="friends"
-              className="flex-1 text-lg rounded-lg font-bold"
+              value="reels"
+              className="flex-1 rounded-lg"
+              data-ocid="profile.reels.tab"
             >
-              मित्र ({FRIENDS.length})
+              <Play className="w-4 h-4" />
+            </TabsTrigger>
+            <TabsTrigger
+              value="tagged"
+              className="flex-1 rounded-lg"
+              data-ocid="profile.tagged.tab"
+            >
+              <Tag className="w-4 h-4" />
             </TabsTrigger>
             {isOwnProfile && (
               <TabsTrigger
                 value="settings"
-                className="flex-1 text-lg rounded-lg font-bold"
+                className="flex-1 rounded-lg"
                 data-ocid="profile.settings.tab"
               >
-                सेटिंग ⚙️
+                <Settings className="w-4 h-4" />
               </TabsTrigger>
             )}
           </TabsList>
 
-          {/* Posts Tab */}
-          <TabsContent value="posts" className="mt-0">
-            <div className="flex items-center justify-end gap-2 mb-3">
-              <button
-                type="button"
-                onClick={() => setPostViewMode("grid")}
-                className={`p-2 rounded-lg transition-colors ${
-                  postViewMode === "grid"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover:bg-accent"
-                }`}
-                data-ocid="profile.toggle"
-              >
-                <Grid3X3 className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setPostViewMode("list")}
-                className={`p-2 rounded-lg transition-colors ${
-                  postViewMode === "list"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover:bg-accent"
-                }`}
-                data-ocid="profile.toggle"
-              >
-                <List className="w-4 h-4" />
-              </button>
-            </div>
+          {/* Grid Tab */}
+          <TabsContent value="grid" className="mt-0">
             {userPosts.length === 0 ? (
               <div
-                className="bg-card rounded-xl border border-border shadow-card p-8 text-center"
+                className="bg-card rounded-xl border border-border p-8 text-center"
                 data-ocid="profile.posts.empty_state"
               >
                 <div className="text-4xl mb-3">📸</div>
@@ -742,12 +1027,13 @@ export default function ProfilePage({
                   होम फीड से अपनी पहली पोस्ट डालें!
                 </p>
               </div>
-            ) : postViewMode === "grid" ? (
-              <div className="grid grid-cols-3 gap-1">
-                {userPosts.map((post) => (
+            ) : (
+              <div className="grid grid-cols-3 gap-0.5">
+                {userPosts.map((post, idx) => (
                   <div
                     key={post.id}
-                    className="relative aspect-square bg-card rounded-lg overflow-hidden border border-border"
+                    className="relative aspect-square bg-muted overflow-hidden"
+                    data-ocid={`profile.posts.item.${idx + 1}`}
                   >
                     {post.videoUrl ? (
                       <div className="relative w-full h-full">
@@ -757,13 +1043,13 @@ export default function ProfilePage({
                           playsInline
                           className="w-full h-full object-cover"
                         />
-                        <div className="absolute top-1 right-1 bg-black/60 rounded-full p-0.5">
-                          <span className="text-[10px]">🎬</span>
+                        <div className="absolute top-1 right-1 bg-black/60 rounded-sm p-0.5">
+                          <Play className="w-3 h-3 text-white fill-white" />
                         </div>
                       </div>
                     ) : (
                       <div className="w-full h-full flex items-center justify-center p-2 bg-muted">
-                        <p className="text-[10px] text-foreground text-center line-clamp-4 leading-tight">
+                        <p className="text-[9px] text-foreground text-center line-clamp-4 leading-tight">
                           {post.content}
                         </p>
                       </div>
@@ -777,58 +1063,11 @@ export default function ProfilePage({
                             prev.filter((p) => p.id !== post.id),
                           );
                         }}
-                        className="absolute bottom-1 right-1 bg-red-500/80 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px]"
+                        className="absolute bottom-1 right-1 bg-red-500/80 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px]"
                         aria-label="डिलीट करें"
+                        data-ocid={`profile.posts.delete_button.${idx + 1}`}
                       >
                         ×
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col gap-2">
-                {userPosts.map((post) => (
-                  <div
-                    key={post.id}
-                    className="bg-card rounded-xl border border-border p-3 flex gap-3 items-start"
-                  >
-                    {post.videoUrl ? (
-                      <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-muted">
-                        <video
-                          src={post.videoUrl}
-                          muted
-                          playsInline
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                        <span className="text-xl">📝</span>
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-foreground line-clamp-3 leading-snug">
-                        {post.content ||
-                          (post.videoUrl ? "🎬 वीडियो पोस्ट" : "")}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground mt-1">
-                        ❤️ {post.likes} · 💬 {post.comments}
-                      </p>
-                    </div>
-                    {isOwnProfile && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          deletePostFromStorage(post.id);
-                          setUserPosts((prev) =>
-                            prev.filter((p) => p.id !== post.id),
-                          );
-                        }}
-                        className="text-red-500 hover:text-red-700 text-sm font-bold shrink-0"
-                        aria-label="डिलीट करें"
-                      >
-                        🗑️
                       </button>
                     )}
                   </div>
@@ -837,319 +1076,721 @@ export default function ProfilePage({
             )}
           </TabsContent>
 
-          {/* Friends Tab */}
-          <TabsContent value="friends" className="mt-0">
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {FRIENDS.map((friend, idx) => (
-                <div
-                  key={friend.id}
-                  className="bg-card rounded-xl border border-border shadow-card p-4 flex flex-col items-center gap-3"
-                  data-ocid={`profile.friends.item.${idx + 1}`}
-                >
-                  <Avatar className="w-24 h-24">
-                    <AvatarFallback className="bg-accent text-accent-foreground font-bold text-xl">
-                      {friend.initials}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="text-center">
-                    <p className="font-bold text-lg text-foreground leading-tight">
-                      {friend.name}
-                    </p>
-                    <p className="text-base text-muted-foreground mt-0.5">
-                      {friend.mutual}
-                    </p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full rounded-full text-base h-10"
-                    data-ocid={`profile.friends.button.${idx + 1}`}
+          {/* Reels Tab */}
+          <TabsContent value="reels" className="mt-0">
+            {videoPosts.length === 0 ? (
+              <div
+                className="bg-card rounded-xl border border-border p-8 text-center"
+                data-ocid="profile.reels.empty_state"
+              >
+                <div className="text-4xl mb-3">🎬</div>
+                <p className="text-sm font-bold text-foreground">
+                  अभी कोई रील नहीं
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  वीडियो पोस्ट करें और यहाँ दिखेंगी
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-0.5">
+                {videoPosts.map((post, idx) => (
+                  <div
+                    key={post.id}
+                    className="relative aspect-[9/16] bg-black overflow-hidden"
+                    data-ocid={`profile.reels.item.${idx + 1}`}
                   >
-                    मित्र
-                  </Button>
-                </div>
-              ))}
+                    <video
+                      src={post.videoUrl}
+                      muted
+                      playsInline
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute top-1 right-1 bg-black/60 rounded-sm p-0.5">
+                      <Play className="w-3 h-3 text-white fill-white" />
+                    </div>
+                    {post.content && (
+                      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-1">
+                        <p className="text-white text-[9px] line-clamp-2">
+                          {post.content}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Tagged Tab */}
+          <TabsContent value="tagged" className="mt-0">
+            <div
+              className="bg-card rounded-xl border border-border p-8 text-center"
+              data-ocid="profile.tagged.empty_state"
+            >
+              <div className="text-4xl mb-3">🏷️</div>
+              <p className="text-sm font-bold text-foreground">
+                अभी कोई टैग नहीं
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                जब कोई आपको टैग करेगा, यहाँ दिखेगा
+              </p>
             </div>
           </TabsContent>
 
-          {/* Settings Tab -- सिर्फ profile owner को दिखेगा */}
+          {/* Settings Tab — 6 Accordion Sections */}
           {isOwnProfile && (
             <TabsContent
               value="settings"
               className="mt-0"
               data-ocid="profile.settings.panel"
             >
-              {/* Dark Mode Toggle -- सिर्फ Prince Pawan Kumar (admin) को दिखेगा */}
-              {adminVerified && (
-                <div className="bg-card border border-border rounded-xl shadow-card p-4 mb-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl">{dark ? "🌙" : "☀️"}</span>
-                    <div>
-                      <p className="font-bold text-lg text-foreground">
-                        डार्क मोड
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {dark ? "रात का थीम चालू है" : "दिन का थीम चालू है"}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={toggleDark}
-                    data-ocid="profile.settings.darkmode.toggle"
-                    className={`relative w-16 h-8 rounded-full transition-colors duration-300 focus:outline-none ${
-                      dark ? "bg-primary" : "bg-muted"
-                    }`}
-                  >
-                    <span
-                      className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white shadow-md transition-transform duration-300 ${
-                        dark ? "translate-x-8" : "translate-x-0"
-                      }`}
-                    />
-                  </button>
-                </div>
-              )}
-              <Tabs defaultValue="language">
-                <div className="overflow-x-auto pb-1">
-                  <TabsList className="w-max min-w-full grid grid-cols-5 bg-card border border-border rounded-xl shadow-card mb-4 h-14">
-                    <TabsTrigger
-                      value="language"
-                      className="text-sm rounded-lg font-bold px-3"
-                    >
-                      🌐 भाषा
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="englishguru"
-                      className="text-sm rounded-lg font-bold px-3"
-                    >
-                      🎓 English AI
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="wallet"
-                      className="text-sm rounded-lg font-bold px-3"
-                      data-ocid="profile.settings.wallet.tab"
-                    >
-                      💰 वॉलेट
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="spinwheel"
-                      className="text-sm rounded-lg font-bold px-3"
-                      data-ocid="profile.settings.spinwheel.tab"
-                    >
-                      🎡 भाग्य चक्र
-                    </TabsTrigger>
-                    {isAdmin && (
-                      <TabsTrigger
-                        value="admin-stats"
-                        className="text-sm rounded-lg font-bold px-3"
-                        data-ocid="profile.settings.admin_stats.tab"
-                        onClick={handleShowStats}
-                      >
-                        📊 Stats
-                      </TabsTrigger>
-                    )}
-                  </TabsList>
-                </div>
-
-                {/* Language */}
-                <TabsContent value="language" className="mt-0">
-                  <div className="bg-card rounded-xl border border-border shadow-card p-4">
-                    <div className="flex items-center gap-2 mb-4">
-                      <span className="text-2xl">🌐</span>
-                      <h3 className="font-black text-xl text-foreground">
-                        भाषा चुनें
-                      </h3>
-                    </div>
-                    <ScrollArea className="h-72">
-                      <div className="flex flex-col gap-2 pr-2">
-                        {LANGUAGES.map((lang) => {
-                          const isActive = selectedLang === lang.code;
-                          return (
-                            <button
-                              key={lang.code}
-                              type="button"
-                              onClick={() => handleLangSelect(lang.code)}
-                              data-ocid="profile.settings.language.button"
-                              className={`flex items-center justify-between px-4 py-3 rounded-xl transition-colors text-left ${
-                                isActive
-                                  ? "bg-primary/10 border border-primary/30"
-                                  : "hover:bg-muted border border-transparent"
-                              }`}
-                            >
-                              <div className="flex flex-col">
-                                <span
-                                  className={`text-xl font-bold leading-tight ${isActive ? "text-primary" : "text-foreground"}`}
-                                >
-                                  {lang.name}
-                                </span>
-                                <span className="text-base text-muted-foreground mt-0.5">
-                                  {lang.label}
-                                </span>
-                              </div>
-                              {isActive && (
-                                <Check className="w-6 h-6 text-primary shrink-0" />
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </ScrollArea>
-                  </div>
-                </TabsContent>
-
-                {/* English Guru AI */}
-                <TabsContent value="englishguru" className="mt-0">
-                  <div className="bg-card rounded-xl border border-border shadow-card p-4">
-                    <div className="flex items-center gap-2 mb-4">
-                      <span className="text-2xl">🎓</span>
-                      <h3 className="font-black text-xl text-foreground">
-                        English Guru AI
-                      </h3>
-                    </div>
-                    <EnglishGuruAI />
-                  </div>
-                </TabsContent>
-
-                {/* Wallet */}
-                <TabsContent
-                  value="wallet"
-                  className="mt-0"
-                  data-ocid="profile.settings.wallet.panel"
+              <div className="flex flex-col gap-2 pb-4">
+                {/* Section 1: Account Settings */}
+                <SettingsSection
+                  icon="👤"
+                  title="अकाउंट सेटिंग्स"
+                  sectionKey="account"
+                  openSections={openSections}
+                  toggleSection={toggleSection}
+                  ocid="profile.settings.account.panel"
                 >
-                  <div className="bg-card rounded-xl border border-border shadow-card p-4 flex flex-col gap-4">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 text-center">
-                        <p className="text-base text-muted-foreground mb-1">
-                          मेरा बैलेंस
-                        </p>
-                        <p className="text-3xl font-black text-primary">
-                          ₹{walletBalance.toFixed(2)}
-                        </p>
-                      </div>
-                      <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-center">
-                        <p className="text-base text-muted-foreground mb-1">
-                          Admin फ़ीस
-                        </p>
-                        <p className="text-3xl font-black text-amber-600">
-                          ₹{adminBalance.toFixed(2)}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="bg-muted/50 rounded-xl p-4 border border-border flex flex-col gap-3">
-                      <h3 className="font-black text-xl text-foreground">
-                        💸 पैसे भेजें
-                      </h3>
-                      <Input
-                        value={recipient}
-                        onChange={(e) => setRecipient(e.target.value)}
-                        placeholder="प्राप्तकर्ता का नाम"
-                        className="text-lg h-14"
-                        data-ocid="profile.wallet.recipient.input"
-                      />
-                      <Input
-                        value={sendAmount}
-                        onChange={(e) => setSendAmount(e.target.value)}
-                        placeholder="राशि (₹)"
-                        type="number"
-                        min="1"
-                        className="text-lg h-14"
-                        data-ocid="profile.wallet.amount.input"
-                      />
-                      <p className="text-base text-muted-foreground">
-                        ₹5 शुल्क हर लेनदेन पर लगेगा
+                  <div className="flex items-center justify-between py-2">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">
+                        प्रोफाइल एडिट करें
                       </p>
-                      <Button
-                        onClick={handleSend}
-                        disabled={animating || !recipient.trim() || !sendAmount}
-                        className="w-full text-xl font-black h-14"
-                        data-ocid="profile.wallet.send.button"
-                      >
-                        {animating ? "भेज रहा है..." : "भेजें 🚀"}
-                      </Button>
+                      <p className="text-xs text-muted-foreground">
+                        नाम, bio, फोटो बदलें
+                      </p>
                     </div>
-
-                    <div className="flex flex-col gap-2">
-                      <h3 className="font-black text-xl text-foreground">
-                        📜 लेनदेन इतिहास
-                      </h3>
-                      {transactions.length === 0 ? (
-                        <div
-                          className="text-center py-8 text-muted-foreground"
-                          data-ocid="profile.wallet.empty_state"
-                        >
-                          <span className="text-4xl block mb-3">🏦</span>
-                          <p className="text-xl font-bold">कोई लेनदेन नहीं</p>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col gap-2">
-                          {transactions.map((tx: any, idx: number) => (
-                            <div
-                              key={tx.id}
-                              data-ocid={`profile.wallet.item.${idx + 1}`}
-                              className="bg-card border border-border rounded-lg px-4 py-3 flex items-center justify-between"
-                            >
-                              <div>
-                                <p className="text-base font-bold text-foreground">
-                                  {tx.sender} → {tx.recipient}
-                                </p>
-                                <p className="text-base text-muted-foreground">
-                                  {tx.time}
-                                </p>
-                              </div>
-                              <span className="text-xl font-black text-destructive">
-                                -₹{tx.amount + 5}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setEditOpen(true)}
+                      data-ocid="profile.settings.account.edit_button"
+                    >
+                      ✏️ एडिट
+                    </Button>
                   </div>
+                  <div className="border-t border-border" />
+                  <div className="flex items-center justify-between py-2">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">
+                        अकाउंट टाइप {accountType === "public" ? "🌍" : "🔒"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {accountType === "public"
+                          ? "पब्लिक — सब देख सकते हैं"
+                          : "प्राइवेट — सिर्फ फॉलोअर्स"}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const next =
+                          accountType === "public" ? "private" : "public";
+                        setAccountType(next);
+                        localStorage.setItem("mk_account_type", next);
+                      }}
+                      className={`relative w-12 h-6 rounded-full transition-all duration-300 ${accountType === "public" ? "bg-primary" : "bg-muted"}`}
+                      data-ocid="profile.settings.account.toggle"
+                    >
+                      <div
+                        className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-300 ${accountType === "public" ? "left-6" : "left-0.5"}`}
+                      />
+                    </button>
+                  </div>
+                  <div className="border-t border-border" />
+                  <div className="flex items-center justify-between py-2">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">
+                        मोबाइल नंबर
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        रजिस्टर्ड नंबर
+                      </p>
+                    </div>
+                    <span className="text-sm font-mono font-bold text-foreground bg-muted px-3 py-1 rounded-lg">
+                      {userMobile === "admin" ? "—" : userMobile}
+                    </span>
+                  </div>
+                </SettingsSection>
+
+                {/* Section 2: Wallet */}
+                <SettingsSection
+                  icon="💰"
+                  title="मनी किंगडम वॉलेट"
+                  sectionKey="wallet"
+                  openSections={openSections}
+                  toggleSection={toggleSection}
+                  ocid="profile.settings.wallet.panel"
+                >
+                  <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 text-center mb-2">
+                    <p className="text-xs text-muted-foreground mb-0.5">
+                      मेरा बैलेंस
+                    </p>
+                    <p className="text-3xl font-black text-primary">
+                      ₹{walletBalance.toFixed(2)}
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Input
+                      value={recipient}
+                      onChange={(e) => setRecipient(e.target.value)}
+                      placeholder="प्राप्तकर्ता का नाम"
+                      className="text-sm h-10"
+                      data-ocid="profile.wallet.recipient.input"
+                    />
+                    <Input
+                      value={sendAmount}
+                      onChange={(e) => setSendAmount(e.target.value)}
+                      placeholder="राशि (₹)"
+                      type="number"
+                      min="1"
+                      className="text-sm h-10"
+                      data-ocid="profile.wallet.amount.input"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      ₹5 शुल्क हर लेनदेन पर
+                    </p>
+                    <Button
+                      onClick={handleSend}
+                      disabled={animating || !recipient.trim() || !sendAmount}
+                      className="w-full font-bold h-10"
+                      data-ocid="profile.wallet.send.button"
+                    >
+                      {animating ? "भेज रहा है..." : "भेजें 🚀"}
+                    </Button>
+                  </div>
+                  <div className="border-t border-border my-2" />
+                  <div className="flex items-center justify-between py-1">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">
+                        विथड्रॉल
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        वर्चुअल वॉलेट
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        toast.info("विथड्रॉल के लिए admin से संपर्क करें")
+                      }
+                      data-ocid="profile.settings.wallet.withdraw_button"
+                    >
+                      निकालें
+                    </Button>
+                  </div>
+                  <div className="border-t border-border my-2" />
+                  <p className="text-sm font-semibold text-foreground mb-2">
+                    📜 ट्रांजेक्शन हिस्ट्री
+                  </p>
+                  {transactions.length === 0 ? (
+                    <div
+                      className="text-center py-4 text-muted-foreground"
+                      data-ocid="profile.wallet.empty_state"
+                    >
+                      <span className="text-2xl block mb-1">🏦</span>
+                      <p className="text-sm font-bold">कोई लेनदेन नहीं</p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-1.5">
+                      {transactions.map((tx: any, idx: number) => (
+                        <div
+                          key={tx.id}
+                          data-ocid={`profile.wallet.item.${idx + 1}`}
+                          className="bg-muted/50 border border-border rounded-lg px-3 py-2 flex items-center justify-between"
+                        >
+                          <div>
+                            <p className="text-xs font-bold text-foreground">
+                              {tx.sender} → {tx.recipient}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {tx.time}
+                            </p>
+                          </div>
+                          <span className="text-sm font-black text-destructive">
+                            -₹{tx.amount + 5}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   {animating && (
                     <CoinAnimation onComplete={handleAnimationComplete} />
                   )}
-                </TabsContent>
+                </SettingsSection>
 
-                {/* Spin Wheel Tab */}
-                <TabsContent
-                  value="spinwheel"
-                  className="mt-0"
-                  data-ocid="profile.settings.spinwheel.panel"
+                {/* Section 3: Privacy & Security */}
+                <SettingsSection
+                  icon="🔒"
+                  title="प्राइवेसी और सुरक्षा"
+                  sectionKey="privacy"
+                  openSections={openSections}
+                  toggleSection={toggleSection}
+                  ocid="profile.settings.privacy.panel"
                 >
-                  <div className="bg-card rounded-xl border border-border shadow-card overflow-hidden">
-                    <SpinWheel />
+                  <div className="py-1">
+                    <p className="text-sm font-semibold text-foreground mb-2">
+                      पिन बदलें
+                    </p>
+                    {pinChangeMode ? (
+                      <div className="flex flex-col gap-2">
+                        <Input
+                          type="password"
+                          maxLength={4}
+                          value={newPin}
+                          onChange={(e) =>
+                            setNewPin(
+                              e.target.value.replace(/\D/g, "").slice(0, 4),
+                            )
+                          }
+                          placeholder="नया 4-अंक पिन"
+                          className="text-sm h-10"
+                          data-ocid="profile.settings.privacy.pin.input"
+                        />
+                        <Input
+                          type="password"
+                          maxLength={4}
+                          value={confirmPin}
+                          onChange={(e) =>
+                            setConfirmPin(
+                              e.target.value.replace(/\D/g, "").slice(0, 4),
+                            )
+                          }
+                          placeholder="पिन दोबारा डालें"
+                          className="text-sm h-10"
+                          data-ocid="profile.settings.privacy.confirm_pin.input"
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => {
+                              if (
+                                newPin.length === 4 &&
+                                newPin === confirmPin
+                              ) {
+                                localStorage.setItem("mk_user_pin", newPin);
+                                setPinChangeMode(false);
+                                setNewPin("");
+                                setConfirmPin("");
+                                toast.success("पिन बदल गया! ✅");
+                              } else {
+                                toast.error("4-अंक पिन डालें और दोनों एक जैसे हों");
+                              }
+                            }}
+                            data-ocid="profile.settings.privacy.pin.save_button"
+                          >
+                            सेव करें
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1"
+                            onClick={() => {
+                              setPinChangeMode(false);
+                              setNewPin("");
+                              setConfirmPin("");
+                            }}
+                            data-ocid="profile.settings.privacy.pin.cancel_button"
+                          >
+                            रद्द
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-fit"
+                        onClick={() => setPinChangeMode(true)}
+                        data-ocid="profile.settings.privacy.change_pin.button"
+                      >
+                        🔑 पिन बदलें
+                      </Button>
+                    )}
                   </div>
-                </TabsContent>
+                  <div className="border-t border-border my-2" />
+                  <div className="py-1">
+                    <p className="text-sm font-semibold text-foreground mb-1">
+                      ब्लॉक लिस्ट
+                    </p>
+                    <div
+                      className="bg-muted/40 rounded-lg p-3 text-center text-muted-foreground text-xs"
+                      data-ocid="profile.settings.privacy.blocklist.empty_state"
+                    >
+                      🚫 कोई ब्लॉक नहीं किया गया
+                    </div>
+                  </div>
+                  <div className="border-t border-border my-2" />
+                  <div className="py-1">
+                    <p className="text-sm font-semibold text-foreground mb-1">
+                      एक्टिविटी लॉग
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      आखिरी लॉगिन:{" "}
+                      {localStorage.getItem("mk_last_login") || "उपलब्ध नहीं"}
+                    </p>
+                  </div>
+                </SettingsSection>
 
-                {/* Admin Stats Tab -- सिर्फ Prince Pawan Kumar को दिखेगा */}
-                <TabsContent
-                  value="admin-stats"
-                  className="mt-0"
-                  data-ocid="profile.settings.admin_stats.panel"
+                {/* Section 4: Notification Settings */}
+                <SettingsSection
+                  icon="🔔"
+                  title="नोटिफिकेशन सेटिंग्स"
+                  sectionKey="notifications"
+                  openSections={openSections}
+                  toggleSection={toggleSection}
+                  ocid="profile.settings.notifications.panel"
                 >
-                  <div className="bg-card rounded-xl border border-border shadow-card p-5 flex flex-col gap-5">
-                    <div className="flex items-center gap-3">
-                      <span className="text-3xl">📊</span>
-                      <div>
-                        <h3 className="font-black text-xl text-foreground">
-                          Admin Stats
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          सिर्फ Prince Pawan Kumar के लिए
+                  <ToggleRow
+                    label="पुश नोटिफिकेशन"
+                    desc="सभी नोटिफिकेशन"
+                    value={notifPush}
+                    onToggle={() => {
+                      const n = !notifPush;
+                      setNotifPush(n);
+                      localStorage.setItem("mk_notif_push", String(n));
+                    }}
+                    ocid="profile.settings.notifications.push.toggle"
+                  />
+                  <div className="border-t border-border" />
+                  <ToggleRow
+                    label="पेमेंट अलर्ट"
+                    desc="लेनदेन की सूचना"
+                    value={notifPayment}
+                    onToggle={() => {
+                      const n = !notifPayment;
+                      setNotifPayment(n);
+                      localStorage.setItem("mk_notif_payment", String(n));
+                    }}
+                    ocid="profile.settings.notifications.payment.toggle"
+                  />
+                  <div className="border-t border-border" />
+                  <ToggleRow
+                    label="म्यूट करें"
+                    desc={
+                      notifMute ? "🔕 नोटिफिकेशन बंद है" : "सब नोटिफिकेशन म्यूट करें"
+                    }
+                    value={notifMute}
+                    onToggle={() => {
+                      const n = !notifMute;
+                      setNotifMute(n);
+                      localStorage.setItem("mk_notif_mute", String(n));
+                    }}
+                    ocid="profile.settings.notifications.mute.toggle"
+                  />
+                </SettingsSection>
+
+                {/* Section 5: Display & Media */}
+                <SettingsSection
+                  icon="🎨"
+                  title="डिस्प्ले और मीडिया"
+                  sectionKey="display"
+                  openSections={openSections}
+                  toggleSection={toggleSection}
+                  ocid="profile.settings.display.panel"
+                >
+                  <ToggleRow
+                    label={dark ? "🌙 डार्क मोड" : "☀️ लाइट मोड"}
+                    desc={dark ? "रात की तरह काला थीम" : "उज्जवल और साफ थीम"}
+                    value={dark}
+                    onToggle={toggleDark}
+                    ocid="profile.darkmode.toggle"
+                  />
+                  <div className="border-t border-border" />
+                  <div className="py-2">
+                    <p className="text-sm font-semibold text-foreground mb-2">
+                      थीम चुनें
+                    </p>
+                    <div className="flex flex-col gap-1.5">
+                      {(
+                        [
+                          {
+                            id: "royal-gold" as ThemeName,
+                            icon: "🌟",
+                            name: "Royal Gold",
+                            preview: "oklch(0.86 0.08 72)",
+                          },
+                          {
+                            id: "night-black" as ThemeName,
+                            icon: "🌙",
+                            name: "Night Black",
+                            preview: "oklch(0.12 0.02 40)",
+                          },
+                          {
+                            id: "diamond-silver" as ThemeName,
+                            icon: "💎",
+                            name: "Diamond Silver",
+                            preview: "oklch(0.97 0.005 240)",
+                          },
+                        ] as const
+                      ).map((th) => (
+                        <button
+                          key={th.id}
+                          type="button"
+                          onClick={() => setTheme(th.id)}
+                          data-ocid={`profile.settings.display.${th.id}.button`}
+                          className={`flex items-center gap-3 px-3 py-2 rounded-xl border-2 transition-all text-left ${appTheme === th.id ? "border-primary" : "border-border hover:border-primary/40"}`}
+                        >
+                          <div
+                            className="w-7 h-7 rounded-lg shrink-0 border border-border flex items-center justify-center text-sm"
+                            style={{ background: th.preview }}
+                          >
+                            {th.icon}
+                          </div>
+                          <span
+                            className={`text-sm font-semibold ${appTheme === th.id ? "text-primary" : "text-foreground"}`}
+                          >
+                            {th.name}
+                          </span>
+                          {appTheme === th.id && (
+                            <span className="ml-auto text-primary text-xs">
+                              ✓
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="border-t border-border" />
+                  <ToggleRow
+                    label="डाटा सेवर"
+                    desc={
+                      dataSaver ? "वीडियो कम क्वालिटी में चलेंगे" : "सामान्य क्वालिटी"
+                    }
+                    value={dataSaver}
+                    onToggle={() => {
+                      const n = !dataSaver;
+                      setDataSaver(n);
+                      localStorage.setItem("mk_data_saver", String(n));
+                    }}
+                    ocid="profile.settings.display.datasaver.toggle"
+                  />
+                  <div className="border-t border-border" />
+                  <ToggleRow
+                    label="ऑटो-प्ले"
+                    desc="वीडियो अपने आप चलें"
+                    value={autoPlay}
+                    onToggle={() => {
+                      const n = !autoPlay;
+                      setAutoPlay(n);
+                      localStorage.setItem("mk_autoplay", String(n));
+                    }}
+                    ocid="profile.settings.display.autoplay.toggle"
+                  />
+                  <div className="border-t border-border" />
+                  <div className="py-2">
+                    <p className="text-sm font-semibold text-foreground mb-2">
+                      🌐 भाषा चुनें
+                    </p>
+                    <div className="grid grid-cols-2 gap-1.5 max-h-48 overflow-y-auto pr-1">
+                      {LANGUAGES.map((lang) => (
+                        <button
+                          key={lang.code}
+                          type="button"
+                          onClick={() => handleLangSelect(lang.code)}
+                          className={`flex items-center gap-1 px-2 py-1.5 rounded-lg border text-xs font-semibold transition-all ${selectedLang === lang.code ? "bg-primary text-primary-foreground border-primary" : "bg-muted text-foreground border-border hover:bg-accent"}`}
+                          data-ocid="profile.settings.language.button"
+                        >
+                          <span>{lang.name}</span>
+                          {selectedLang === lang.code && (
+                            <span className="ml-auto">✓</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </SettingsSection>
+
+                {/* Section 6: Help & Support */}
+                <SettingsSection
+                  icon="❓"
+                  title="सपोर्ट और हेल्प"
+                  sectionKey="help"
+                  openSections={openSections}
+                  toggleSection={toggleSection}
+                  ocid="profile.settings.help.panel"
+                >
+                  {/* Help Center */}
+                  <div className="py-1">
+                    <button
+                      type="button"
+                      onClick={() => setHelpExpanded(!helpExpanded)}
+                      className="flex items-center justify-between w-full py-1"
+                      data-ocid="profile.settings.help.helpcenter.button"
+                    >
+                      <p className="text-sm font-semibold text-foreground">
+                        📚 हेल्प सेंटर
+                      </p>
+                      <span className="text-xs text-muted-foreground">
+                        {helpExpanded ? "▲" : "▼"}
+                      </span>
+                    </button>
+                    {helpExpanded && (
+                      <div className="mt-2 flex flex-col gap-1 pl-2">
+                        {[
+                          "🪙 किंगडम कॉइन्स कैसे कमाएं?",
+                          "🎥 वीडियो कैसे डालें?",
+                          "🎁 गिफ्ट कैसे भेजें?",
+                          "👥 फॉलो कैसे करें?",
+                          "🔒 अकाउंट सुरक्षित कैसे रखें?",
+                          "🛒 बाज़ार में कैसे खरीदें?",
+                        ].map((tip) => (
+                          <p
+                            key={tip}
+                            className="text-xs text-muted-foreground py-1 border-b border-border/40 last:border-0"
+                          >
+                            {tip}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="border-t border-border my-2" />
+                  {/* Report Issue */}
+                  <div className="py-1">
+                    <p className="text-sm font-semibold text-foreground mb-2">
+                      🚨 समस्या रिपोर्ट करें
+                    </p>
+                    {reportSent ? (
+                      <div
+                        className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 text-center"
+                        data-ocid="profile.settings.help.report.success_state"
+                      >
+                        <p className="text-sm font-bold text-green-600">
+                          ✅ रिपोर्ट मिल गई!
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          जल्द जवाब मिलेगा
                         </p>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="flex flex-col gap-2">
+                        <Textarea
+                          value={reportText}
+                          onChange={(e) => setReportText(e.target.value)}
+                          placeholder="अपनी समस्या लिखें..."
+                          className="text-sm min-h-[70px]"
+                          data-ocid="profile.settings.help.report.textarea"
+                        />
+                        <Button
+                          size="sm"
+                          disabled={!reportText.trim()}
+                          onClick={() => {
+                            const reports = JSON.parse(
+                              localStorage.getItem("mk_reports") || "[]",
+                            );
+                            reports.push({
+                              text: reportText,
+                              time: new Date().toLocaleString("hi-IN"),
+                              user: displayName,
+                            });
+                            localStorage.setItem(
+                              "mk_reports",
+                              JSON.stringify(reports),
+                            );
+                            setReportText("");
+                            setReportSent(true);
+                            setTimeout(() => setReportSent(false), 4000);
+                          }}
+                          data-ocid="profile.settings.help.report.submit_button"
+                        >
+                          📤 भेजें
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="border-t border-border my-2" />
+                  {/* Delete Account */}
+                  <div className="py-1">
+                    <p className="text-sm font-semibold text-foreground mb-1">
+                      अकाउंट डिलीट करें
+                    </p>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      यह action पूर्ववत नहीं हो सकता
+                    </p>
+                    {deleteConfirmOpen ? (
+                      <div
+                        className="bg-destructive/10 border border-destructive/30 rounded-xl p-3 flex flex-col gap-2"
+                        data-ocid="profile.settings.help.delete.dialog"
+                      >
+                        <p className="text-sm font-bold text-destructive text-center">
+                          ⚠️ क्या आप सच में अकाउंट डिलीट करना चाहते हैं?
+                        </p>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            className="flex-1"
+                            onClick={() => {
+                              localStorage.clear();
+                              window.location.reload();
+                            }}
+                            data-ocid="profile.settings.help.delete.confirm_button"
+                          >
+                            हाँ, डिलीट करें
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1"
+                            onClick={() => setDeleteConfirmOpen(false)}
+                            data-ocid="profile.settings.help.delete.cancel_button"
+                          >
+                            रद्द करें
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="w-fit"
+                        onClick={() => setDeleteConfirmOpen(true)}
+                        data-ocid="profile.settings.help.delete_button"
+                      >
+                        🗑️ अकाउंट डिलीट करें
+                      </Button>
+                    )}
+                  </div>
+                  <div className="border-t border-border my-2" />
+                  {/* English Guru AI */}
+                  <div className="py-1">
+                    <p className="text-sm font-semibold text-foreground mb-2">
+                      🎓 English Guru AI
+                    </p>
+                    <EnglishGuruAI />
+                  </div>
+                  <div className="border-t border-border my-2" />
+                  {/* Spin Wheel */}
+                  <div className="py-1">
+                    <p className="text-sm font-semibold text-foreground mb-2">
+                      🎡 भाग्य चक्र
+                    </p>
+                    <SpinWheel />
+                  </div>
+                </SettingsSection>
 
+                {/* Admin Stats (password-protected) */}
+                {isAdmin && (
+                  <SettingsSection
+                    icon="📊"
+                    title="Admin Stats"
+                    sectionKey="admin-stats"
+                    openSections={openSections}
+                    toggleSection={toggleSection}
+                    ocid="profile.settings.admin_stats.panel"
+                  >
                     {!adminVerified ? (
-                      <div className="flex flex-col gap-4">
-                        <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-center">
-                          <span className="text-4xl block mb-2">🔐</span>
-                          <p className="font-bold text-lg text-foreground">
+                      <div className="flex flex-col gap-3 py-2">
+                        <div className="text-center">
+                          <span className="text-3xl block mb-2">🔐</span>
+                          <p className="font-bold text-foreground">
                             Admin पहचान verify करें
-                          </p>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            यह section सिर्फ admin के लिए है
                           </p>
                         </div>
                         <Input
@@ -1160,60 +1801,57 @@ export default function ProfilePage({
                             setPinError(false);
                           }}
                           placeholder="Admin password डालें"
-                          className={`text-lg h-14 ${pinError ? "border-destructive" : ""}`}
+                          className={`text-sm h-10 ${pinError ? "border-destructive" : ""}`}
                           onKeyDown={(e) => {
                             if (e.key === "Enter") handleAdminVerify();
                           }}
-                          data-ocid="profile.settings.admin_stats.pin_input"
+                          data-ocid="profile.settings.admin_stats.input"
                         />
                         {pinError && (
-                          <p className="text-destructive text-sm font-semibold text-center">
-                            ❌ गलत password। फिर से कोशिश करें।
+                          <p className="text-destructive text-xs font-semibold text-center">
+                            ❌ गलत password
                           </p>
                         )}
                         <Button
                           onClick={handleAdminVerify}
                           disabled={!pinInput.trim()}
-                          className="w-full text-xl font-black h-14"
+                          className="w-full font-bold h-10"
                           data-ocid="profile.settings.admin_stats.verify_button"
                         >
                           Verify करें 🔓
                         </Button>
                       </div>
                     ) : (
-                      <div className="flex flex-col gap-4">
-                        <div className="grid grid-cols-1 gap-4">
-                          <div className="bg-primary/10 border border-primary/30 rounded-2xl p-6 text-center">
-                            <p className="text-base text-muted-foreground mb-2 font-semibold">
-                              कुल App Loads
-                            </p>
-                            <p className="text-6xl font-black text-primary">
-                              {appLoads}
-                            </p>
-                            <p className="text-sm text-muted-foreground mt-2">
-                              बार app खोला गया है
-                            </p>
-                          </div>
+                      <div className="flex flex-col gap-3 py-2">
+                        <div className="bg-primary/10 border border-primary/30 rounded-2xl p-4 text-center">
+                          <p className="text-xs text-muted-foreground mb-1 font-semibold">
+                            कुल App Loads
+                          </p>
+                          <p className="text-4xl font-black text-primary">
+                            {appLoads}
+                          </p>
+                        </div>
+                        <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 text-center">
+                          <p className="text-xs text-muted-foreground mb-0.5">
+                            Admin फ़ीस
+                          </p>
+                          <p className="text-2xl font-black text-amber-600">
+                            ₹{adminBalance.toFixed(2)}
+                          </p>
                         </div>
                         <Button
                           variant="outline"
                           onClick={handleShowStats}
-                          className="w-full text-base font-bold h-12"
+                          className="w-full font-bold h-10"
                           data-ocid="profile.settings.admin_stats.refresh_button"
                         >
-                          🔄 Refresh करें
+                          🔄 Refresh
                         </Button>
-                        <div className="bg-muted/50 rounded-xl p-4 border border-border">
-                          <p className="text-sm text-muted-foreground text-center leading-relaxed">
-                            यह count हर बार profile खुलने पर बढ़ता है। बाकी कोई भी
-                            user यह नहीं देख सकता।
-                          </p>
-                        </div>
                       </div>
                     )}
-                  </div>
-                </TabsContent>
-              </Tabs>
+                  </SettingsSection>
+                )}
+              </div>
             </TabsContent>
           )}
         </Tabs>
@@ -1222,7 +1860,7 @@ export default function ProfilePage({
       <button
         type="button"
         onClick={onBack}
-        className="mt-4 text-base text-muted-foreground hover:text-foreground underline self-start"
+        className="mt-4 text-sm text-muted-foreground hover:text-foreground underline self-start"
         data-ocid="profile.link"
       >
         ← होम पर वापस जाएं

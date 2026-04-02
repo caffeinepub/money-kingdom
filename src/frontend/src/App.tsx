@@ -1,8 +1,10 @@
 import { Toaster } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
+import DustOverlay from "./components/DustOverlay";
 import LoginPage from "./components/LoginPage";
 import MainLayout from "./components/MainLayout";
+import MidnightCleaner from "./components/MidnightCleaner";
 import MoneyRain from "./components/MoneyRain";
 import { useDarkMode } from "./hooks/useDarkMode";
 import { useReminderNotification } from "./hooks/useReminderNotification";
@@ -77,10 +79,14 @@ function AppInner() {
   return (
     <>
       <MoneyRain />
-      <MainLayout
-        showReminderBanner={showBanner}
-        onDismissReminderBanner={dismissBanner}
-      />
+      <DustOverlay />
+      <MidnightCleaner />
+      <div className="relative mx-1 my-1 rounded-lg overflow-hidden">
+        <MainLayout
+          showReminderBanner={showBanner}
+          onDismissReminderBanner={dismissBanner}
+        />
+      </div>
       {showSummary && (
         <SessionSummaryDialog minutes={lastDuration} onClose={dismissSummary} />
       )}

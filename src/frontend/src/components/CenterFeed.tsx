@@ -5,7 +5,6 @@ import { useLanguage } from "../utils/i18n";
 import BackgroundMusicPlayer from "./BackgroundMusicPlayer";
 import CreatePost from "./CreatePost";
 import HindiQuotesCard from "./HindiQuotesCard";
-import KingdomClockWidget from "./KingdomClockWidget";
 import PostCard from "./PostCard";
 import StoryCreator from "./StoryCreator";
 import StoryViewer, { type Story } from "./StoryViewer";
@@ -94,9 +93,6 @@ interface CenterFeedProps {
 export default function CenterFeed({
   showReminderBanner,
   onDismissReminderBanner,
-  onNavigateProfile,
-  onOpenWallet,
-  onOpenSettings,
 }: CenterFeedProps) {
   const { t } = useLanguage();
   const [posts, setPosts] = useState<Post[]>(() => loadPostsFromStorage());
@@ -195,13 +191,6 @@ export default function CenterFeed({
     <div className="flex flex-col gap-2">
       {/* Background Music Player (fixed positioned) */}
       <BackgroundMusicPlayer />
-
-      {/* Kingdom Clock Widget */}
-      <KingdomClockWidget
-        onNavigateProfile={onNavigateProfile ?? (() => {})}
-        onOpenWallet={onOpenWallet ?? (() => {})}
-        onOpenSettings={onOpenSettings ?? (() => {})}
-      />
 
       {/* Hindi Quotes Card */}
       <HindiQuotesCard />
@@ -345,7 +334,7 @@ export default function CenterFeed({
         </button>
       </div>
 
-      {/* Unified Feed — all posts (video + text) in chronological order */}
+      {/* Unified Feed */}
       <AnimatePresence initial={false}>
         {filteredPosts.length === 0 ? (
           <motion.div

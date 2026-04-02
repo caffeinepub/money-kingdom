@@ -1,76 +1,50 @@
-# Money Kingdom – v64
+# Money Kingdom v66
 
 ## Current State
-v63 is a full PWA with Instagram/Facebook-style layout:
-- Bottom nav: Home | Bazaar | Reels | Chat | Profile
-- CenterFeed with Stories, CreatePost, PostCard (with reactions, comments, bookmark, gift), VideoPostCard
-- ProfilePage (Facebook-style with cover photo, round photo, followers, Settings inside)
-- SettingsPanel (Language 39 langs + English Guru AI tabs)
-- WalletPanel, SpinWheel, GiftCharacterPanel
-- Dark Mode (admin-only), Admin Stats (admin-only)
-- 39 languages full translation, onboarding (name + mobile)
-- Posts/stories persisted to localStorage
-- MoneyRain, CoinAnimation, animated header
+v65 has Instagram-style profile, Reels (vertical scroll, double-tap like), and basic Settings panel. Clock widget exists (KingdomClockWidget.tsx), music player (BackgroundMusicPlayer.tsx), wallet, gift system, 39 languages, admin panel, task board, and more are all present.
 
 ## Requested Changes (Diff)
 
 ### Add
-1. **KingdomClockWidget** – A decorative royal clock widget displayed at the TOP of the CenterFeed home screen (above Stories). Clock face shows 4 navigation points:
-   - 🕛 12 o'clock = "Profile" label + tap navigates to Profile
-   - 🕒 3 o'clock = "Wallet" label + tap opens WalletPanel
-   - 🕕 6 o'clock = "Feed" (stays on home)
-   - 🕘 9 o'clock = "Settings" label + tap opens SettingsPanel
-   The clock also shows the LIVE current time (hours + minutes hands). Animated gold/royal design. Tapping a position triggers a smooth card-flip or slide transition. Has a crown icon at center. Clock is compact (180px diameter) so it doesn't dominate the screen.
+1. **Dust & Midnight Cleaner feature:**
+   - CSS overlay on screen corners that increases opacity based on session time (max ~60 min to reach max dust)
+   - At exactly midnight (00:00), show animated character overlay saying "रुको! बहुत धूल-मिट्टी हो गई है, मुझे साफ करने दो!"
+   - Character animation: sweeping motion across screen, then dust clears, screen "sparkles"
+   - After cleaning: reward user with 10 Kingdom Coins
+   - Main app content has slight frame/margin so dust on edges is visible
+   - New component: DustOverlay.tsx + MidnightCleaner.tsx
 
-2. **BackgroundMusicPlayer** – A floating mini music player anchored to bottom-left (above bottom nav). Uses Web Audio API to generate a gentle looping ambient tone (pentatonic arpeggio, ~60 BPM, soft). Shows 🎵 icon, play/pause toggle, and "Money Kingdom Theme" label. Defaults to PAUSED (user must press play). Stores play preference in localStorage.
+2. **Full-Screen Immersive UI:**
+   - Chat (TravelChatPanel) opens as full-screen slide-up modal with blur backdrop
+   - Settings panel opens as full-screen slide-up modal
+   - Profile page opens as full-screen slide-up modal
+   - Swipe down to close gesture support
+   - Blur background effect when these are open
 
-3. **HindiQuotesOverlay** – Pre-loaded Hindi inspirational quotes shown as a scrollable quote card in CenterFeed (between Clock widget and Stories). Rotates through 10+ quotes about money/kingdom every 8 seconds with fade animation. Examples:
-   - "पैसा बोलता है, मेहनत से सिखो इसे बोलना"
-   - "आपका किंगडम आपकी मेहनत से बनेगा"
-   - "हर रुपया एक कदम है — मंजिल की तरफ"
-   - "जो सपने देखते हैं, वही राजा बनते हैं"
-   - "पैसों की बारिश तब होती है जब मेहनत की धूप निकलती है"
-
-4. **ThemeColorPicker** – In SettingsPanel, add a new "🎨 थीम" tab with 3 selectable themes:
-   - Royal Gold (current default – warm earthy oklch tones)
-   - Night Black (dark mode variant with deep black + gold accents)
-   - Diamond Silver (cool silver/white + blue-tinted accents)
-   Applies CSS variable overrides stored in localStorage as `mk_theme`.
-
-5. **TaskBoard** – New component shown in CenterFeed below the QuotesCard. "🏆 आज के काम" section with 3-4 daily tasks:
-   - "✅ आज लॉगिन किया" (auto-completed, +5 coins)
-   - "📸 एक पोस्ट डालो" (+10 coins)
-   - "👥 किसी को follow करो" (+5 coins)
-   - "🎡 भाग्य चक्र घुमाओ" (+2 coins)
-   Shows coin balance earned today. Tasks reset daily. Stored in localStorage. "Kingdom Coins" are separate from wallet balance, displayed as 🪙 X coins.
-
-6. **Following Feed Tab** – In CenterFeed, add two tabs at top: "सभी" (All posts) and "फॉलोइंग" (only posts from followed users). Tabs are small pills.
-
-7. **Crown Reaction** – Add 👑 "किंगडम" as a special 7th reaction in PostCard REACTIONS array. Crown reaction has gold color and shows a small crown animation when selected.
-
-8. **Music Sticker on Post** – In CreatePost, add a "🎵 Music" button that toggles showing a dropdown of 3 Hindi lyric quotes that get appended as a styled banner to the post content. Example options:
-   - "🎵 पैसा बोलता है..."
-   - "🎵 किंगडम की राह..."
-   - "🎵 मेहनत की धूप..."
+3. **Settings Panel Upgrade (6 detailed sections):**
+   - 👤 Account: profile edit (name, username, bio, photo), email/mobile update, public/private toggle
+   - 💰 Wallet: balance display, UPI ID save (text field only), transaction history, withdraw request button (shows "24 घंटे में process होगी" message)
+   - 🔒 Privacy: 4-digit PIN change, block list, activity log
+   - 🔔 Notifications: push alerts toggle, payment alerts toggle, mute option
+   - 🎨 Display: Dark Mode toggle (for ALL users now), theme picker, data saver, autoplay toggle, language
+   - ❓ Help: help center text, report problem, delete account
+   - 👑 "Verify My Kingdom" section at bottom: "Coming Soon" badge
 
 ### Modify
-- **CenterFeed**: Accept onNavigate and onOpenWallet and onOpenSettings callbacks from MainLayout so ClockWidget can navigate. Add Following tab toggle. Add KingdomClockWidget, HindiQuotesCard, TaskBoard sections above Stories.
-- **MainLayout**: Pass navigation callbacks down to CenterFeed.
-- **SettingsPanel**: Add 🎨 थीम tab with ThemeColorPicker.
-- **PostCard REACTIONS**: Add 👑 crown reaction as 7th item.
-- **CreatePost**: Add music sticker selector button.
+- TravelChatPanel: convert from popup/overlay to full-screen slide-up modal
+- SettingsPanel: expand into 6-section accordion/tabs layout, full-screen modal
+- ProfilePage: wrap in full-screen modal that slides up
+- App.tsx / MainLayout.tsx: add DustOverlay component, add frame margin
+- Dark Mode: make available to ALL users (remove admin-only restriction)
 
 ### Remove
-- Nothing removed.
+- Admin-only restriction on Dark Mode toggle
 
 ## Implementation Plan
-1. Create `KingdomClockWidget.tsx` – live clock SVG with 4 nav tap zones and golden styling
-2. Create `BackgroundMusicPlayer.tsx` – Web Audio API ambient generator, floating UI
-3. Create `HindiQuotesCard.tsx` – rotating quote card with fade animation
-4. Create `TaskBoard.tsx` – daily tasks with coin rewards, localStorage persistence
-5. Modify `CenterFeed.tsx` – add Following tab, integrate new widgets above stories, accept nav callbacks
-6. Modify `MainLayout.tsx` – pass wallet/settings/navigate callbacks to CenterFeed
-7. Modify `SettingsPanel.tsx` – add Theme tab
-8. Modify `PostCard.tsx` – add 👑 crown reaction
-9. Modify `CreatePost.tsx` – add music sticker button
-10. Create `ThemeColorPicker.tsx` – 3 theme selector inside SettingsPanel
+1. Create `DustOverlay.tsx` - canvas or CSS overlay with dust particles at corners, session timer, midnight trigger
+2. Create `MidnightCleaner.tsx` - animated character (CSS/emoji-based), speech bubble, sweep animation, sparkle, coin reward
+3. Update `TravelChatPanel.tsx` - make it a full-screen modal with slide-up animation
+4. Update `SettingsPanel.tsx` - rebuild as 6-section full-screen modal with accordion sections
+5. Update `ProfilePage.tsx` - wrap in full-screen slide-up modal container
+6. Update `App.tsx` or `MainLayout.tsx` - integrate DustOverlay, add MidnightCleaner, add frame padding
+7. Make Dark Mode accessible to all users in Display settings
