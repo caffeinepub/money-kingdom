@@ -14,20 +14,24 @@ import { useTheme } from "./hooks/useTheme";
 
 const queryClient = new QueryClient();
 
-function getStoredProfile(): {
-  name: string;
-  mobile: string;
-  createdAt: string;
-} | null {
+function isOnboardingDone(): boolean {
   try {
+    // Admin bypass
+    if (localStorage.getItem("mk_is_admin") === "true") return true;
+    // Regular user completed onboarding
+    if (localStorage.getItem("onboardingComplete") === "true") return true;
+    // Legacy: old user profile format
     const raw = localStorage.getItem("mk_user_profile");
-    if (!raw) return null;
+    if (!raw) return false;
     const parsed = JSON.parse(raw);
-    if (parsed?.name && parsed?.mobile) return parsed;
-    return null;
+    return Boolean(parsed?.name && parsed?.mobile);
   } catch {
-    return null;
+    return false;
   }
+}
+
+function isAdminUser(): boolean {
+  return localStorage.getItem("mk_is_admin") === "true";
 }
 
 function SessionSummaryDialog({
@@ -59,13 +63,10 @@ function SessionSummaryDialog({
 }
 
 function AppInner() {
-  const hasProfile = Boolean(getStoredProfile());
-  const [loggedIn, setLoggedIn] = useState(hasProfile);
+  const [loggedIn, setLoggedIn] = useState(isOnboardingDone);
   const { showSummary, lastDuration, dismissSummary } = useSessionTimer();
   const { showBanner, dismissBanner } = useReminderNotification();
-  // Initialize dark mode on app start
   useDarkMode();
-  // Initialize theme on app start (applies saved theme to CSS variables)
   useTheme();
 
   if (!loggedIn) {
@@ -77,9 +78,12 @@ function AppInner() {
     );
   }
 
+  const isAdmin = isAdminUser();
+
   return (
     <>
-      <WeatherBackground />
+      {/* Weather only for regular users, not admin */}
+      {!isAdmin && <WeatherBackground />}
       <MoneyRain />
       <DustOverlay />
       <MidnightCleaner />
