@@ -38,6 +38,26 @@ interface Comment {
   author: string;
   initials: string;
   text: string;
+  isKing?: boolean;
+}
+
+function getUserCoins(): number {
+  try {
+    const raw = localStorage.getItem("mk_wallet");
+    if (!raw) return 0;
+    const parsed = JSON.parse(raw);
+    return typeof parsed?.coins === "number" ? parsed.coins : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function getUserRank(): "Soldier" | "Knight" | "Prince" | "King" {
+  const coins = getUserCoins();
+  if (coins >= 2000) return "King";
+  if (coins >= 500) return "Prince";
+  if (coins >= 100) return "Knight";
+  return "Soldier";
 }
 
 const REACTIONS = [
@@ -111,15 +131,19 @@ export default function PostCard({
 
   const handleAddComment = () => {
     if (!newComment.trim()) return;
-    setComments((prev) => [
-      ...prev,
-      {
-        id: Date.now().toString(),
-        author: "Prince Pawan Kumar",
-        initials: "PPK",
-        text: newComment.trim(),
-      },
-    ]);
+    const rank = getUserRank();
+    const newC: Comment = {
+      id: Date.now().toString(),
+      author: "Prince Pawan Kumar",
+      initials: "PPK",
+      text: newComment.trim(),
+      isKing: rank === "King",
+    };
+    setComments((prev) => {
+      // King comments go to top, others append
+      if (newC.isKing) return [newC, ...prev];
+      return [...prev, newC];
+    });
     setNewComment("");
     playCommentSound();
   };
@@ -450,21 +474,39 @@ export default function PostCard({
                 className="overflow-hidden"
               >
                 <div className="flex flex-col gap-2 pt-2 border-t border-border">
-                  {comments.map((c) => (
-                    <div key={c.id} className="flex gap-2">
-                      <Avatar className="w-7 h-7 shrink-0">
-                        <AvatarFallback className="text-[10px] bg-muted text-muted-foreground">
-                          {c.initials}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="bg-muted rounded-xl px-2.5 py-1.5 text-xs flex-1">
-                        <span className="font-semibold text-foreground">
-                          {c.author}:{" "}
-                        </span>
-                        <span className="text-foreground">{c.text}</span>
+                  {[...comments]
+                    .sort((a, b) => (b.isKing ? 1 : 0) - (a.isKing ? 1 : 0))
+                    .map((c) => (
+                      <div key={c.id} className="flex gap-2">
+                        <Avatar className="w-7 h-7 shrink-0">
+                          <AvatarFallback
+                            className={`text-[10px] font-bold ${c.isKing ? "bg-yellow-500 text-black" : "bg-muted text-muted-foreground"}`}
+                          >
+                            {c.initials}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div
+                          className={`rounded-xl px-2.5 py-1.5 text-xs flex-1 ${c.isKing ? "border-2 border-yellow-400 bg-yellow-50 dark:bg-yellow-950" : "bg-muted"}`}
+                          style={
+                            c.isKing
+                              ? { boxShadow: "0 0 6px rgba(234,179,8,0.4)" }
+                              : {}
+                          }
+                        >
+                          {c.isKing && (
+                            <span className="text-yellow-600 font-black text-[10px] mr-1">
+                              👑 KING
+                            </span>
+                          )}
+                          <span
+                            className={`font-semibold ${c.isKing ? "text-yellow-700 dark:text-yellow-300" : "text-foreground"}`}
+                          >
+                            {c.author}:{" "}
+                          </span>
+                          <span className="text-foreground">{c.text}</span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
 
                   {/* Add comment */}
                   <div className="flex gap-2 mt-0.5">

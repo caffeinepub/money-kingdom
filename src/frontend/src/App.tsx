@@ -6,6 +6,7 @@ import LoginPage from "./components/LoginPage";
 import MainLayout from "./components/MainLayout";
 import MidnightCleaner from "./components/MidnightCleaner";
 import MoneyRain from "./components/MoneyRain";
+import WeatherBackground from "./components/WeatherBackground";
 import { useDarkMode } from "./hooks/useDarkMode";
 import { useReminderNotification } from "./hooks/useReminderNotification";
 import { useSessionTimer } from "./hooks/useSessionTimer";
@@ -78,6 +79,7 @@ function AppInner() {
 
   return (
     <>
+      <WeatherBackground />
       <MoneyRain />
       <DustOverlay />
       <MidnightCleaner />

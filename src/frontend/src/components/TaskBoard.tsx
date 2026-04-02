@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { DOUBLE_EARN_KEY } from "./MidnightCleaner";
 
 function todayKey() {
   return new Date().toISOString().split("T")[0];
@@ -111,15 +112,28 @@ export default function TaskBoard() {
     });
   }, []);
 
+  const isDoubleEarnings = () => {
+    try {
+      const until = Number(localStorage.getItem(DOUBLE_EARN_KEY) ?? 0);
+      return Date.now() < until;
+    } catch {
+      return false;
+    }
+  };
+
   const claimTask = (taskId: string, taskCoins: number) => {
     if (completed.includes(taskId)) return;
     const newCompleted = [...completed, taskId];
     setCompleted(newCompleted);
     saveCompletedTasks(newCompleted);
-    const newCoins = coins + taskCoins;
+    const double = isDoubleEarnings();
+    const earned = double ? taskCoins * 2 : taskCoins;
+    const newCoins = coins + earned;
     setCoins(newCoins);
     saveCoins(newCoins);
-    toast.success(`+${taskCoins} 🪙 कमाए!`);
+    toast.success(
+      double ? `⚡ 2x! +${earned} 🪙 डबल कमाए!` : `+${earned} 🪙 कमाए!`,
+    );
   };
 
   return (

@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useState } from "react";
 import { LAST_CLEAN_KEY } from "./DustOverlay";
+export const DOUBLE_EARN_KEY = "mk_double_earn_until";
 
 type Phase = "idle" | "arrival" | "sweeping" | "done";
 
@@ -63,6 +64,9 @@ export default function MidnightCleaner() {
     setTimeout(() => setPhase("sweeping"), 2200);
     setTimeout(() => {
       addCoins(10);
+      // Set double earnings power-up for 1 hour
+      const until = Date.now() + 60 * 60 * 1000;
+      localStorage.setItem(DOUBLE_EARN_KEY, String(until));
       window.dispatchEvent(new Event("mk_dust_reset"));
       setPhase("done");
       localStorage.setItem(LAST_CLEAN_KEY, todayString());
@@ -184,6 +188,14 @@ export default function MidnightCleaner() {
                 </motion.div>
                 <p className="text-yellow-200 text-sm opacity-80">
                   रात के 12 बजे की सफाई पूरी हुई 🌙
+                  <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                    className="bg-orange-500 text-white font-bold text-sm px-5 py-2.5 rounded-2xl shadow-xl mt-1"
+                  >
+                    ⚡ 1 घंटे के लिए 2x Coins! Tasks u0026 Games पर डबल कमाई!
+                  </motion.div>
                 </p>
               </motion.div>
             )}
