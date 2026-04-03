@@ -7,6 +7,8 @@ import type { View } from "./BottomNav";
 import BottomNav from "./BottomNav";
 import CenterFeed from "./CenterFeed";
 import ExploreView from "./ExploreView";
+import FestivalMode from "./FestivalMode";
+import GamesPanel from "./GamesPanel";
 import Header from "./Header";
 import LeftSidebar from "./LeftSidebar";
 import MarketplaceView from "./MarketplaceView";
@@ -32,6 +34,7 @@ export default function MainLayout({
   const [chatOpen, setChatOpen] = useState(false);
   const [walletOpen, setWalletOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [gamesOpen, setGamesOpen] = useState(false);
   const notificationsValue = useNotificationsState();
 
   const handleNavigate = (view: View) => {
@@ -49,6 +52,9 @@ export default function MainLayout({
   return (
     <NotificationsContext.Provider value={notificationsValue}>
       <div className="min-h-screen bg-background flex flex-col">
+        {/* Festival Mode banner (auto-triggered on festival days) */}
+        <FestivalMode />
+
         <Header
           onOpenChat={() => setChatOpen(true)}
           onOpenNotifications={() => setNotifOpen(true)}
@@ -85,7 +91,7 @@ export default function MainLayout({
         <BottomNav
           activeTab={currentView}
           onNavigate={handleNavigate}
-          onOpenChat={() => setChatOpen(true)}
+          onOpenGames={() => setGamesOpen(true)}
         />
 
         <NotificationsPanel
@@ -95,14 +101,14 @@ export default function MainLayout({
 
         <TravelChatPanel open={chatOpen} onClose={() => setChatOpen(false)} />
 
-        {/* Wallet panel from clock/home navigation */}
         <WalletPanel open={walletOpen} onClose={() => setWalletOpen(false)} />
 
-        {/* Settings panel from clock/home navigation */}
         <SettingsPanel
           open={settingsOpen}
           onClose={() => setSettingsOpen(false)}
         />
+
+        <GamesPanel open={gamesOpen} onClose={() => setGamesOpen(false)} />
       </div>
     </NotificationsContext.Provider>
   );

@@ -2,7 +2,13 @@ import { useEffect, useRef, useState } from "react";
 
 const SESSION_KEY = "mk_dust_session_start";
 export const LAST_CLEAN_KEY = "mk_last_midnight_clean";
-const MAX_DUST_MINUTES = 60;
+
+function getMaxDustMinutes(): number {
+  const intensity = localStorage.getItem("mk_dust_intensity") ?? "medium";
+  if (intensity === "slow") return 120;
+  if (intensity === "fast") return 20;
+  return 60; // medium default
+}
 
 function getSessionStart(): number {
   const stored = localStorage.getItem(SESSION_KEY);
@@ -22,9 +28,10 @@ export default function DustOverlay() {
 
   useEffect(() => {
     function update() {
+      const maxDust = getMaxDustMinutes();
       const elapsedMs = Date.now() - sessionStartRef.current;
       const elapsedMin = elapsedMs / 60000;
-      const ratio = Math.min(elapsedMin / MAX_DUST_MINUTES, 1);
+      const ratio = Math.min(elapsedMin / maxDust, 1);
       setOpacity(ratio * 0.72);
     }
     update();
@@ -109,7 +116,7 @@ export default function DustOverlay() {
             "radial-gradient(ellipse at bottom right, rgba(80,55,20,0.9) 0%, transparent 70%)",
         }}
       />
-      {/* SVG noise filter - decorative, no accessible label needed */}
+      {/* SVG noise filter */}
       <svg
         width="0"
         height="0"

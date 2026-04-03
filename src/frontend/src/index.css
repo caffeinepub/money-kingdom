@@ -332,3 +332,18 @@
 html {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
+
+/* 11. Marquee text for music track */
+@keyframes marqueeScroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+.marquee-text {
+  display: inline-block;
+  white-space: nowrap;
+  animation: marqueeScroll 12s linear infinite;
+}

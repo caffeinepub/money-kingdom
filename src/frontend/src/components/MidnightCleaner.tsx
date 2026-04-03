@@ -13,6 +13,26 @@ const SPARKLES = [
   { id: "sp5", icon: "✨" },
 ];
 
+type CharacterType = "joker" | "soldier" | "robot";
+
+function getCharacter(): CharacterType {
+  const c = localStorage.getItem("mk_cleaner_character");
+  if (c === "joker" || c === "soldier" || c === "robot") return c;
+  return "soldier";
+}
+
+function getCharacterEmoji(c: CharacterType): string {
+  if (c === "joker") return "🤡";
+  if (c === "robot") return "🤖";
+  return "💂";
+}
+
+function getCharacterSpeech(c: CharacterType): string {
+  if (c === "joker") return "हाहाहा! धूल साफ करने का समय आ गया! 🤡";
+  if (c === "robot") return "BEEP BOOP... धूल detected... सफाई शुरू! 🤖";
+  return "रुको! बहुत धूल-मिट्टी हो गई है,\nमुझे साफ करने दो! 💂";
+}
+
 function addCoins(amount: number) {
   try {
     const raw = localStorage.getItem("mk_wallet");
@@ -58,8 +78,10 @@ function alreadyCleanedToday() {
 
 export default function MidnightCleaner() {
   const [phase, setPhase] = useState<Phase>("idle");
+  const [character, setCharacter] = useState<CharacterType>(getCharacter);
 
   const startCleaning = useCallback(() => {
+    setCharacter(getCharacter());
     setPhase("arrival");
     setTimeout(() => setPhase("sweeping"), 2200);
     setTimeout(() => {
@@ -87,6 +109,9 @@ export default function MidnightCleaner() {
   useEffect(() => {
     (window as any).__mkTestMidnight = startCleaning;
   }, [startCleaning]);
+
+  const emoji = getCharacterEmoji(character);
+  const speech = getCharacterSpeech(character);
 
   return (
     <AnimatePresence>
@@ -136,7 +161,7 @@ export default function MidnightCleaner() {
                   }}
                   className="text-7xl select-none"
                 >
-                  🧹
+                  {emoji}
                 </motion.div>
                 <motion.div
                   initial={{ scale: 0, opacity: 0 }}
@@ -145,9 +170,7 @@ export default function MidnightCleaner() {
                   className="bg-yellow-400 text-black rounded-2xl px-5 py-3 max-w-xs text-center text-base font-bold shadow-2xl"
                   style={{ borderRadius: "18px 18px 18px 4px" }}
                 >
-                  रुको! बहुत धूल-मिट्टी हो गई है,
-                  <br />
-                  मुझे साफ करने दो! 🧹
+                  {speech}
                 </motion.div>
               </motion.div>
             )}
@@ -194,7 +217,7 @@ export default function MidnightCleaner() {
                     transition={{ delay: 0.5 }}
                     className="bg-orange-500 text-white font-bold text-sm px-5 py-2.5 rounded-2xl shadow-xl mt-1"
                   >
-                    ⚡ 1 घंटे के लिए 2x Coins! Tasks u0026 Games पर डबल कमाई!
+                    ⚡ 1 घंटे के लिए 2x Coins! Tasks &amp; Games पर डबल कमाई!
                   </motion.div>
                 </p>
               </motion.div>

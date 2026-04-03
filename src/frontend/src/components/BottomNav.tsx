@@ -1,5 +1,12 @@
 import { Badge } from "@/components/ui/badge";
-import { Home, MessageCircle, ShoppingBag, User, Video } from "lucide-react";
+import {
+  Gamepad2,
+  Home,
+  MessageCircle,
+  ShoppingBag,
+  User,
+  Video,
+} from "lucide-react";
 import { useLanguage } from "../utils/i18n";
 
 export type View =
@@ -12,13 +19,15 @@ export type View =
 interface BottomNavProps {
   activeTab: View;
   onNavigate: (view: View) => void;
-  onOpenChat?: () => void;
+
+  onOpenGames?: () => void;
 }
 
 export default function BottomNav({
   activeTab,
   onNavigate,
-  onOpenChat,
+
+  onOpenGames,
 }: BottomNavProps) {
   const { t } = useLanguage();
   const tabs = [
@@ -69,17 +78,15 @@ export default function BottomNav({
           );
         })}
 
-        {/* Chat button */}
+        {/* Games button */}
         <button
           type="button"
-          onClick={onOpenChat}
+          onClick={onOpenGames}
           className="flex flex-col items-center justify-center gap-0.5 flex-1 transition-all duration-300 text-muted-foreground hover:text-primary"
-          data-ocid="bottomnav.chat.button"
+          data-ocid="bottomnav.games.button"
         >
-          <MessageCircle className="w-6 h-6" strokeWidth={1.8} />
-          <span className="text-[10px] font-medium leading-none">
-            {t("chat")}
-          </span>
+          <Gamepad2 className="w-6 h-6" strokeWidth={1.8} />
+          <span className="text-[10px] font-medium leading-none">Games</span>
         </button>
 
         {/* Profile button - far right corner */}
