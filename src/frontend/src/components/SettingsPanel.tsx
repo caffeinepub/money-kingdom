@@ -19,12 +19,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Check } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useDarkMode } from "../hooks/useDarkMode";
 import { type ThemeName, useTheme } from "../hooks/useTheme";
@@ -111,6 +112,30 @@ const ACTIVITY_ITEMS = [
   "2 दिन पहले — Wallet चेक किया",
 ];
 
+const MOCK_DEVICES = [
+  {
+    id: "d1",
+    device: "Samsung Galaxy S23",
+    location: "मुंबई, India",
+    time: "आज 10:45 AM",
+    current: true,
+  },
+  {
+    id: "d2",
+    device: "Chrome Browser — Windows",
+    location: "दिल्ली, India",
+    time: "कल 8:20 PM",
+    current: false,
+  },
+  {
+    id: "d3",
+    device: "iPhone 14 — Safari",
+    location: "Bangalore, India",
+    time: "3 दिन पहले",
+    current: false,
+  },
+];
+
 function getStoredLang() {
   return localStorage.getItem("mk_language") ?? "hi";
 }
@@ -154,6 +179,15 @@ function setBool(key: string, v: boolean) {
   localStorage.setItem(key, String(v));
 }
 
+function saveUserSettings(patch: Record<string, string | boolean | number>) {
+  try {
+    const raw = localStorage.getItem("mk_user_settings");
+    const existing = raw ? JSON.parse(raw) : {};
+    const updated = { ...existing, ...patch };
+    localStorage.setItem("mk_user_settings", JSON.stringify(updated));
+  } catch {}
+}
+
 type TxFilter = "all" | "today" | "yesterday" | "month";
 
 function filterTx(txList: any[], filter: TxFilter) {
@@ -180,6 +214,9 @@ function AccountTab() {
   const prof = getProfile();
   const [name, setName] = useState(prof.name ?? "");
   const [username, setUsername] = useState(prof.username ?? "");
+  const [nickname, setNickname] = useState(
+    localStorage.getItem("mk_nickname") ?? "",
+  );
   const [bio, setBio] = useState(prof.bio ?? "");
   const [email, setEmail] = useState(prof.email ?? "");
   const [isPublic, setIsPublic] = useState(
@@ -188,11 +225,32 @@ function AccountTab() {
   const [accountType, setAccountType] = useState(
     localStorage.getItem("mk_account_type_v2") ?? "personal",
   );
+  // Avatar colors
+  const [crownColor, setCrownColor] = useState(
+    localStorage.getItem("mk_avatar_crown") ?? "#FFD700",
+  );
+  const [clothesColor, setClothesColor] = useState(
+    localStorage.getItem("mk_avatar_clothes") ?? "#1a1a2e",
+  );
+  const [skinTone, setSkinTone] = useState(
+    localStorage.getItem("mk_avatar_skin") ?? "#d4a76a",
+  );
+  const [verifySubmitted, setVerifySubmitted] = useState(
+    localStorage.getItem("mk_verify_requested") === "true",
+  );
 
   const save = () => {
     const updated = { ...prof, name, username, bio, email };
     localStorage.setItem("mk_user_profile", JSON.stringify(updated));
     localStorage.setItem("mk_account_type", isPublic ? "public" : "private");
+    localStorage.setItem("mk_nickname", nickname);
+    saveUserSettings({
+      nickname,
+      accountType,
+      crownColor,
+      clothesColor,
+      skinTone,
+    });
     toast.success("प्रोफाइल सेव हो गई ✅");
   };
 
@@ -201,10 +259,36 @@ function AccountTab() {
     localStorage.setItem("mk_account_type_v2", t);
   };
 
+  const handleVerify = (type: "gold" | "blue") => {
+    localStorage.setItem("mk_verify_requested", "true");
+    setVerifySubmitted(true);
+    toast.success(
+      type === "gold"
+        ? "Gold Tick के लिए request submit हो गई! 👑"
+        : "Blue Tick के लिए request submit हो गई! ✅",
+    );
+  };
+
+  const CROWN_COLORS = ["#FFD700", "#C0C0C0", "#b5651d", "#e74c3c", "#8e44ad"];
+  const CLOTHES_COLORS = [
+    "#1a1a2e",
+    "#2c3e50",
+    "#e74c3c",
+    "#27ae60",
+    "#2980b9",
+  ];
+  const SKIN_TONES = ["#d4a76a", "#c68642", "#8d5524", "#f1c27d", "#e0ac69"];
+
   const ACC_TYPES = [
     { id: "personal", emoji: "👤", label: "Personal" },
     { id: "business", emoji: "💼", label: "Business" },
     { id: "royal", emoji: "👑", label: "Royal" },
+  ];
+
+  const LINKED_ACCOUNTS = [
+    { id: "facebook", emoji: "📘", label: "Facebook" },
+    { id: "instagram", emoji: "📸", label: "Instagram" },
+    { id: "google", emoji: "🔵", label: "Google" },
   ];
 
   return (
@@ -227,6 +311,17 @@ function AccountTab() {
               placeholder="@your_kingdom"
               data-ocid="settings.account.username_input"
             />
+          </Field>
+          <Field label="शाही नाम (Nickname)">
+            <Input
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
+              placeholder="जैसे: महाराज पवन, KingPawan..."
+              data-ocid="settings.account.nickname_input"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              यह नाम आपके username के नीचे display होगा
+            </p>
           </Field>
           <Field label="बायो">
             <Textarea
@@ -257,6 +352,93 @@ function AccountTab() {
           </Field>
         </div>
 
+        {/* Avatar Editor */}
+        <SectionTitle icon="🎭" title="Avatar Editor" />
+        <div className="p-4 rounded-2xl border border-border bg-muted/20 flex flex-col gap-4">
+          {/* Avatar preview */}
+          <div className="flex items-center justify-center">
+            <div
+              className="relative w-20 h-20 rounded-full flex items-center justify-center shadow-lg border-4"
+              style={{ background: skinTone, borderColor: crownColor }}
+            >
+              <span className="text-3xl">😊</span>
+              <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-2xl">
+                👑
+              </span>
+              <div
+                className="absolute inset-0 rounded-full opacity-20"
+                style={{ background: clothesColor }}
+              />
+            </div>
+          </div>
+          <ColorPicker
+            label="मुकुट का रंग (Crown)"
+            colors={CROWN_COLORS}
+            value={crownColor}
+            onChange={(c) => {
+              setCrownColor(c);
+              localStorage.setItem("mk_avatar_crown", c);
+            }}
+          />
+          <ColorPicker
+            label="कपड़ों का रंग (Clothes)"
+            colors={CLOTHES_COLORS}
+            value={clothesColor}
+            onChange={(c) => {
+              setClothesColor(c);
+              localStorage.setItem("mk_avatar_clothes", c);
+            }}
+          />
+          <ColorPicker
+            label="त्वचा का रंग (Skin Tone)"
+            colors={SKIN_TONES}
+            value={skinTone}
+            onChange={(c) => {
+              setSkinTone(c);
+              localStorage.setItem("mk_avatar_skin", c);
+            }}
+          />
+        </div>
+
+        {/* Verification */}
+        <SectionTitle icon="✅" title="Kingdom Verification" />
+        <div
+          className="rounded-2xl border-2 p-4 flex flex-col gap-3"
+          style={{ borderColor: "#FFD700", background: "rgba(255,215,0,0.05)" }}
+        >
+          <p className="text-sm text-muted-foreground">
+            Verified Badge लगाएं और Kingdom में अपनी पहचान बनाएं!
+          </p>
+          {verifySubmitted ? (
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-green-500/10 border border-green-500/30">
+              <span className="text-2xl">✅</span>
+              <p className="text-sm font-semibold text-green-400">
+                Request submit हो गई! Admin review करेंगे।
+              </p>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <Button
+                onClick={() => handleVerify("gold")}
+                className="flex-1 text-xs font-bold"
+                style={{ background: "#FFD700", color: "#000" }}
+                data-ocid="settings.account.gold_verify_button"
+              >
+                👑 Gold Tick
+              </Button>
+              <Button
+                onClick={() => handleVerify("blue")}
+                variant="outline"
+                className="flex-1 text-xs font-bold border-blue-500 text-blue-400 hover:bg-blue-500/10"
+                data-ocid="settings.account.blue_verify_button"
+              >
+                ✅ Blue Tick
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* Account Type */}
         <SectionTitle icon="👑" title="अकाउंट टाइप" />
         <div className="flex gap-2">
           {ACC_TYPES.map((t) => (
@@ -273,11 +455,40 @@ function AccountTab() {
             >
               <span className="text-xl">{t.emoji}</span>
               <span
-                className={`text-xs font-bold ${accountType === t.id ? "text-primary" : "text-foreground"}`}
+                className={`text-xs font-bold ${
+                  accountType === t.id ? "text-primary" : "text-foreground"
+                }`}
               >
                 {t.label}
               </span>
             </button>
+          ))}
+        </div>
+
+        {/* Linked Accounts */}
+        <SectionTitle icon="🔗" title="Linked Accounts" />
+        <div className="flex flex-col gap-2">
+          {LINKED_ACCOUNTS.map((acc) => (
+            <div
+              key={acc.id}
+              className="flex items-center justify-between p-3 rounded-xl border border-border bg-muted/20"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">{acc.emoji}</span>
+                <span className="text-sm font-semibold text-foreground">
+                  {acc.label}
+                </span>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-xs border-primary text-primary"
+                onClick={() => toast.info(`${acc.label} — जल्द आ रहा है! 🚀`)}
+                data-ocid={`settings.account.${acc.id}.button`}
+              >
+                जोड़ें
+              </Button>
+            </div>
           ))}
         </div>
 
@@ -286,7 +497,7 @@ function AccountTab() {
           label={isPublic ? "Public" : "Private"}
           desc={
             isPublic
-              ? "सभी लोग आपकी प्रोयाइल देख सकते हैं"
+              ? "सभी लोग आपकी प्रोफाइल देख सकते हैं"
               : "सिर्फ आपके followers देख सकते हैं"
           }
           value={isPublic}
@@ -312,10 +523,22 @@ function WalletTab() {
   const allTx = getTransactions();
   const txList = filterTx(allTx, txFilter).slice(0, 20);
   const [upiId, setUpiId] = useState(localStorage.getItem("mk_upi_id") ?? "");
+  const [withdrawLimit, setWithdrawLimit] = useState(
+    localStorage.getItem("mk_withdraw_limit") ?? "500",
+  );
+  const [giftingPref, setGiftingPref] = useState(
+    localStorage.getItem("mk_gifting_pref") ?? "all",
+  );
 
   const saveUpi = () => {
     localStorage.setItem("mk_upi_id", upiId);
     toast.success("UPI ID सेव हो गई ✅");
+  };
+
+  const saveWithdrawLimit = () => {
+    localStorage.setItem("mk_withdraw_limit", withdrawLimit);
+    saveUserSettings({ withdrawLimit });
+    toast.success(`Daily withdrawal limit: ${withdrawLimit} coins ✅`);
   };
 
   const withdraw = () => {
@@ -328,6 +551,14 @@ function WalletTab() {
     { key: "yesterday", label: "कल" },
     { key: "month", label: "पिछला महीना" },
   ];
+
+  const GIFTING_OPTIONS = [
+    { value: "all", label: "सभी" },
+    { value: "friends", label: "सिर्फ दोस्त" },
+    { value: "none", label: "कोई नहीं" },
+  ];
+
+  const ADMIN_COMMISSION_RATE = 0.05; // 5%
 
   return (
     <ScrollArea className="flex-1">
@@ -366,6 +597,59 @@ function WalletTab() {
           </div>
         </Field>
 
+        {/* Withdrawal Limit */}
+        <SectionTitle icon="🏦" title="Withdrawal Limit (Daily)" />
+        <div className="flex flex-col gap-2">
+          <p className="text-xs text-muted-foreground">
+            एक दिन में अधिकतम कितने coins निकाले जा सकते हैं
+          </p>
+          <div className="flex gap-2">
+            <Input
+              type="number"
+              value={withdrawLimit}
+              onChange={(e) => setWithdrawLimit(e.target.value)}
+              placeholder="500"
+              min="0"
+              className="flex-1"
+              data-ocid="settings.wallet.withdraw_limit_input"
+            />
+            <Button
+              onClick={saveWithdrawLimit}
+              size="sm"
+              data-ocid="settings.wallet.save_limit_button"
+            >
+              सेट करें
+            </Button>
+          </div>
+        </div>
+
+        {/* Gifting Settings */}
+        <SectionTitle icon="🎁" title="Gifting Settings" />
+        <p className="text-xs text-muted-foreground -mt-3">
+          कौन आपको gift भेज सकता है?
+        </p>
+        <div className="flex gap-2">
+          {GIFTING_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => {
+                setGiftingPref(opt.value);
+                localStorage.setItem("mk_gifting_pref", opt.value);
+                saveUserSettings({ giftingPref: opt.value });
+              }}
+              className={`flex-1 py-2 rounded-xl text-xs font-bold border-2 transition-all ${
+                giftingPref === opt.value
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border text-foreground hover:border-primary/40"
+              }`}
+              data-ocid={`settings.wallet.gifting.${opt.value}.button`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+
         <SectionTitle icon="📜" title="Transaction History" />
         {/* Filter buttons */}
         <div className="flex gap-2">
@@ -386,6 +670,19 @@ function WalletTab() {
           ))}
         </div>
 
+        {/* Tax & Commission info box */}
+        <div className="rounded-xl border border-border bg-amber-500/5 p-3 flex items-start gap-2">
+          <span className="text-lg mt-0.5">📊</span>
+          <div className="text-xs text-muted-foreground">
+            <span className="font-bold text-foreground">Tax & Commission:</span>{" "}
+            हर transaction पर Admin का{" "}
+            <span className="text-primary font-bold">
+              {(ADMIN_COMMISSION_RATE * 100).toFixed(0)}%
+            </span>{" "}
+            हिस्सा कटता है। यह राशि Prince Pawan Kumar के Kingdom Fund में जाती है।
+          </div>
+        </div>
+
         {txList.length === 0 ? (
           <div
             className="text-center text-muted-foreground text-sm py-6"
@@ -402,22 +699,33 @@ function WalletTab() {
               <div
                 key={tx.id ?? `tx-${i}`}
                 data-ocid={`settings.wallet.item.${i + 1}`}
-                className="flex items-center justify-between p-3 rounded-xl bg-muted/40 border border-border"
+                className="flex flex-col p-3 rounded-xl bg-muted/40 border border-border gap-1"
               >
-                <div>
+                <div className="flex items-center justify-between">
                   <p className="text-sm font-medium text-foreground">
                     {tx.desc}
                   </p>
-                  <p className="text-xs text-muted-foreground">{tx.time}</p>
+                  <span
+                    className={`font-bold text-sm ${
+                      tx.type === "credit"
+                        ? "text-green-500"
+                        : "text-destructive"
+                    }`}
+                  >
+                    {tx.type === "credit" ? "+" : "-"}
+                    {tx.amount} 🪙
+                  </span>
                 </div>
-                <span
-                  className={`font-bold text-sm ${
-                    tx.type === "credit" ? "text-green-500" : "text-destructive"
-                  }`}
-                >
-                  {tx.type === "credit" ? "+" : "-"}
-                  {tx.amount} 🪙
-                </span>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-muted-foreground">{tx.time}</p>
+                  {tx.type === "debit" && (
+                    <span className="text-xs text-amber-400">
+                      Admin Commission: ₹
+                      {(Number(tx.amount) * ADMIN_COMMISSION_RATE).toFixed(2)}{" "}
+                      कटा
+                    </span>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -446,6 +754,7 @@ function PrivacyTab() {
   const [storyPrivacy, setStoryPrivacy] = useState(
     localStorage.getItem("mk_story_privacy") ?? "all",
   );
+  const [loggedOutDevices, setLoggedOutDevices] = useState<string[]>([]);
 
   const changePin = () => {
     const stored = localStorage.getItem("mk_pin") ?? "";
@@ -466,9 +775,14 @@ function PrivacyTab() {
 
   const STORY_OPTIONS = [
     { value: "all", label: "सभी" },
-    { value: "friends", label: "सिर्यादोस्त" },
+    { value: "friends", label: "सिर्फ दोस्त" },
     { value: "none", label: "कोई नहीं" },
   ];
+
+  const logoutDevice = (id: string) => {
+    setLoggedOutDevices((prev) => [...prev, id]);
+    toast.success("डिवाइस से Logout कर दिया गया ✅");
+  };
 
   return (
     <ScrollArea className="flex-1">
@@ -524,6 +838,29 @@ function PrivacyTab() {
           </div>
         )}
 
+        {/* 2FA */}
+        <SectionTitle icon="🛡️" title="Two-Factor Authentication (2FA)" />
+        <button
+          type="button"
+          className="w-full flex items-center justify-between gap-4 p-3 rounded-xl bg-muted/30 border border-border cursor-pointer text-left hover:bg-muted/50 transition-colors"
+          onClick={() =>
+            toast.info("Fingerprint / Face ID Login — जल्द आ रहा है! 🔐")
+          }
+          data-ocid="settings.privacy.twofa_toggle"
+        >
+          <div className="flex flex-col gap-0.5">
+            <span className="text-sm font-semibold text-foreground">
+              Fingerprint / Face ID Login
+            </span>
+            <span className="text-xs text-muted-foreground">
+              Biometric से secure login (जल्द आ रहा है)
+            </span>
+          </div>
+          <div className="px-2 py-1 rounded-full bg-amber-500/20 text-amber-400 text-xs font-bold">
+            जल्द
+          </div>
+        </button>
+
         {/* Ghost Mode */}
         <SectionTitle icon="👻" title="Ghost Mode" />
         <ToggleRow
@@ -533,6 +870,7 @@ function PrivacyTab() {
           onChange={(v) => {
             setGhostMode(v);
             setBool("mk_ghost_mode", v);
+            saveUserSettings({ ghostMode: v });
           }}
           ocid="settings.privacy.ghost_switch"
         />
@@ -547,6 +885,7 @@ function PrivacyTab() {
               onClick={() => {
                 setStoryPrivacy(opt.value);
                 localStorage.setItem("mk_story_privacy", opt.value);
+                saveUserSettings({ storyPrivacy: opt.value });
               }}
               className={`flex-1 py-2 rounded-xl text-sm font-bold border-2 transition-all ${
                 storyPrivacy === opt.value
@@ -580,6 +919,60 @@ function PrivacyTab() {
             </div>
           ))}
         </div>
+
+        {/* Login Activity */}
+        <SectionTitle icon="📱" title="Login Activity" />
+        <p className="text-xs text-muted-foreground -mt-3">
+          इन devices पर आपका account खुला है
+        </p>
+        <div className="flex flex-col gap-2">
+          {MOCK_DEVICES.map((device, i) => (
+            <div
+              key={device.id}
+              data-ocid={`settings.privacy.device.item.${i + 1}`}
+              className={`p-3 rounded-xl border flex flex-col gap-2 ${
+                device.current
+                  ? "border-primary/40 bg-primary/5"
+                  : "border-border bg-muted/20"
+              }`}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">📱</span>
+                    <span className="text-sm font-semibold text-foreground">
+                      {device.device}
+                    </span>
+                    {device.current && (
+                      <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full font-bold">
+                        यह Device
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    📍 {device.location} · 🕐 {device.time}
+                  </p>
+                </div>
+                {!device.current && !loggedOutDevices.includes(device.id) && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-xs border-destructive text-destructive hover:bg-destructive/10 shrink-0"
+                    onClick={() => logoutDevice(device.id)}
+                    data-ocid="settings.privacy.logout.button"
+                  >
+                    Logout
+                  </Button>
+                )}
+                {loggedOutDevices.includes(device.id) && (
+                  <span className="text-xs text-muted-foreground">
+                    Logged out
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </ScrollArea>
   );
@@ -600,6 +993,12 @@ function NotificationsTab() {
   const [quietTo, setQuietTo] = useState(
     localStorage.getItem("mk_quiet_to") ?? "07:00",
   );
+  const [alertStyle, setAlertStyle] = useState(
+    localStorage.getItem("mk_alert_style") ?? "center",
+  );
+  const [coinChime, setCoinChime] = useState(() =>
+    getBool("mk_coin_chime", true),
+  );
 
   return (
     <ScrollArea className="flex-1">
@@ -612,6 +1011,7 @@ function NotificationsTab() {
           onChange={(v) => {
             setPush(v);
             setBool("mk_notif_push", v);
+            saveUserSettings({ pushNotifications: v });
           }}
           ocid="settings.notif.push_switch"
         />
@@ -622,6 +1022,7 @@ function NotificationsTab() {
           onChange={(v) => {
             setPayment(v);
             setBool("mk_notif_payment", v);
+            saveUserSettings({ paymentAlerts: v });
           }}
           ocid="settings.notif.payment_switch"
         />
@@ -632,18 +1033,85 @@ function NotificationsTab() {
           onChange={(v) => {
             setMute(v);
             setBool("mk_notif_mute", v);
+            saveUserSettings({ muteAll: v });
           }}
           ocid="settings.notif.mute_switch"
+        />
+
+        {/* Alert Style */}
+        <SectionTitle icon="📢" title="Alert Style" />
+        <p className="text-xs text-muted-foreground -mt-3">Alerts कहाँ दिखें?</p>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setAlertStyle("center");
+              localStorage.setItem("mk_alert_style", "center");
+              saveUserSettings({ alertStyle: "center" });
+            }}
+            className={`flex-1 flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all ${
+              alertStyle === "center"
+                ? "border-primary bg-primary/10"
+                : "border-border hover:border-primary/40"
+            }`}
+            data-ocid="settings.notif.alert.center.button"
+          >
+            <div className="w-12 h-16 rounded-lg border-2 border-muted bg-muted/30 flex items-center justify-center relative">
+              <div className="absolute inset-x-2 top-1/2 -translate-y-1/2 h-4 bg-primary/60 rounded" />
+            </div>
+            <span
+              className={`text-xs font-bold ${alertStyle === "center" ? "text-primary" : "text-foreground"}`}
+            >
+              बीच में (Center)
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setAlertStyle("top");
+              localStorage.setItem("mk_alert_style", "top");
+              saveUserSettings({ alertStyle: "top" });
+            }}
+            className={`flex-1 flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all ${
+              alertStyle === "top"
+                ? "border-primary bg-primary/10"
+                : "border-border hover:border-primary/40"
+            }`}
+            data-ocid="settings.notif.alert.top.button"
+          >
+            <div className="w-12 h-16 rounded-lg border-2 border-muted bg-muted/30 flex items-center justify-center relative">
+              <div className="absolute inset-x-2 top-1 h-4 bg-primary/60 rounded" />
+            </div>
+            <span
+              className={`text-xs font-bold ${alertStyle === "top" ? "text-primary" : "text-foreground"}`}
+            >
+              ऊपर (Top)
+            </span>
+          </button>
+        </div>
+
+        {/* Coin Chime */}
+        <ToggleRow
+          label="Coin Chime Sound 🪙"
+          desc="सिक्के मिलने पर खनक की आवाज़"
+          value={coinChime}
+          onChange={(v) => {
+            setCoinChime(v);
+            setBool("mk_coin_chime", v);
+            saveUserSettings({ coinChime: v });
+          }}
+          ocid="settings.notif.chime_switch"
         />
 
         <SectionTitle icon="🌙" title="Quiet Hours" />
         <ToggleRow
           label="Quiet Hours"
-          desc="रात में नोटियफिकेशन बंद"
+          desc="रात में नोटिफिकेशन बंद"
           value={quietHours}
           onChange={(v) => {
             setQuietHours(v);
             setBool("mk_quiet_hours", v);
+            saveUserSettings({ quietHours: v });
           }}
           ocid="settings.notif.quiet_switch"
         />
@@ -699,6 +1167,21 @@ function DisplayTab({
   const [cleanerChar, setCleanerChar] = useState(
     localStorage.getItem("mk_cleaner_character") ?? "soldier",
   );
+  const [cleanerSound, setCleanerSound] = useState(
+    localStorage.getItem("mk_cleaner_sound") ?? "music",
+  );
+  const [autoCleanRule, setAutoCleanRule] = useState(
+    localStorage.getItem("mk_auto_clean_rule") ?? "midnight",
+  );
+  const [immersiveMode, setImmersiveMode] = useState(() =>
+    getBool("mk_immersive_mode", true),
+  );
+  const [frameSize, setFrameSize] = useState(() =>
+    Number(localStorage.getItem("mk_frame_size") ?? "1"),
+  );
+  const [darkIntensity, setDarkIntensity] = useState(() =>
+    Number(localStorage.getItem("mk_dark_intensity") ?? "1"),
+  );
 
   const DUST_OPTIONS = [
     { value: "slow", label: "धीरा" },
@@ -712,10 +1195,27 @@ function DisplayTab({
     { value: "robot", emoji: "🤖", label: "रोबोट" },
   ];
 
+  const FRAME_LABELS = ["छोटा", "मध्यम", "बड़ा"];
+  const DARK_LABELS = ["हल्का", "मध्यम", "गहरा"];
+
   return (
     <ScrollArea className="flex-1">
       <div className="px-4 py-4 flex flex-col gap-5">
         <SectionTitle icon="🌗" title="डिस्प्ले" />
+
+        {/* Immersive Mode */}
+        <ToggleRow
+          label="पूरी स्क्रीन अनुभव (Immersive Mode)"
+          desc="सेक्शन खुलने पर पीछे का सब हट जाए"
+          value={immersiveMode}
+          onChange={(v) => {
+            setImmersiveMode(v);
+            setBool("mk_immersive_mode", v);
+            saveUserSettings({ immersiveMode: v });
+          }}
+          ocid="settings.display.immersive_switch"
+        />
+
         <ToggleRow
           label="Dark Mode"
           desc="एप को dark theme में देखें"
@@ -723,6 +1223,69 @@ function DisplayTab({
           onChange={toggleDark}
           ocid="settings.display.dark_switch"
         />
+
+        {/* Dark Theme Intensity */}
+        {dark && (
+          <div className="flex flex-col gap-2 px-1">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs text-muted-foreground font-medium">
+                Dark Theme Intensity:{" "}
+                <span className="text-primary font-bold">
+                  {DARK_LABELS[darkIntensity]}
+                </span>
+              </Label>
+            </div>
+            <Slider
+              min={0}
+              max={2}
+              step={1}
+              value={[darkIntensity]}
+              onValueChange={(v) => {
+                setDarkIntensity(v[0]);
+                localStorage.setItem("mk_dark_intensity", String(v[0]));
+                saveUserSettings({ darkIntensity: v[0] });
+              }}
+              className="w-full"
+              data-ocid="settings.display.dark_intensity.slider"
+            />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              {DARK_LABELS.map((l) => (
+                <span key={l}>{l}</span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Screen Frame Size */}
+        <div className="flex flex-col gap-2 px-1">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs text-muted-foreground font-medium">
+              Screen Frame Size:{" "}
+              <span className="text-primary font-bold">
+                {FRAME_LABELS[frameSize]}
+              </span>
+            </Label>
+          </div>
+          <Slider
+            min={0}
+            max={2}
+            step={1}
+            value={[frameSize]}
+            onValueChange={(v) => {
+              setFrameSize(v[0]);
+              localStorage.setItem("mk_frame_size", String(v[0]));
+              saveUserSettings({ frameSize: v[0] });
+            }}
+            className="w-full"
+            data-ocid="settings.display.frame_size.slider"
+          />
+          <div className="flex justify-between text-xs text-muted-foreground">
+            {FRAME_LABELS.map((l) => (
+              <span key={l}>{l}</span>
+            ))}
+          </div>
+        </div>
+
         <ToggleRow
           label="Data Saver"
           desc="कम इंटरनेट में भी videos स्मूथ"
@@ -730,6 +1293,7 @@ function DisplayTab({
           onChange={(v) => {
             setDataSaver(v);
             setBool("mk_data_saver", v);
+            saveUserSettings({ dataSaver: v });
           }}
           ocid="settings.display.data_saver_switch"
         />
@@ -740,12 +1304,13 @@ function DisplayTab({
           onChange={(v) => {
             setAutoplay(v);
             setBool("mk_autoplay", v);
+            saveUserSettings({ autoplay: v });
           }}
           ocid="settings.display.autoplay_switch"
         />
 
         {/* Dust Intensity */}
-        <SectionTitle icon="🌫️" title="धूल की रफ़्ता" />
+        <SectionTitle icon="🌫️" title="धूल की रफ़्ता" />
         <div className="flex gap-2">
           {DUST_OPTIONS.map((opt) => (
             <button
@@ -754,6 +1319,7 @@ function DisplayTab({
               onClick={() => {
                 setDustIntensity(opt.value);
                 localStorage.setItem("mk_dust_intensity", opt.value);
+                saveUserSettings({ dustIntensity: opt.value });
               }}
               className={`flex-1 py-2 rounded-xl text-sm font-bold border-2 transition-all ${
                 dustIntensity === opt.value
@@ -777,6 +1343,7 @@ function DisplayTab({
               onClick={() => {
                 setCleanerChar(c.value);
                 localStorage.setItem("mk_cleaner_character", c.value);
+                saveUserSettings({ cleanerCharacter: c.value });
               }}
               className={`flex-1 flex flex-col items-center gap-1 py-3 rounded-xl border-2 transition-all ${
                 cleanerChar === c.value
@@ -787,12 +1354,88 @@ function DisplayTab({
             >
               <span className="text-2xl">{c.emoji}</span>
               <span
-                className={`text-xs font-bold ${cleanerChar === c.value ? "text-primary" : "text-foreground"}`}
+                className={`text-xs font-bold ${
+                  cleanerChar === c.value ? "text-primary" : "text-foreground"
+                }`}
               >
                 {c.label}
               </span>
             </button>
           ))}
+        </div>
+
+        {/* Cleaner Sound */}
+        <SectionTitle icon="🔊" title="Cleaner की आवाज़" />
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setCleanerSound("broom");
+              localStorage.setItem("mk_cleaner_sound", "broom");
+              saveUserSettings({ cleanerSound: "broom" });
+            }}
+            className={`flex-1 py-2.5 rounded-xl text-sm font-bold border-2 transition-all ${
+              cleanerSound === "broom"
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-border text-foreground hover:border-primary/40"
+            }`}
+            data-ocid="settings.display.cleaner_sound.broom.button"
+          >
+            🧹 झाड़ू की आवाज़
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setCleanerSound("music");
+              localStorage.setItem("mk_cleaner_sound", "music");
+              saveUserSettings({ cleanerSound: "music" });
+            }}
+            className={`flex-1 py-2.5 rounded-xl text-sm font-bold border-2 transition-all ${
+              cleanerSound === "music"
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-border text-foreground hover:border-primary/40"
+            }`}
+            data-ocid="settings.display.cleaner_sound.music.button"
+          >
+            🎵 म्यूजिक
+          </button>
+        </div>
+
+        {/* Auto-Clean Rule */}
+        <SectionTitle icon="⏰" title="Auto-Clean नियम" />
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setAutoCleanRule("midnight");
+              localStorage.setItem("mk_auto_clean_rule", "midnight");
+              saveUserSettings({ autoCleanRule: "midnight" });
+            }}
+            className={`flex-1 py-2.5 rounded-xl text-xs font-bold border-2 transition-all ${
+              autoCleanRule === "midnight"
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-border text-foreground hover:border-primary/40"
+            }`}
+            data-ocid="settings.display.auto_clean.midnight.button"
+          >
+            🌙 हर रात 12 बजे
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setAutoCleanRule("dust80");
+              localStorage.setItem("mk_auto_clean_rule", "dust80");
+              saveUserSettings({ autoCleanRule: "dust80" });
+            }}
+            className={`flex-1 py-2.5 rounded-xl text-xs font-bold border-2 transition-all ${
+              autoCleanRule === "dust80"
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-border text-foreground hover:border-primary/40"
+            }`}
+            data-ocid="settings.display.auto_clean.dust80.button"
+          >
+            🌫️ 80% धूल होने पर
+          </button>
         </div>
 
         <SectionTitle icon="🎨" title="थीम" />
@@ -1016,6 +1659,42 @@ function HelpTab() {
 }
 
 // ──────────────────────────────────────────────
+function ColorPicker({
+  label,
+  colors,
+  value,
+  onChange,
+}: {
+  label: string;
+  colors: string[];
+  value: string;
+  onChange: (c: string) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Label className="text-xs text-muted-foreground font-medium">
+        {label}
+      </Label>
+      <div className="flex gap-2">
+        {colors.map((c) => (
+          <button
+            key={c}
+            type="button"
+            onClick={() => onChange(c)}
+            className={`w-8 h-8 rounded-full border-2 transition-all ${
+              value === c
+                ? "border-primary ring-2 ring-primary ring-offset-2 ring-offset-background scale-110"
+                : "border-transparent hover:border-border"
+            }`}
+            style={{ background: c }}
+            title={c}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function SectionTitle({ icon, title }: { icon: string; title: string }) {
   return (
     <div className="flex items-center gap-2">
@@ -1081,6 +1760,22 @@ export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
   const [langSelected, setLangSelected] = useState<string>(getStoredLang);
   const [gamesOpen, setGamesOpen] = useState(false);
   const { t } = useLanguage();
+  const panelRef = useRef<HTMLDivElement>(null);
+  const touchStartY = useRef(0);
+  const touchCurrentY = useRef(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchCurrentY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = () => {
+    const delta = touchCurrentY.current - touchStartY.current;
+    if (delta > 80) onClose();
+  };
 
   const handleLangSelect = (code: string) => {
     setLangSelected(code);
@@ -1103,18 +1798,16 @@ export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
 
             <motion.div
               key="settings-panel"
+              ref={panelRef}
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
-              drag="y"
-              dragConstraints={{ top: 0, bottom: 0 }}
-              dragElastic={{ top: 0, bottom: 0.3 }}
-              onDragEnd={(_, info) => {
-                if (info.offset.y > 100) onClose();
-              }}
               transition={{ type: "spring", damping: 28, stiffness: 280 }}
               className="fixed inset-0 z-[110] bg-card flex flex-col"
               style={{ height: "100dvh" }}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
               data-ocid="settings.panel"
             >
               <div className="flex justify-center pt-3 pb-1 shrink-0">
@@ -1218,7 +1911,7 @@ export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
                         खेलो और कमाओ!
                       </p>
                       <p className="text-muted-foreground text-sm text-center">
-                        Quiz, Coin Toss, Lucky Spin, Treasure Hunt और आरो गेम्स
+                        Quiz, Coin Toss, Lucky Spin, Treasure Hunt और और गेम्स
                       </p>
                       <button
                         type="button"

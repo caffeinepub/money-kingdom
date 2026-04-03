@@ -1,69 +1,66 @@
-# Money Kingdom v69
+# Money Kingdom
 
 ## Current State
-v68 build with: Clock UI (removed per user), Onboarding (4-step), Admin bypass (password), Weather Background (users only), Dust & Midnight Cleaner, Full-screen overlays (Chat/Profile/Settings), Reels (vertical snap scroll, double-tap like, WhatsApp share), Kingdom Rank (Soldier/Knight/Prince/King), Vault animation, Coin sound/haptic, Settings (6 tabs: Account/Wallet/Privacy/Notifications/Display/Help), 39 languages, English Guru AI.
+v69 app is live with:
+- Settings: 6 sections (Account, Wallet, Privacy, Notifications, Display, Help)
+- Full-screen overlays for Chat, Profile, Settings already implemented
+- Stories, Reels, Dust, Midnight Cleaner, Weather, Games all working
+- Onboarding 4-step for new users, admin bypass with password
 
 ## Requested Changes (Diff)
 
 ### Add
-**Reels Upgrades:**
-- Full-screen immersive view (hide status/nav bars via CSS)
-- Double-tap: animated gold coin / crown flies up instead of plain heart
-- Haptic feedback (vibrate API) on like and swipe
-- Dynamic blur background when video is not 9:16
-- Kingdom music marquee text (scrolling) at bottom
-- Rotating royal disc icon showing music playing
-- Silent autoplay (muted by default, tap anywhere to unmute)
-- Music visualizer waves at bottom of video
-- Hindi lyrics sync animation overlay
-- Gifting vault button on right side panel (send Kingdom Coins)
-- Golden rocket / coins rain animation when gift sent
-- View & Earn: random lucky coin appears every 30 seconds, tap for 1-3 coins
-- Earning counter in corner showing coins earned today from reels
-- Sponsored tag on ad-marked videos
-- Long-press menu (download, share, not interested)
-- WhatsApp direct share button
-- Royal comment scroll (slide up from bottom, blur behind)
-- Golden progress bar at bottom of video
-- Love You exit animation (big animated heart when exiting Reels)
+- **Account Settings:**
+  - Nickname (शाही नाम) field -- separate display name from username
+  - Avatar Editor -- clothes/crown color picker for profile character
+  - Verification apply button (Blue Tick / Gold Tick) -- UI only, cosmetic
+  - Account Type selector: Personal / Business / Royal
+  - Linked Accounts section (Facebook/Instagram/Google) -- cosmetic display only, no real OAuth
 
-**Settings Upgrades:**
-- Display tab: Dust Intensity slider (slow/medium/fast)
-- Display tab: Midnight Cleaner character choice (Joker/Soldier/Robot)
-- Privacy tab: Ghost Mode toggle (hide online status)
-- Privacy tab: Story Privacy selector (All/Friends/None)
-- Notifications tab: Quiet Hours toggle with time picker
-- Wallet tab: Transaction filter (Today/Yesterday/Last Month)
-- Account tab: Account Type selector (Personal/Business/Royal)
+- **Wallet Settings:**
+  - Withdrawal Limit -- user sets their own daily withdrawal limit
+  - Tax & Commission transparency -- show user how much admin commission was deducted from each transaction
+  - Gifting Settings -- toggle: who can send gifts (Everyone / Friends only / Nobody)
 
-**Games Section (new tab in Settings or separate view):**
-- Quiz game (pre-filled Hindi/finance questions, earn coins on correct answers)
-- Festival Mode (auto triggers on Diwali/Eid/Holi dates with fireworks/lights)
-- Coin Toss mini-game
-- Lucky Spin wheel
-- Treasure Hunt (tap to find hidden coins in feed)
-- Gift Box drop (random gift box appears, tap to open)
-- Soundboard (royal sound effects)
-- Avatar Maker (cartoon face customizer)
+- **Privacy Settings:**
+  - 2FA toggle (fingerprint/face-id UI, cosmetic)
+  - Login Activity -- list of devices/sessions (mock UI)
 
-**Profile Upgrades:**
-- Visitor Tax: fixed system, when someone visits a King/Prince profile, 1 coin auto-deducted and credited to profile owner
-- King comments appear at top with golden border (already partly done, strengthen)
+- **Midnight Cleaner Settings:**
+  - Cleaner Sound toggle: झाड़ू sound vs music
+  - Auto-Clean toggle: always at midnight OR only when dust > 80%
+
+- **Notifications:**
+  - Alert Style: Center screen (big) vs top bar (small)
+  - Coin Chime Sound: ON/OFF
+
+- **Display:**
+  - Immersive Mode toggle (full-screen overlays ON/OFF)
+  - Screen Frame Size slider (app padding/margin adjustment)
+  - Dark theme intensity slider
+
+- **Full-Screen Immersive UI everywhere:**
+  - Story Creator (StoryCreator.tsx) -- opens full-screen, hides everything behind it
+  - Story Viewer (StoryViewer.tsx) -- full-screen, nothing visible behind
+  - Every modal/overlay: slide-up animation from bottom, blur backdrop
+  - All sections: Reels, Chat, Profile, Settings, Games, Bazaar, Camera -- all open as full-screen overlays with slide-up transition, swipe-down to close
 
 ### Modify
-- ReelsView: complete overhaul with all new features above
-- SettingsPanel: add new controls to existing tabs
-- MidnightCleaner: support character choice (joker/soldier/robot) from settings
-- DustOverlay: support intensity setting from settings
+- **SettingsPanel.tsx:** Add new sub-sections to existing 6 sections
+- **StoryCreator.tsx:** Wrap in full-screen overlay with slide-up animation
+- **StoryViewer.tsx:** Ensure full-screen, everything behind hidden
+- **MainLayout.tsx / App.tsx:** Ensure all section transitions use full-screen overlay pattern
 
 ### Remove
-- Nothing removed
+- Real Estate / Land section from Settings (was planned, now removed)
 
 ## Implementation Plan
-1. Overhaul ReelsView.tsx with all 20 new Reels features
-2. Add Games.tsx component with Quiz, CoinToss, LuckySpin, TreasureHunt, GiftBox, Soundboard, AvatarMaker
-3. Update SettingsPanel.tsx with new controls in existing tabs + new Games tab
-4. Update MidnightCleaner.tsx to support character selection
-5. Update DustOverlay.tsx to support intensity slider
-6. Add FestivalMode.tsx that auto-triggers on Indian festival dates
-7. Wire everything in MainLayout / App
+1. Update SettingsPanel.tsx with new fields in each section
+2. Wrap StoryCreator and StoryViewer in full-screen overlay containers
+3. Audit all panels/modals to ensure slide-up full-screen behavior
+4. Add new Account fields: nickname, avatar color picker, account type, linked accounts, verification
+5. Add Wallet fields: withdrawal limit input, transaction commission breakdown
+6. Add Privacy fields: 2FA toggle, login activity list
+7. Add Midnight Cleaner settings: sound choice, auto-clean rule
+8. Add Notification settings: alert style, coin chime toggle
+9. Add Display settings: immersive mode toggle, frame size slider, theme intensity

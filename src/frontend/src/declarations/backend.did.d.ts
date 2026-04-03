@@ -10,9 +10,41 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export interface UserAccount {
+  'notificationPreferences' : {
+    'coinChime' : boolean,
+    'alertStyle' : { 'top' : null } |
+      { 'center' : null },
+  },
+  'twoFactorEnabled' : boolean,
+  'owner' : Principal,
+  'type' : { 'personal' : null } |
+    { 'business' : null } |
+    { 'royal' : null },
+  'displayPreferences' : {
+    'frameSize' : bigint,
+    'darkIntensity' : bigint,
+    'immersive' : boolean,
+  },
+  'withdrawalLimit' : WithdrawalLimit,
+}
+export interface UserProfile {
+  'nickname' : string,
+  'linkedAccounts' : Array<string>,
+  'accountType' : { 'personal' : null } |
+    { 'business' : null } |
+    { 'royal' : null },
+  'avatarConfig' : { 'color' : string, 'crown' : string, 'clothes' : string },
+}
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
+export interface WithdrawalLimit {
+  'lastResetTimestamp' : bigint,
+  'todayWithdrawn' : bigint,
+  'limitPerTransaction' : bigint,
+  'limitPerDay' : bigint,
+}
 export interface _CaffeineStorageCreateCertificateResult {
   'method' : string,
   'blob_hash' : string,
@@ -42,8 +74,15 @@ export interface _SERVICE {
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'getAccount' : ActorMethod<[Principal], [] | [UserAccount]>,
+  'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
+  'getWithdrawalLimit' : ActorMethod<[Principal], [] | [WithdrawalLimit]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'listAllAccounts' : ActorMethod<[], Array<UserAccount>>,
+  'saveAccount' : ActorMethod<[UserAccount], undefined>,
+  'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

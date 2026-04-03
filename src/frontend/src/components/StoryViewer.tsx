@@ -33,8 +33,18 @@ export default function StoryViewer({ stories, startIndex, onClose }: Props) {
   const [progress, setProgress] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   const animFrameRef = useRef<number | null>(null);
+  const touchStartY = useRef(0);
+  const touchCurrentY = useRef(0);
 
   const story = stories[current];
+
+  // Prevent background scroll
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
 
   useEffect(() => {
     setCurrent(startIndex);
@@ -75,16 +85,34 @@ export default function StoryViewer({ stories, startIndex, onClose }: Props) {
     else onClose();
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchCurrentY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = () => {
+    const delta = touchCurrentY.current - touchStartY.current;
+    if (delta > 80) onClose();
+  };
+
   if (!story) return null;
 
   return (
     <AnimatePresence>
       <motion.div
-        key="viewer"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 bg-black flex items-center justify-center"
+        key="story-viewer-overlay"
+        initial={{ y: "100%", opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: "100%", opacity: 0 }}
+        transition={{ type: "spring", damping: 30, stiffness: 300 }}
+        className="fixed inset-0 z-[9999] bg-black flex items-center justify-center"
+        style={{ height: "100dvh" }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         data-ocid="story_viewer.modal"
       >
         {/* Video */}
@@ -102,6 +130,11 @@ export default function StoryViewer({ stories, startIndex, onClose }: Props) {
                 story.filterStyle === "none" ? undefined : story.filterStyle,
             }}
           />
+
+          {/* Swipe hint */}
+          <div className="absolute top-1 inset-x-0 flex justify-center pointer-events-none">
+            <div className="w-8 h-1 rounded-full bg-white/30" />
+          </div>
 
           {/* Top overlay */}
           <div className="absolute top-0 inset-x-0 p-3 bg-gradient-to-b from-black/60 to-transparent">
@@ -129,8 +162,8 @@ export default function StoryViewer({ stories, startIndex, onClose }: Props) {
 
             {/* Author info */}
             <div className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center border-2 border-white shadow">
-                <span className="text-primary-foreground text-xs font-bold">
+              <div className="w-9 h-9 rounded-full bg-yellow-500 flex items-center justify-center border-2 border-white shadow">
+                <span className="text-black text-xs font-bold">
                   {story.authorInitials}
                 </span>
               </div>
@@ -152,7 +185,7 @@ export default function StoryViewer({ stories, startIndex, onClose }: Props) {
           <button
             type="button"
             onClick={onClose}
-            className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/50 flex items-center justify-center"
+            className="absolute top-14 right-3 w-9 h-9 rounded-full bg-black/50 flex items-center justify-center z-10"
             data-ocid="story_viewer.close_button"
           >
             <X size={18} className="text-white" />

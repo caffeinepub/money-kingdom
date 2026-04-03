@@ -24,6 +24,45 @@ export const UserRole = IDL.Variant({
   'user' : IDL.Null,
   'guest' : IDL.Null,
 });
+export const WithdrawalLimit = IDL.Record({
+  'lastResetTimestamp' : IDL.Int,
+  'todayWithdrawn' : IDL.Nat,
+  'limitPerTransaction' : IDL.Nat,
+  'limitPerDay' : IDL.Nat,
+});
+export const UserAccount = IDL.Record({
+  'notificationPreferences' : IDL.Record({
+    'coinChime' : IDL.Bool,
+    'alertStyle' : IDL.Variant({ 'top' : IDL.Null, 'center' : IDL.Null }),
+  }),
+  'twoFactorEnabled' : IDL.Bool,
+  'owner' : IDL.Principal,
+  'type' : IDL.Variant({
+    'personal' : IDL.Null,
+    'business' : IDL.Null,
+    'royal' : IDL.Null,
+  }),
+  'displayPreferences' : IDL.Record({
+    'frameSize' : IDL.Nat,
+    'darkIntensity' : IDL.Nat,
+    'immersive' : IDL.Bool,
+  }),
+  'withdrawalLimit' : WithdrawalLimit,
+});
+export const UserProfile = IDL.Record({
+  'nickname' : IDL.Text,
+  'linkedAccounts' : IDL.Vec(IDL.Text),
+  'accountType' : IDL.Variant({
+    'personal' : IDL.Null,
+    'business' : IDL.Null,
+    'royal' : IDL.Null,
+  }),
+  'avatarConfig' : IDL.Record({
+    'color' : IDL.Text,
+    'crown' : IDL.Text,
+    'clothes' : IDL.Text,
+  }),
+});
 
 export const idlService = IDL.Service({
   '_caffeineStorageBlobIsLive' : IDL.Func(
@@ -54,8 +93,23 @@ export const idlService = IDL.Service({
   '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'getAccount' : IDL.Func([IDL.Principal], [IDL.Opt(UserAccount)], ['query']),
+  'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+  'getUserProfile' : IDL.Func(
+      [IDL.Principal],
+      [IDL.Opt(UserProfile)],
+      ['query'],
+    ),
+  'getWithdrawalLimit' : IDL.Func(
+      [IDL.Principal],
+      [IDL.Opt(WithdrawalLimit)],
+      ['query'],
+    ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'listAllAccounts' : IDL.Func([], [IDL.Vec(UserAccount)], ['query']),
+  'saveAccount' : IDL.Func([UserAccount], [], []),
+  'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
 });
 
 export const idlInitArgs = [];
@@ -76,6 +130,45 @@ export const idlFactory = ({ IDL }) => {
     'admin' : IDL.Null,
     'user' : IDL.Null,
     'guest' : IDL.Null,
+  });
+  const WithdrawalLimit = IDL.Record({
+    'lastResetTimestamp' : IDL.Int,
+    'todayWithdrawn' : IDL.Nat,
+    'limitPerTransaction' : IDL.Nat,
+    'limitPerDay' : IDL.Nat,
+  });
+  const UserAccount = IDL.Record({
+    'notificationPreferences' : IDL.Record({
+      'coinChime' : IDL.Bool,
+      'alertStyle' : IDL.Variant({ 'top' : IDL.Null, 'center' : IDL.Null }),
+    }),
+    'twoFactorEnabled' : IDL.Bool,
+    'owner' : IDL.Principal,
+    'type' : IDL.Variant({
+      'personal' : IDL.Null,
+      'business' : IDL.Null,
+      'royal' : IDL.Null,
+    }),
+    'displayPreferences' : IDL.Record({
+      'frameSize' : IDL.Nat,
+      'darkIntensity' : IDL.Nat,
+      'immersive' : IDL.Bool,
+    }),
+    'withdrawalLimit' : WithdrawalLimit,
+  });
+  const UserProfile = IDL.Record({
+    'nickname' : IDL.Text,
+    'linkedAccounts' : IDL.Vec(IDL.Text),
+    'accountType' : IDL.Variant({
+      'personal' : IDL.Null,
+      'business' : IDL.Null,
+      'royal' : IDL.Null,
+    }),
+    'avatarConfig' : IDL.Record({
+      'color' : IDL.Text,
+      'crown' : IDL.Text,
+      'clothes' : IDL.Text,
+    }),
   });
   
   return IDL.Service({
@@ -107,8 +200,23 @@ export const idlFactory = ({ IDL }) => {
     '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'getAccount' : IDL.Func([IDL.Principal], [IDL.Opt(UserAccount)], ['query']),
+    'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+    'getUserProfile' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Opt(UserProfile)],
+        ['query'],
+      ),
+    'getWithdrawalLimit' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Opt(WithdrawalLimit)],
+        ['query'],
+      ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'listAllAccounts' : IDL.Func([], [IDL.Vec(UserAccount)], ['query']),
+    'saveAccount' : IDL.Func([UserAccount], [], []),
+    'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   });
 };
 
