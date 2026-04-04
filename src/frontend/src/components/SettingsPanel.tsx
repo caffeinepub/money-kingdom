@@ -492,6 +492,15 @@ function AccountTab() {
           ))}
         </div>
 
+        <SectionTitle icon="👑" title="Kingdom Title" />
+        <KingdomTitleSelector />
+
+        <SectionTitle icon="⚪" title="Profile Border Style" />
+        <ProfileBorderSelector />
+
+        <SectionTitle icon="✍️" title="Bio Font Style" />
+        <BioFontSelector />
+
         <SectionTitle icon="🔓" title="अकाउंट विजिबिलिटी" />
         <ToggleRow
           label={isPublic ? "Public" : "Private"}
@@ -573,6 +582,9 @@ function WalletTab() {
             </p>
           )}
         </div>
+
+        <SectionTitle icon="💱" title="Currency Display" />
+        <CurrencyDisplaySwitch />
 
         <SectionTitle icon="💳" title="पेमेंट मेथड" />
         <div className="flex gap-2 items-center">
@@ -899,6 +911,8 @@ function PrivacyTab() {
           ))}
         </div>
 
+        <ScreenshotBlockToggle />
+
         <SectionTitle icon="🚫" title="Block List" />
         <div
           className="text-center text-muted-foreground text-sm py-4"
@@ -1102,6 +1116,12 @@ function NotificationsTab() {
           }}
           ocid="settings.notif.chime_switch"
         />
+
+        <SectionTitle icon="🎵" title="Coin Chime Sound" />
+        <CoinChimeSelector />
+
+        <SectionTitle icon="⭐" title="Priority Contact" />
+        <PriorityContactNotif />
 
         <SectionTitle icon="🌙" title="Quiet Hours" />
         <ToggleRow
@@ -1517,13 +1537,536 @@ function DisplayTab({
   );
 }
 
-function HelpTab() {
+// ──────────────────────────────────────────────
+function MediaReelsTab() {
+  const [autoScroll, setAutoScroll] = useState(() =>
+    getBool("mk_media_autoscroll", false),
+  );
+  const [quality, setQuality] = useState(
+    localStorage.getItem("mk_media_quality") ?? "auto",
+  );
+  const [musicVol, setMusicVol] = useState(() =>
+    Number(localStorage.getItem("mk_music_volume") ?? "70"),
+  );
+  const [downloadPerm, setDownloadPerm] = useState(() =>
+    getBool("mk_media_download_perm", true),
+  );
+  const [lyricsDisplay, setLyricsDisplay] = useState(() =>
+    getBool("mk_media_lyrics", true),
+  );
+  const [captionSize, setCaptionSize] = useState(() =>
+    Number(localStorage.getItem("mk_caption_font_size") ?? "14"),
+  );
+
+  const QUALITY_OPTS = [
+    { value: "hd", label: "HD" },
+    { value: "datasaver", label: "Data Saver" },
+    { value: "auto", label: "Auto" },
+  ];
+
+  return (
+    <ScrollArea className="flex-1">
+      <div className="px-4 py-4 flex flex-col gap-5">
+        <SectionTitle icon="🎬" title="रील & मीडिया कंट्रोल" />
+
+        <ToggleRow
+          label="Auto-Scroll"
+          desc="रील अपने आप बदलती रहे"
+          value={autoScroll}
+          onChange={(v) => {
+            setAutoScroll(v);
+            setBool("mk_media_autoscroll", v);
+          }}
+          ocid="settings.media.autoscroll_switch"
+        />
+
+        <SectionTitle icon="📹" title="वीडियो क्वालिटी" />
+        <div className="flex gap-2">
+          {QUALITY_OPTS.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => {
+                setQuality(opt.value);
+                localStorage.setItem("mk_media_quality", opt.value);
+              }}
+              className={`flex-1 py-2.5 rounded-xl text-sm font-bold border-2 transition-all ${
+                quality === opt.value
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border text-foreground hover:border-primary/40"
+              }`}
+              data-ocid={`settings.media.quality.${opt.value}.button`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+
+        <SectionTitle icon="🎵" title="म्यूजिक वॉल्यूम" />
+        <div className="flex flex-col gap-2 px-1">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs text-muted-foreground font-medium">
+              Volume:{" "}
+              <span className="text-primary font-bold">{musicVol}%</span>
+            </Label>
+          </div>
+          <Slider
+            min={0}
+            max={100}
+            step={5}
+            value={[musicVol]}
+            onValueChange={(v) => {
+              setMusicVol(v[0]);
+              localStorage.setItem("mk_music_volume", String(v[0]));
+            }}
+            className="w-full"
+            data-ocid="settings.media.music_vol.slider"
+          />
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>🔇 बंद</span>
+            <span>🔊 पूरा</span>
+          </div>
+        </div>
+
+        <ToggleRow
+          label="Download Permission"
+          desc="दूसरे आपकी रील गैलरी में save कर सकते हैं?"
+          value={downloadPerm}
+          onChange={(v) => {
+            setDownloadPerm(v);
+            setBool("mk_media_download_perm", v);
+          }}
+          ocid="settings.media.download_switch"
+        />
+
+        <ToggleRow
+          label="Lyrics Display"
+          desc="वीडियो पर Hindi lyrics दिखाएं"
+          value={lyricsDisplay}
+          onChange={(v) => {
+            setLyricsDisplay(v);
+            setBool("mk_media_lyrics", v);
+          }}
+          ocid="settings.media.lyrics_switch"
+        />
+
+        <SectionTitle icon="🔤" title="Caption Font Size" />
+        <div className="flex flex-col gap-2 px-1">
+          <Label className="text-xs text-muted-foreground font-medium">
+            Size:{" "}
+            <span className="text-primary font-bold">{captionSize}px</span>
+          </Label>
+          <Slider
+            min={12}
+            max={24}
+            step={1}
+            value={[captionSize]}
+            onValueChange={(v) => {
+              setCaptionSize(v[0]);
+              localStorage.setItem("mk_caption_font_size", String(v[0]));
+            }}
+            className="w-full"
+            data-ocid="settings.media.caption_size.slider"
+          />
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>छोटा (12px)</span>
+            <span>बड़ा (24px)</span>
+          </div>
+        </div>
+      </div>
+    </ScrollArea>
+  );
+}
+
+// ──────────────────────────────────────────────
+function DustWeatherTab() {
+  const [dustSpeed, setDustSpeed] = useState(
+    localStorage.getItem("mk_dust_speed") ?? "medium",
+  );
+  const [cleanerSchedule, setCleanerSchedule] = useState(
+    localStorage.getItem("mk_cleaner_schedule") ?? "daily",
+  );
+  const [cleanerChar, setCleanerChar] = useState(
+    localStorage.getItem("mk_cleaner_character") ?? "soldier",
+  );
+  const [liveWeather, setLiveWeather] = useState(() =>
+    getBool("mk_weather_live", true),
+  );
+  const [animSpeed, setAnimSpeed] = useState(() =>
+    Number(localStorage.getItem("mk_anim_speed") ?? "1"),
+  );
+  const [cleanerSound, setCleanerSound] = useState(
+    localStorage.getItem("mk_cleaner_sound") ?? "music",
+  );
+
+  const DUST_OPTS = [
+    { value: "slow", label: "धीरा 🌫" },
+    { value: "medium", label: "मध्यम 🌪" },
+    { value: "fast", label: "तेज ⚡" },
+  ];
+  const CLEANER_CHARS = [
+    { value: "joker", emoji: "🤡", label: "जोकर" },
+    { value: "soldier", emoji: "💂", label: "सिपाही" },
+    { value: "robot", emoji: "🤖", label: "रोबोट" },
+  ];
+  const ANIM_LABELS = ["0.5x धीरा", "1x Normal", "1.5x तेज़", "2x बहुत तेज़"];
+
+  return (
+    <ScrollArea className="flex-1">
+      <div className="px-4 py-4 flex flex-col gap-5">
+        <SectionTitle icon="🌫️" title="धूल की रफ़्तार" />
+        <div className="flex gap-2">
+          {DUST_OPTS.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => {
+                setDustSpeed(opt.value);
+                localStorage.setItem("mk_dust_speed", opt.value);
+                localStorage.setItem("mk_dust_intensity", opt.value);
+              }}
+              className={`flex-1 py-2.5 rounded-xl text-xs font-bold border-2 transition-all ${
+                dustSpeed === opt.value
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border text-foreground hover:border-primary/40"
+              }`}
+              data-ocid={`settings.dust.speed.${opt.value}.button`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+
+        <SectionTitle icon="🗓️" title="Cleaner का Schedule" />
+        <div className="flex gap-2">
+          {[
+            { value: "daily", label: "🌙 रोज़ 12 बजे" },
+            { value: "weekly", label: "📅 हफ्ते में एक बार" },
+          ].map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => {
+                setCleanerSchedule(opt.value);
+                localStorage.setItem("mk_cleaner_schedule", opt.value);
+              }}
+              className={`flex-1 py-2.5 rounded-xl text-xs font-bold border-2 transition-all ${
+                cleanerSchedule === opt.value
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border text-foreground hover:border-primary/40"
+              }`}
+              data-ocid={`settings.dust.schedule.${opt.value}.button`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+
+        <SectionTitle icon="🧹" title="Cleaner Character चुनें" />
+        <div className="flex gap-2">
+          {CLEANER_CHARS.map((c) => (
+            <button
+              key={c.value}
+              type="button"
+              onClick={() => {
+                setCleanerChar(c.value);
+                localStorage.setItem("mk_cleaner_character", c.value);
+              }}
+              className={`flex-1 flex flex-col items-center gap-1 py-3 rounded-xl border-2 transition-all ${
+                cleanerChar === c.value
+                  ? "border-primary bg-primary/10"
+                  : "border-border hover:border-primary/40"
+              }`}
+              data-ocid={`settings.dust.cleaner.${c.value}.button`}
+            >
+              <span className="text-2xl">{c.emoji}</span>
+              <span
+                className={`text-xs font-bold ${cleanerChar === c.value ? "text-primary" : "text-foreground"}`}
+              >
+                {c.label}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        <SectionTitle icon="🔊" title="Cleaner की आवाज़" />
+        <div className="flex gap-2">
+          {[
+            { value: "broom", label: "🧹 झाड़ू की आवाज़" },
+            { value: "music", label: "🎵 म्यूजिक" },
+          ].map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => {
+                setCleanerSound(opt.value);
+                localStorage.setItem("mk_cleaner_sound", opt.value);
+              }}
+              className={`flex-1 py-2.5 rounded-xl text-xs font-bold border-2 transition-all ${
+                cleanerSound === opt.value
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border text-foreground hover:border-primary/40"
+              }`}
+              data-ocid={`settings.dust.sound.${opt.value}.button`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+
+        <ToggleRow
+          label="Live Weather Background"
+          desc="शहर के मौसम के हिसाब से background बदले"
+          value={liveWeather}
+          onChange={(v) => {
+            setLiveWeather(v);
+            setBool("mk_weather_live", v);
+          }}
+          ocid="settings.dust.weather_switch"
+        />
+
+        <SectionTitle icon="⚡" title="Animation Speed" />
+        <div className="flex flex-col gap-2 px-1">
+          <Label className="text-xs text-muted-foreground font-medium">
+            Speed:{" "}
+            <span className="text-primary font-bold">
+              {ANIM_LABELS[animSpeed] ?? "1x Normal"}
+            </span>
+          </Label>
+          <Slider
+            min={0}
+            max={3}
+            step={1}
+            value={[animSpeed]}
+            onValueChange={(v) => {
+              setAnimSpeed(v[0]);
+              localStorage.setItem("mk_anim_speed", String(v[0]));
+            }}
+            className="w-full"
+            data-ocid="settings.dust.anim_speed.slider"
+          />
+          <div className="flex justify-between text-xs text-muted-foreground">
+            {ANIM_LABELS.map((l) => (
+              <span key={l}>{l}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </ScrollArea>
+  );
+}
+
+// ──────────────────────────────────────────────
+function MessagingTab() {
+  const WALLPAPERS = [
+    {
+      id: "royal",
+      label: "Royal Gold",
+      bg: "linear-gradient(135deg, #1a1a2e, #FFD700)",
+    },
+    {
+      id: "night",
+      label: "Night Sky",
+      bg: "linear-gradient(135deg, #0f0c29, #302b63, #24243e)",
+    },
+    {
+      id: "rose",
+      label: "Rose Garden",
+      bg: "linear-gradient(135deg, #f953c6, #b91d73)",
+    },
+    {
+      id: "ocean",
+      label: "Ocean",
+      bg: "linear-gradient(135deg, #1cb5e0, #000851)",
+    },
+    {
+      id: "forest",
+      label: "Forest",
+      bg: "linear-gradient(135deg, #1a472a, #52b788)",
+    },
+    {
+      id: "minimal",
+      label: "Minimal",
+      bg: "linear-gradient(135deg, #f5f5f5, #e0e0e0)",
+    },
+  ];
+  const BUBBLE_COLORS = [
+    "#FFD700",
+    "#2196F3",
+    "#E91E63",
+    "#4CAF50",
+    "#9C27B0",
+    "#FF5722",
+  ];
+  const AUTO_DELETE_OPTS = [
+    { value: "never", label: "कभी नहीं" },
+    { value: "1h", label: "1 घंटा" },
+    { value: "24h", label: "24 घंटे" },
+    { value: "7d", label: "7 दिन" },
+  ];
+  const VOICE_SPEED_OPTS = [
+    { value: "slow", label: "🐢 धीरा" },
+    { value: "normal", label: "▶️ Normal" },
+    { value: "fast", label: "⚡ तेज़" },
+  ];
+
+  const [wallpaper, setWallpaper] = useState(
+    localStorage.getItem("mk_chat_wallpaper") ?? "royal",
+  );
+  const [autoDelete, setAutoDelete] = useState(
+    localStorage.getItem("mk_chat_auto_delete") ?? "never",
+  );
+  const [voiceSpeed, setVoiceSpeed] = useState(
+    localStorage.getItem("mk_chat_voice_speed") ?? "normal",
+  );
+  const [bubbleColor, setBubbleColor] = useState(
+    localStorage.getItem("mk_chat_bubble_color") ?? "#FFD700",
+  );
+  const [readReceipts, setReadReceipts] = useState(() =>
+    getBool("mk_chat_read_receipts", true),
+  );
+  const [priorityContact, setPriorityContact] = useState(
+    localStorage.getItem("mk_chat_priority") ?? "",
+  );
+
+  return (
+    <ScrollArea className="flex-1">
+      <div className="px-4 py-4 flex flex-col gap-5">
+        <SectionTitle icon="💬" title="चैट & बातचीत" />
+
+        <SectionTitle icon="🖼️" title="Chat Wallpaper" />
+        <div className="grid grid-cols-3 gap-2">
+          {WALLPAPERS.map((w) => (
+            <button
+              key={w.id}
+              type="button"
+              onClick={() => {
+                setWallpaper(w.id);
+                localStorage.setItem("mk_chat_wallpaper", w.id);
+              }}
+              className={`h-16 rounded-xl border-2 transition-all relative overflow-hidden ${
+                wallpaper === w.id
+                  ? "border-primary ring-2 ring-primary"
+                  : "border-border"
+              }`}
+              style={{ background: w.bg }}
+              data-ocid={`settings.chat.wallpaper.${w.id}.button`}
+            >
+              <span className="absolute bottom-1 left-0 right-0 text-center text-[9px] font-bold text-white drop-shadow">
+                {w.label}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        <SectionTitle icon="🗑️" title="Auto-Delete Messages" />
+        <div className="grid grid-cols-2 gap-2">
+          {AUTO_DELETE_OPTS.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => {
+                setAutoDelete(opt.value);
+                localStorage.setItem("mk_chat_auto_delete", opt.value);
+              }}
+              className={`py-2.5 rounded-xl text-xs font-bold border-2 transition-all ${
+                autoDelete === opt.value
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border text-foreground hover:border-primary/40"
+              }`}
+              data-ocid={`settings.chat.autodelete.${opt.value}.button`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+
+        <SectionTitle icon="🎙️" title="Voice Message Speed" />
+        <div className="flex gap-2">
+          {VOICE_SPEED_OPTS.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => {
+                setVoiceSpeed(opt.value);
+                localStorage.setItem("mk_chat_voice_speed", opt.value);
+              }}
+              className={`flex-1 py-2.5 rounded-xl text-xs font-bold border-2 transition-all ${
+                voiceSpeed === opt.value
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border text-foreground hover:border-primary/40"
+              }`}
+              data-ocid={`settings.chat.voice_speed.${opt.value}.button`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+
+        <SectionTitle icon="🫧" title="Chat Bubble Color" />
+        <ColorPicker
+          label="अपना bubble color चुनें"
+          colors={BUBBLE_COLORS}
+          value={bubbleColor}
+          onChange={(c) => {
+            setBubbleColor(c);
+            localStorage.setItem("mk_chat_bubble_color", c);
+          }}
+        />
+
+        <ToggleRow
+          label="Read Receipts (टिक ✓✓)"
+          desc="मैसेज पढ़ा गया या नहीं — दिखाएं"
+          value={readReceipts}
+          onChange={(v) => {
+            setReadReceipts(v);
+            setBool("mk_chat_read_receipts", v);
+          }}
+          ocid="settings.chat.read_receipts_switch"
+        />
+
+        <SectionTitle icon="⭐" title="Priority Contact" />
+        <Field label="प्राथमिकता वाला contact (नाम)">
+          <div className="flex gap-2">
+            <Input
+              value={priorityContact}
+              onChange={(e) => setPriorityContact(e.target.value)}
+              placeholder="जैसे: Prince Pawan..."
+              data-ocid="settings.chat.priority_input"
+            />
+            <Button
+              size="sm"
+              onClick={() => {
+                localStorage.setItem("mk_chat_priority", priorityContact);
+                toast.success("Priority contact सेट हो गया! ⭐");
+              }}
+              data-ocid="settings.chat.priority.save_button"
+            >
+              सेव
+            </Button>
+          </div>
+        </Field>
+      </div>
+    </ScrollArea>
+  );
+}
+
+// ──────────────────────────────────────────────
+function SupportTab() {
   const [report, setReport] = useState("");
+  const [breakReminder, setBreakReminder] = useState(() =>
+    getBool("mk_break_reminder", false),
+  );
+  const [breakInterval, setBreakInterval] = useState(() =>
+    Number(localStorage.getItem("mk_break_interval") ?? "1"),
+  );
+
+  const BREAK_LABELS = ["30 मिनट", "1 घंटा", "2 घंटे", "4 घंटे"];
 
   const submitReport = () => {
     if (!report.trim()) return;
     setReport("");
-    toast.success("आपकी रिपोर्ट भेजी गई ✅");
+    toast.success("रिपोर्ट भेज दी गई! Admin को मिली। 🙏");
   };
 
   const deleteAccount = () => {
@@ -1534,6 +2077,87 @@ function HelpTab() {
   return (
     <ScrollArea className="flex-1">
       <div className="px-4 py-4 flex flex-col gap-5">
+        <SectionTitle icon="🐛" title="Bug Report" />
+        <Textarea
+          value={report}
+          onChange={(e) => setReport(e.target.value)}
+          placeholder="कोई bug या problem बताएं... जैसे: Login नहीं हो रहा, Wallet काम नहीं कर रहा..."
+          rows={4}
+          data-ocid="settings.support.report_textarea"
+        />
+        <Button
+          onClick={submitReport}
+          disabled={!report.trim()}
+          data-ocid="settings.support.report_button"
+          variant="outline"
+          className="w-full border-primary text-primary hover:bg-primary/10"
+        >
+          📤 Admin को भेजें
+        </Button>
+
+        <SectionTitle icon="📖" title="Help Tutorial" />
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={() => toast.info("Tutorial जल्द आ रहा है! 🎬")}
+          data-ocid="settings.support.tutorial_button"
+        >
+          🎥 ट्यूटोरियल देखें
+        </Button>
+
+        <SectionTitle icon="⏰" title="Break Reminder" />
+        <ToggleRow
+          label="Break Reminder"
+          desc={'"आराम करो" का message समय-समय पर आए'}
+          value={breakReminder}
+          onChange={(v) => {
+            setBreakReminder(v);
+            setBool("mk_break_reminder", v);
+          }}
+          ocid="settings.support.break_switch"
+        />
+        {breakReminder && (
+          <div className="flex flex-col gap-2 px-1">
+            <Label className="text-xs text-muted-foreground font-medium">
+              Interval:{" "}
+              <span className="text-primary font-bold">
+                {BREAK_LABELS[breakInterval]}
+              </span>
+            </Label>
+            <Slider
+              min={0}
+              max={3}
+              step={1}
+              value={[breakInterval]}
+              onValueChange={(v) => {
+                setBreakInterval(v[0]);
+                localStorage.setItem("mk_break_interval", String(v[0]));
+              }}
+              className="w-full"
+              data-ocid="settings.support.break_interval.slider"
+            />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              {BREAK_LABELS.map((l) => (
+                <span key={l}>{l}</span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <SectionTitle icon="ℹ️" title="App Info" />
+        <div className="rounded-xl border border-border bg-muted/30 p-4 flex items-center gap-3">
+          <span className="text-3xl">👑</span>
+          <div>
+            <p className="font-bold text-sm text-foreground">Money Kingdom</p>
+            <p className="text-xs text-muted-foreground">
+              v71 — Built with ❤️ for Prince Pawan Kumar
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              PWA App · caffeine.ai
+            </p>
+          </div>
+        </div>
+
         <SectionTitle icon="❓" title="Help Center" />
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="earn">
@@ -1565,24 +2189,6 @@ function HelpTab() {
           </AccordionItem>
         </Accordion>
 
-        <SectionTitle icon="🐛" title="Problem Report" />
-        <Textarea
-          value={report}
-          onChange={(e) => setReport(e.target.value)}
-          placeholder="कोई bug या problem बताएं..."
-          rows={3}
-          data-ocid="settings.help.report_textarea"
-        />
-        <Button
-          onClick={submitReport}
-          disabled={!report.trim()}
-          data-ocid="settings.help.report_button"
-          variant="outline"
-          className="w-full"
-        >
-          📤 रिपोर्ट भेजें
-        </Button>
-
         {/* Verify My Kingdom */}
         <div
           className="rounded-2xl border-2 p-4 flex flex-col gap-3 mt-2"
@@ -1598,57 +2204,45 @@ function HelpTab() {
           <p className="text-sm text-muted-foreground">
             अपना Verified Badge पाएं और Kingdom में अपनी पहचान बनाएं!
           </p>
-          <div className="flex items-center gap-2">
-            <motion.span
-              animate={{ opacity: [0.5, 1, 0.5] }}
-              transition={{ repeat: Number.POSITIVE_INFINITY, duration: 2 }}
-              className="text-2xl"
-            >
-              ✅
-            </motion.span>
-            <span className="text-sm font-semibold text-primary">
-              Gold Verified Badge
-            </span>
-          </div>
           <Button
             disabled
             className="w-full opacity-70"
             style={{ background: "oklch(0.72 0.12 66)", color: "white" }}
-            data-ocid="settings.help.verify_button"
+            data-ocid="settings.support.verify_button"
           >
             जल्द आ रहा है... 🚀
           </Button>
         </div>
 
-        <SectionTitle icon="⚠️" title="खतरनाक zone" />
+        {/* Delete Account */}
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button
-              variant="destructive"
-              className="w-full"
-              data-ocid="settings.help.delete_button"
+              variant="outline"
+              className="w-full border-destructive text-destructive hover:bg-destructive/10"
+              data-ocid="settings.support.delete_button"
             >
-              🗑️ Account Delete करें
+              🗑️ अकाउंट डिलीट करें
             </Button>
           </AlertDialogTrigger>
-          <AlertDialogContent data-ocid="settings.help.dialog">
+          <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Account Delete करें?</AlertDialogTitle>
+              <AlertDialogTitle>क्या आप sure हैं?</AlertDialogTitle>
               <AlertDialogDescription>
-                क्या आप सच में account delete करना चाहते हैं? यह action उलटा नहीं हो
-                सकता। सारा data मिट जाएगा।
+                यह action पूरी तरह permanent है। आपका सारा data, coins और posts
+                हमेशा के लिए हट जाएंगे।
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel data-ocid="settings.help.cancel_button">
+              <AlertDialogCancel data-ocid="settings.support.cancel_button">
                 रद्द करें
               </AlertDialogCancel>
               <AlertDialogAction
                 onClick={deleteAccount}
-                className="bg-destructive text-destructive-foreground"
-                data-ocid="settings.help.confirm_button"
+                className="bg-destructive hover:bg-destructive/90"
+                data-ocid="settings.support.confirm_button"
               >
-                हाँ, Delete करें
+                हाँ, डिलीट करें
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -1659,6 +2253,235 @@ function HelpTab() {
 }
 
 // ──────────────────────────────────────────────
+
+// ──────────────────────────────────────────────
+// Small reusable sub-components used by multiple tabs
+// ──────────────────────────────────────────────
+
+function KingdomTitleSelector() {
+  const TITLES = ["महाराजा", "सुल्तान", "नवाब", "रजवाड़ा", "युवराज", "सेनापति"];
+  const [selected, setSelected] = useState(
+    localStorage.getItem("mk_kingdom_title") ?? "",
+  );
+  return (
+    <div className="flex flex-wrap gap-2">
+      {TITLES.map((t) => (
+        <button
+          key={t}
+          type="button"
+          onClick={() => {
+            setSelected(t);
+            localStorage.setItem("mk_kingdom_title", t);
+            saveUserSettings({ kingdomTitle: t });
+            toast.success(`Kingdom Title: ${t} 👑`);
+          }}
+          className={`px-3 py-1.5 rounded-xl text-xs font-bold border-2 transition-all ${
+            selected === t
+              ? "border-primary bg-primary/10 text-primary"
+              : "border-border text-foreground hover:border-primary/40"
+          }`}
+          data-ocid="settings.account.title.button"
+        >
+          {t}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function ProfileBorderSelector() {
+  const BORDERS = [
+    { value: "golden", label: "🌟 Golden Ring" },
+    { value: "diamond", label: "💎 Diamond Ring" },
+    { value: "silver", label: "⚪ Silver Ring" },
+    { value: "none", label: "❌ No Border" },
+  ];
+  const [selected, setSelected] = useState(
+    localStorage.getItem("mk_profile_border") ?? "golden",
+  );
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      {BORDERS.map((b) => (
+        <button
+          key={b.value}
+          type="button"
+          onClick={() => {
+            setSelected(b.value);
+            localStorage.setItem("mk_profile_border", b.value);
+            saveUserSettings({ profileBorder: b.value });
+          }}
+          className={`py-2.5 rounded-xl text-xs font-bold border-2 transition-all ${
+            selected === b.value
+              ? "border-primary bg-primary/10 text-primary"
+              : "border-border text-foreground hover:border-primary/40"
+          }`}
+          data-ocid="settings.account.border.button"
+        >
+          {b.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function BioFontSelector() {
+  const FONTS = [
+    { value: "normal", label: "Normal" },
+    {
+      value: "italic",
+      label: "Italic",
+      style: "italic" as React.CSSProperties["fontStyle"],
+    },
+    { value: "bold", label: "Bold", style: undefined, weight: "bold" },
+    { value: "royal", label: "👑 Royal", special: true },
+  ];
+  const [selected, setSelected] = useState(
+    localStorage.getItem("mk_bio_font") ?? "normal",
+  );
+  return (
+    <div className="flex gap-2">
+      {FONTS.map((f) => (
+        <button
+          key={f.value}
+          type="button"
+          onClick={() => {
+            setSelected(f.value);
+            localStorage.setItem("mk_bio_font", f.value);
+            saveUserSettings({ bioFont: f.value });
+          }}
+          className={`flex-1 py-2 rounded-xl text-xs border-2 transition-all ${
+            selected === f.value
+              ? "border-primary bg-primary/10 text-primary"
+              : "border-border text-foreground hover:border-primary/40"
+          }`}
+          style={{ fontStyle: f.style, fontWeight: f.weight }}
+          data-ocid="settings.account.bio_font.button"
+        >
+          {f.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function CurrencyDisplaySwitch() {
+  const [showCoins, setShowCoins] = useState(
+    () => (localStorage.getItem("mk_currency_display") ?? "coins") === "coins",
+  );
+  return (
+    <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border">
+      <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+        <span className="text-sm font-semibold text-foreground">
+          {showCoins ? "🪙 Coins में दिखाएं" : "₹ Rupees में दिखाएं"}
+        </span>
+        <span className="text-xs text-muted-foreground">
+          Balance display format बदलें
+        </span>
+      </div>
+      <Switch
+        checked={showCoins}
+        onCheckedChange={(v) => {
+          setShowCoins(v);
+          localStorage.setItem("mk_currency_display", v ? "coins" : "rupees");
+          saveUserSettings({ currencyDisplay: v ? "coins" : "rupees" });
+        }}
+        data-ocid="settings.wallet.currency_switch"
+      />
+    </div>
+  );
+}
+
+function ScreenshotBlockToggle() {
+  const [blocked, setBlocked] = useState(() =>
+    getBool("mk_screenshot_block", false),
+  );
+  return (
+    <div className="flex flex-col gap-2">
+      <ToggleRow
+        label="Screenshot Block"
+        desc="दूसरे आपकी profile का screenshot न ले सकें"
+        value={blocked}
+        onChange={(v) => {
+          setBlocked(v);
+          setBool("mk_screenshot_block", v);
+          saveUserSettings({ screenshotBlock: v });
+          if (v)
+            toast.info("⚠️ Browser में पूरी तरह block संभव नहीं, लेकिन warning दिखेगी");
+        }}
+        ocid="settings.privacy.screenshot_switch"
+      />
+      {blocked && (
+        <p className="text-xs text-amber-400 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
+          ⚠️ Browser में पूरी तरह block संभव नहीं, लेकिन screenshot लेने पर warning जरूर
+          दिखेगी।
+        </p>
+      )}
+    </div>
+  );
+}
+
+function CoinChimeSelector() {
+  const CHIMES = [
+    { value: "khanak", label: "🪙 खनक" },
+    { value: "ting", label: "🔔 टिंग" },
+    { value: "ding", label: "✨ डिंग" },
+  ];
+  const [selected, setSelected] = useState(
+    localStorage.getItem("mk_coin_chime_type") ?? "khanak",
+  );
+  return (
+    <div className="flex gap-2">
+      {CHIMES.map((c) => (
+        <button
+          key={c.value}
+          type="button"
+          onClick={() => {
+            setSelected(c.value);
+            localStorage.setItem("mk_coin_chime_type", c.value);
+            toast.success(`${c.label} sound selected!`);
+          }}
+          className={`flex-1 py-2.5 rounded-xl text-xs font-bold border-2 transition-all ${
+            selected === c.value
+              ? "border-primary bg-primary/10 text-primary"
+              : "border-border text-foreground hover:border-primary/40"
+          }`}
+          data-ocid={`settings.notif.chime.${c.value}.button`}
+        >
+          {c.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function PriorityContactNotif() {
+  const [name, setName] = useState(
+    localStorage.getItem("mk_notif_priority") ?? "",
+  );
+  return (
+    <Field label="किसके notifications सबसे पहले दिखें?">
+      <div className="flex gap-2">
+        <Input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="दोस्त का नाम..."
+          data-ocid="settings.notif.priority_input"
+        />
+        <Button
+          size="sm"
+          onClick={() => {
+            localStorage.setItem("mk_notif_priority", name);
+            toast.success("Priority contact सेट! ⭐");
+          }}
+          data-ocid="settings.notif.priority.save_button"
+        >
+          सेव
+        </Button>
+      </div>
+    </Field>
+  );
+}
+
 function ColorPicker({
   label,
   colors,
@@ -1844,7 +2667,10 @@ export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
                         ["privacy", "🔒", "प्राइवेसी"],
                         ["notif", "🔔", "नोटिफ"],
                         ["display", "🎨", "डिस्प्ले"],
-                        ["help", "❓", "हेल्प"],
+                        ["media", "🎬", "मीडिया"],
+                        ["dust", "🌫️", "धूल"],
+                        ["chat", "💬", "चैट"],
+                        ["support", "🆘", "सपोर्ट"],
                         ["games", "🎮", "Games"],
                         ["guru", "🎓", "Guru"],
                       ] as [string, string, string][]
@@ -1898,7 +2724,31 @@ export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
                   value="help"
                   className="flex-1 min-h-0 data-[state=active]:flex data-[state=active]:flex-col"
                 >
-                  <HelpTab />
+                  <SupportTab />
+                </TabsContent>
+                <TabsContent
+                  value="media"
+                  className="flex-1 min-h-0 data-[state=active]:flex data-[state=active]:flex-col"
+                >
+                  <MediaReelsTab />
+                </TabsContent>
+                <TabsContent
+                  value="dust"
+                  className="flex-1 min-h-0 data-[state=active]:flex data-[state=active]:flex-col"
+                >
+                  <DustWeatherTab />
+                </TabsContent>
+                <TabsContent
+                  value="chat"
+                  className="flex-1 min-h-0 data-[state=active]:flex data-[state=active]:flex-col"
+                >
+                  <MessagingTab />
+                </TabsContent>
+                <TabsContent
+                  value="support"
+                  className="flex-1 min-h-0 data-[state=active]:flex data-[state=active]:flex-col"
+                >
+                  <SupportTab />
                 </TabsContent>
                 <TabsContent
                   value="games"

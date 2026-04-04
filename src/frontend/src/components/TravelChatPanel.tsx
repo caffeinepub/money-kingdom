@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 interface Message {
   id: string;
@@ -10,6 +11,8 @@ interface Message {
   initials: string;
   text: string;
   time: string;
+  type?: "text" | "voice";
+  audioUrl?: string;
 }
 
 const STORAGE_KEY = "travelChat_messages";
@@ -26,7 +29,10 @@ function loadMessages(): Message[] {
 }
 
 function saveMessages(msgs: Message[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(msgs));
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify(msgs.map((m) => ({ ...m, audioUrl: undefined }))),
+  );
 }
 
 function nowTime() {
@@ -46,7 +52,12 @@ export default function TravelChatPanel({
   const [messages, setMessages] = useState<Message[]>(loadMessages);
   const [text, setText] = useState("");
   const [dragY, setDragY] = useState(0);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordSeconds, setRecordSeconds] = useState(0);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const recordTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -57,6 +68,15 @@ export default function TravelChatPanel({
     }
   }, [open]);
 
+  const addMessage = (msg: Message) => {
+    const updated = [...messages, msg];
+    setMessages(updated);
+    saveMessages(updated);
+    setTimeout(() => {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 50);
+  };
+
   const handleSend = () => {
     const trimmed = text.trim();
     if (!trimmed) return;
@@ -66,14 +86,10 @@ export default function TravelChatPanel({
       initials: CURRENT_INITIALS,
       text: trimmed,
       time: nowTime(),
+      type: "text",
     };
-    const updated = [...messages, msg];
-    setMessages(updated);
-    saveMessages(updated);
+    addMessage(msg);
     setText("");
-    setTimeout(() => {
-      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 50);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -81,6 +97,59 @@ export default function TravelChatPanel({
       e.preventDefault();
       handleSend();
     }
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+      recorder.onstop = () => {
+        const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        const url = URL.createObjectURL(blob);
+        const msg: Message = {
+          id: Date.now().toString(),
+          user: CURRENT_USER,
+          initials: CURRENT_INITIALS,
+          text: "🎤 Voice Message",
+          time: nowTime(),
+          type: "voice",
+          audioUrl: url,
+        };
+        addMessage(msg);
+        for (const t of stream.getTracks()) {
+          t.stop();
+        }
+      };
+      recorder.start();
+      mediaRecorderRef.current = recorder;
+      setIsRecording(true);
+      setRecordSeconds(0);
+      recordTimerRef.current = setInterval(() => {
+        setRecordSeconds((s) => s + 1);
+      }, 1000);
+    } catch {
+      toast.error("माइक्रोफ़ोन की permission दें 🎤");
+    }
+  };
+
+  const stopRecording = () => {
+    mediaRecorderRef.current?.stop();
+    setIsRecording(false);
+    if (recordTimerRef.current) {
+      clearInterval(recordTimerRef.current);
+      recordTimerRef.current = null;
+    }
+    setRecordSeconds(0);
+  };
+
+  const formatSeconds = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${m}:${String(sec).padStart(2, "0")}`;
   };
 
   return (
@@ -197,7 +266,25 @@ export default function TravelChatPanel({
                                 : "bg-muted text-foreground rounded-tl-sm"
                             }`}
                           >
-                            {msg.text}
+                            {msg.type === "voice" && msg.audioUrl ? (
+                              <div className="flex flex-col gap-1 min-w-[140px]">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-base">🎤</span>
+                                  <span className="text-xs font-semibold opacity-80">
+                                    Voice Message
+                                  </span>
+                                </div>
+                                {/* biome-ignore lint/a11y/useMediaCaption: voice message */}
+                                <audio
+                                  controls
+                                  src={msg.audioUrl}
+                                  className="w-full h-8"
+                                  style={{ minWidth: 140 }}
+                                />
+                              </div>
+                            ) : (
+                              msg.text
+                            )}
                           </div>
                         </div>
                       </div>
@@ -208,6 +295,39 @@ export default function TravelChatPanel({
               )}
             </ScrollArea>
 
+            {/* Recording indicator */}
+            <AnimatePresence>
+              {isRecording && (
+                <motion.div
+                  key="recording-bar"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="mx-3 mb-1 px-3 py-2 rounded-xl bg-red-500/20 border border-red-500/40 flex items-center gap-2"
+                >
+                  <motion.div
+                    animate={{ opacity: [1, 0.3, 1] }}
+                    transition={{
+                      repeat: Number.POSITIVE_INFINITY,
+                      duration: 1,
+                    }}
+                    className="w-2.5 h-2.5 rounded-full bg-red-500"
+                  />
+                  <span className="text-xs text-red-400 font-bold flex-1">
+                    🎤 रिकॉर्डिंग जारी... {formatSeconds(recordSeconds)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={stopRecording}
+                    className="px-2 py-0.5 rounded-lg bg-red-500 text-white text-xs font-bold"
+                    data-ocid="travel_chat.stop_record.button"
+                  >
+                    भेजें ✔
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* Input */}
             <div className="px-3 py-3 border-t border-border flex gap-2 shrink-0">
               <Input
@@ -217,10 +337,29 @@ export default function TravelChatPanel({
                 placeholder="संदेश लिखें..."
                 className="flex-1 text-sm"
                 data-ocid="travel_chat.input"
+                disabled={isRecording}
               />
+              {/* Voice record button */}
+              <button
+                type="button"
+                onMouseDown={startRecording}
+                onTouchStart={startRecording}
+                onMouseUp={isRecording ? stopRecording : undefined}
+                onTouchEnd={isRecording ? stopRecording : undefined}
+                onClick={isRecording ? stopRecording : undefined}
+                className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                  isRecording
+                    ? "bg-red-500 text-white animate-pulse"
+                    : "bg-muted text-muted-foreground hover:bg-primary hover:text-primary-foreground"
+                }`}
+                data-ocid="travel_chat.voice_button"
+                title={isRecording ? "भेजें" : "आवाज़ भेजें"}
+              >
+                🎤
+              </button>
               <Button
                 onClick={handleSend}
-                disabled={!text.trim()}
+                disabled={!text.trim() || isRecording}
                 size="sm"
                 data-ocid="travel_chat.submit_button"
                 className="shrink-0"

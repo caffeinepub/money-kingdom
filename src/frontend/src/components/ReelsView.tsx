@@ -440,6 +440,29 @@ export default function ReelsView({ onBack }: ReelsViewProps) {
     setLikesMap(buildLikesMap(posts));
   }, []);
 
+  // Listen for new post events to prepend new videos instantly
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const evt = e as CustomEvent;
+      const newPost = evt.detail?.post;
+      if (newPost?.videoUrl) {
+        setReels((prev) => {
+          // Avoid duplicates
+          if (prev.find((p) => p.id === newPost.id)) return prev;
+          return [newPost, ...prev];
+        });
+        setLikesMap((prev) => ({ ...prev, [newPost.id]: 0 }));
+      } else {
+        // Re-read all video posts in case the post was added without full detail
+        const posts = loadVideoPosts();
+        setReels(posts);
+        setLikesMap(buildLikesMap(posts));
+      }
+    };
+    window.addEventListener("mk_new_post", handler);
+    return () => window.removeEventListener("mk_new_post", handler);
+  }, []);
+
   // Intersection observer for auto-play
   // biome-ignore lint/correctness/useExhaustiveDependencies: observer setup only needs to run on reel list change
   useEffect(() => {

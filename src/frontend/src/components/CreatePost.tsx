@@ -63,7 +63,45 @@ export default function CreatePost({ onPost }: CreatePostProps) {
   const handleSubmit = () => {
     if (!content.trim() && !videoMeta) return;
     const finalContent = videoMeta?.caption || content.trim();
+    const profile = (() => {
+      try {
+        const raw = localStorage.getItem("mk_user_profile");
+        return raw ? JSON.parse(raw) : {};
+      } catch {
+        return {};
+      }
+    })();
+    const authorName = profile?.name ?? "Prince Pawan Kumar";
+    const authorMobile = profile?.mobile ?? "admin";
+    const getInitials = (n: string) =>
+      n
+        .split(" ")
+        .map((w: string) => w[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 3);
+    const newPost = {
+      id: Date.now().toString(),
+      author: authorName,
+      authorMobile,
+      authorInitials: getInitials(authorName),
+      timeAgo: "अभी",
+      content: finalContent,
+      hashtags: [],
+      likes: 0,
+      comments: 0,
+      liked: false,
+      videoUrl: videoMeta?.videoUrl ?? undefined,
+      createdAt: Date.now(),
+    };
+
     onPost(finalContent, videoMeta?.videoUrl ?? undefined);
+
+    // Dispatch event so Profile and ReelsView can update immediately
+    window.dispatchEvent(
+      new CustomEvent("mk_new_post", { detail: { post: newPost } }),
+    );
+
     setContent("");
     setVideoMeta(null);
     if (videoInputRef.current) videoInputRef.current.value = "";

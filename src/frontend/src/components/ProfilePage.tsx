@@ -350,6 +350,15 @@ export default function ProfilePage({
     setUserPosts(loadUserPosts(userMobile));
   }, [userMobile]);
 
+  // Listen for new posts dispatched from CreatePost
+  useEffect(() => {
+    const handler = () => {
+      setUserPosts(loadUserPosts(userMobile));
+    };
+    window.addEventListener("mk_new_post", handler);
+    return () => window.removeEventListener("mk_new_post", handler);
+  }, [userMobile]);
+
   const videoPosts = userPosts.filter((p) => !!p.videoUrl);
 
   // Followers/following
@@ -880,10 +889,17 @@ export default function ProfilePage({
         {/* Stats row: Posts | Followers | Following */}
         <div className="flex items-center gap-4 mb-3">
           <div className="flex flex-col items-center">
-            <span className="font-black text-lg text-foreground">
+            <span className="font-black text-xl text-foreground">
               {userPosts.length}
             </span>
-            <span className="text-xs text-muted-foreground">पोस्ट</span>
+            <span className="text-xs text-muted-foreground font-semibold">
+              पोस्ट्स
+            </span>
+            {videoPosts.length > 0 && (
+              <span className="text-[9px] text-primary font-bold mt-0.5">
+                🎥 {videoPosts.length} videos
+              </span>
+            )}
           </div>
           <div className="w-px h-8 bg-border" />
           <button
