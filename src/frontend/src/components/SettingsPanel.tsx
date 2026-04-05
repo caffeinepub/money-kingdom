@@ -2486,9 +2486,14 @@ function ColorPicker({
 }
 
 // ── Big section header divider ──────────────────
-function SectionHeader({ icon, title }: { icon: string; title: string }) {
+function SectionHeader({
+  icon,
+  title,
+  id,
+}: { icon: string; title: string; id?: string }) {
   return (
     <div
+      id={id}
       className="flex items-center gap-3 px-4 py-4 sticky top-0 z-10 border-b-2"
       style={{
         background: "var(--card, #fff)",
@@ -2780,54 +2785,144 @@ export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
 
               <ScrollArea className="flex-1 min-h-0">
                 <div className="flex flex-col pb-10">
+                  {/* ── Quick Navigation Bar ── */}
+                  <div className="sticky top-0 z-20 bg-card border-b border-border/40 shrink-0">
+                    <div
+                      className="flex gap-2 px-3 py-2.5 overflow-x-auto"
+                      style={{ scrollbarWidth: "none" }}
+                    >
+                      {[
+                        { id: "section-account", icon: "👤", label: "पहचान" },
+                        { id: "section-wallet", icon: "💰", label: "खजाना" },
+                        { id: "section-privacy", icon: "🔒", label: "प्राइवेसी" },
+                        { id: "section-notif", icon: "🔔", label: "नोटिफिकेशन" },
+                        { id: "section-display", icon: "🎨", label: "डिस्प्ले" },
+                        { id: "section-dust", icon: "🌫️", label: "धूल & मौसम" },
+                        { id: "section-media", icon: "🎬", label: "मीडिया" },
+                        {
+                          id: "section-immersive",
+                          icon: "📱",
+                          label: "फुल स्क्रीन",
+                        },
+                        { id: "section-chat", icon: "💬", label: "चैट" },
+                        { id: "section-support", icon: "🆘", label: "सपोर्ट" },
+                        { id: "section-games", icon: "🎮", label: "गेम्स" },
+                        {
+                          id: "section-english",
+                          icon: "🎓",
+                          label: "English AI",
+                        },
+                      ].map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => {
+                            const el = document.getElementById(item.id);
+                            if (el)
+                              el.scrollIntoView({
+                                behavior: "smooth",
+                                block: "start",
+                              });
+                          }}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted hover:bg-primary/20 text-foreground text-xs font-bold whitespace-nowrap transition-colors shrink-0"
+                          data-ocid={`settings.nav.${item.id.replace("section-", "")}_button`}
+                        >
+                          <span>{item.icon}</span>
+                          <span>{item.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                   {/* ── 1. शाही पहचान ── */}
-                  <SectionHeader icon="👤" title="शाही पहचान (Account)" />
+                  <SectionHeader
+                    id="section-account"
+                    icon="👤"
+                    title="शाही पहचान (Account)"
+                  />
                   <AccountTab />
 
                   {/* ── 2. खजाना & वॉलेट ── */}
-                  <SectionHeader icon="💰" title="खजाना & वॉलेट (Wallet)" />
+                  <SectionHeader
+                    id="section-wallet"
+                    icon="💰"
+                    title="खजाना & वॉलेट (Wallet)"
+                  />
                   <WalletTab />
 
                   {/* ── 3. प्राइवेसी & सुरक्षा ── */}
-                  <SectionHeader icon="🔒" title="प्राइवेसी & सुरक्षा (Privacy)" />
+                  <SectionHeader
+                    id="section-privacy"
+                    icon="🔒"
+                    title="प्राइवेसी & सुरक्षा (Privacy)"
+                  />
                   <PrivacyTab />
 
                   {/* ── 4. नोटिफिकेशन ── */}
-                  <SectionHeader icon="🔔" title="नोटिफिकेशन & फरमान (Alerts)" />
+                  <SectionHeader
+                    id="section-notif"
+                    icon="🔔"
+                    title="नोटिफिकेशन & फरमान (Alerts)"
+                  />
                   <NotificationsTab />
 
                   {/* ── 5. डिस्प्ले & धूल ── */}
-                  <SectionHeader icon="🎨" title="डिस्प्ले & धूल (Display)" />
+                  <SectionHeader
+                    id="section-display"
+                    icon="🎨"
+                    title="डिस्प्ले & धूल (Display)"
+                  />
                   <DisplayTab
                     langSelected={langSelected}
                     onLangSelect={handleLangSelect}
                   />
 
                   {/* ── 6. धूल & मौसम ── */}
-                  <SectionHeader icon="🌫️" title="धूल & मौसम (Dust & Weather)" />
+                  <SectionHeader
+                    id="section-dust"
+                    icon="🌫️"
+                    title="धूल & मौसम (Dust & Weather)"
+                  />
                   <DustWeatherTab />
 
                   {/* ── 7. रील & मीडिया ── */}
-                  <SectionHeader icon="🎬" title="रील & मीडिया (Media)" />
+                  <SectionHeader
+                    id="section-media"
+                    icon="🎬"
+                    title="रील & मीडिया (Media)"
+                  />
                   <MediaReelsTab />
 
                   {/* ── 8. फुल स्क्रीन & इमर्सिव ── */}
                   <SectionHeader
+                    id="section-immersive"
                     icon="📱"
                     title="फुल स्क्रीन & इमर्सिव (Display Magic)"
                   />
                   <ImmersiveDisplayTab />
 
                   {/* ── 9. चैट & बातचीत ── */}
-                  <SectionHeader icon="💬" title="चैट & बातचीत (Messaging)" />
+                  <SectionHeader
+                    id="section-chat"
+                    icon="💬"
+                    title="चैट & बातचीत (Messaging)"
+                  />
                   <MessagingTab />
 
                   {/* ── 10. मदद & सपोर्ट ── */}
-                  <SectionHeader icon="🆘" title="मदद & सपोर्ट (Support)" />
+                  <SectionHeader
+                    id="section-support"
+                    icon="🆘"
+                    title="मदद & सपोर्ट (Support)"
+                  />
                   <SupportTab />
 
                   {/* ── Games ── */}
-                  <SectionHeader icon="🎮" title="खेलो और कमाओ (Games)" />
+                  <SectionHeader
+                    id="section-games"
+                    icon="🎮"
+                    title="खेलो और कमाओ (Games)"
+                  />
                   <div className="px-4 py-4 flex flex-col items-center gap-4 border-b border-border/40">
                     <span className="text-5xl">🎮</span>
                     <p className="text-foreground font-bold text-base">
@@ -2847,7 +2942,11 @@ export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
                   </div>
 
                   {/* ── English Guru AI ── */}
-                  <SectionHeader icon="🎓" title="English Guru AI" />
+                  <SectionHeader
+                    id="section-english"
+                    icon="🎓"
+                    title="English Guru AI"
+                  />
                   <div className="min-h-[400px]">
                     <EnglishGuruAI />
                   </div>
