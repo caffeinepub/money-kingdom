@@ -1,57 +1,50 @@
 # Money Kingdom
 
 ## Current State
-v70 build है जिसमें:
-- Settings panel 6 sections: Account, Wallet, Privacy, Notifications, Display, Help
-- Account में: नाम, username, bio, email, mobile, account type, avatar editor (basic), verification badge, linked accounts
-- Wallet में: balance, UPI save, transaction history, withdrawal request, gifting settings, withdrawal limit, admin commission view
-- Privacy में: PIN, block list, activity log, ghost mode, story privacy, 2FA
-- Notifications में: push, payment, quiet hours, alert style, coin chime
-- Display में: dark mode, dust intensity, cleaner character, weather ON/OFF, autoplay, language
-- Help में: help center, report problem, delete account, verify my kingdom
-- ReelsView.tsx में full-screen reels हैं, double-tap gold coin animation, View & Earn, gifting vault
-- CenterFeed.tsx में posts/videos feed है
-- CreatePost.tsx में post create होती है
-- Profile में post count दिखता है
+Settings panel has 10 sections: Profile, Wallet, Privacy, Notifications, Display, Dust & Weather, Media & Reels, Immersive Display, Messaging, Support + Games + English Guru AI. All rendered as a single scrollable page (v73).
 
 ## Requested Changes (Diff)
 
 ### Add
-1. **Settings को 10 categories में expand करें** (अभी 6 हैं):
-   - **👑 शाही पहचान (Profile & Identity)**: Kingdom Title (महाराजा/सुल्तान/नवाब etc dropdown), Bio font selector, Profile border style (Golden/Diamond/Silver ring), Verification portal (file upload for blue/gold tick), Avatar editor (3D clothes/crown color picker)
-   - **💰 खजाना (Wallet & Economy)**: Currency display switch (सिक्के/रुपये), UPI ID save/delete, Withdrawal limit (daily), Gifting toggle (who can gift you: सभी/दोस्त/कोई नहीं), Tax receipt download button, Transaction filter (आज/कल/महीना), Balance visibility toggle
-   - **🔒 प्राइवेसी (Privacy & Protection)**: App lock (fingerprint/face - prompt), Ghost/incognito mode, Block list, 2FA toggle, Screenshot block toggle, PIN change, Login activity, Story privacy
-   - **🎬 रील & मीडिया (Media & Feed)**: Auto-scroll toggle, Video quality (HD/Data Saver), Music volume slider, Download permission toggle, Lyrics display toggle, Caption font size/color
-   - **🌫️ धूल और मौसम (Dust & Weather)**: Dust speed (Low/Medium/High slider), Cleaner schedule (daily/weekly), Cleaner character selector (जोकर/सिपाही/रोबोट), Live weather ON/OFF, Animation speed slider
-   - **📱 फुल स्क्रीन (Immersive Display)**: Immersive mode toggle, Frame/margin size slider, Page transition style (Slide/Fade dropdown), Love You animation color picker, App brightness slider, Theme selector
-   - **🔔 नोटिफिकेशन (Alerts)**: Alert position (बीच/ऊपर toggle), Coin chime sound selector, DND hours, Priority contacts list, Payment alert toggle, Break reminder interval
-   - **💬 चैट (Messaging)**: Chat wallpaper selector (presets + upload), Auto-delete message timer (never/1hr/24hr/7days), Voice message speed (slow/normal/fast), Chat bubble color, Read receipts toggle
-   - **🎮 गेम्स & मनोरंजन**: Already exists as GamesPanel - add shortcut link
-   - **🆘 मदद (Support & Duty)**: Bug report form (sends to admin), Help tutorial video embed, Break reminder ON/OFF + interval, Account delete, App version info
+- **🦁 Anti-Ganda Aadmi Mode** — New section in Settings after Support:
+  - Intruder Selfie: after 3 wrong password attempts, front camera captures selfie and triggers download to phone gallery, then app closes
+  - Fake Crash Screen: shows scary "Phone is Hacked" screen after 3 wrong attempts before closing
+  - Emergency Shake trigger: phone shake activates fake crash screen + locks app
+  - UI: red-bordered card with lion icon (🦁), matching user-provided HTML/CSS design (dark bg, red border-left, gold border container)
+  - Toggle to enable/disable the mode
 
-2. **Voice Message in Chat**: Record button in chat, sends audio message (use MediaRecorder API), playback in chat bubbles
+- **⚖️ Law Warrior (IPC/BNS धाराएं)** — New section in Settings:
+  - Pre-filled common situations with relevant IPC/BNS sections:
+    - पुलिस ने रोका (Article 22, IPC 341, BNS 126)
+    - FIR नहीं लिख रहे (Section 154 CrPC, SC guidelines)
+    - घरेलू हिंसा (PWDVA 2005, IPC 498A, BNS 84)
+    - Traffic rules (MV Act 184/185, BNS equivalent)
+    - गिरफ्तारी के अधिकार (Article 21, 22, D.K. Basu guidelines)
+  - Baba Saheb Ambedkar quotes (20+ pre-filled)
+  - UI: gold-bordered card with scales icon (⚖️), matching user-provided design
+  - Expandable accordion per situation
 
-3. **Video post visibility fixes**:
-   - जब कोई video post करे, profile का post count तुरंत update हो (real-time)
-   - Video post profile grid में सबसे ऊपर-बाएं दिखे (latest first)
-   - Video post Reels feed में भी तुरंत दिखे
-   - Profile header में "Posts" number prominently दिखे with video count badge
+- **🔥 महा-शक्ति फीचर्स** header section grouping both features with the exact styling from user-provided HTML (black bg, gold border, red accent for anti-ganda)
 
 ### Modify
-- SettingsPanel.tsx: 6 sections → 10 sections, accordion/tabs based navigation
-- ReelsView.tsx: नई posts/videos feed से sync हो
-- Profile section: post count real-time update
-- CenterFeed/CreatePost: post करने पर profile count और reels feed दोनों update हों
+- SettingsPanel.tsx: add two new Tab components (AntiGandaTab, LawWarriorTab) and their SectionHeaders after the Support section
+- Quick nav bar at top of settings: add 🦁 and ⚖️ buttons
 
 ### Remove
-- Kingdom Land / Real Estate section (नहीं बनाना)
+- Nothing removed
 
 ## Implementation Plan
-1. SettingsPanel.tsx को पूरी तरह rewrite करें -- 10 accordion sections, हर section में toggles/sliders/dropdowns/inputs
-2. Chat में voice message: MediaRecorder API से record, audio blob as base64, playback button
-3. CreatePost में post submit होने पर:
-   - localStorage/state में posts array update हो
-   - Profile post counter तुरंत बढ़े
-   - Reels feed में new video automatically appear हो
-4. ReelsView में userPosts state को global/shared state से sync करें
-5. Profile header में Posts count बड़े और prominent तरीके से दिखे
+1. Create AntiGandaTab component inside SettingsPanel.tsx:
+   - Toggle to enable/disable mode (stored in localStorage)
+   - Password attempt counter logic (stored in localStorage)
+   - Camera capture using getUserMedia (front camera)
+   - Download trigger via canvas + blob URL
+   - Fake crash overlay component (full-screen scary red screen)
+   - Device motion shake detection using DeviceMotionEvent
+2. Create LawWarriorTab component:
+   - Accordion list of 5 common situations with IPC/BNS sections
+   - Baba Saheb quotes carousel/list (20+ quotes)
+   - All data pre-filled as static arrays
+3. Add महा-शक्ति section header (styled per user HTML)
+4. Add both tabs to the main scrollable settings page
+5. Add nav shortcuts in quick nav bar

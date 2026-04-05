@@ -2485,6 +2485,561 @@ function ColorPicker({
   );
 }
 
+// ──────────────────────────────────────────────
+// FakeCrashOverlay
+// ──────────────────────────────────────────────
+function FakeCrashOverlay({ onClose }: { onClose: () => void }) {
+  const [visibleLines, setVisibleLines] = useState<string[]>([]);
+  const FAKE_MSGS = [
+    "Accessing contacts...",
+    "Deleting files...",
+    "Security breach detected!",
+    "Uploading data to remote server...",
+    "Bypassing firewall...",
+    "Memory dump in progress...",
+    "Root access granted...",
+    "Scanning personal photos...",
+    "System files corrupted!",
+    "Network credentials exposed!",
+  ];
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally run once on mount
+  useEffect(() => {
+    let i = 0;
+    const iv = setInterval(() => {
+      if (i < FAKE_MSGS.length) {
+        setVisibleLines((prev) => [...prev, FAKE_MSGS[i]]);
+        i++;
+      }
+    }, 300);
+    const timer = setTimeout(() => {
+      clearInterval(iv);
+      onClose();
+    }, 4000);
+    return () => {
+      clearInterval(iv);
+      clearTimeout(timer);
+    };
+  }, []);
+
+  return (
+    <div
+      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center"
+      style={{ background: "#000", fontFamily: "monospace" }}
+    >
+      <div className="text-center px-6 flex flex-col gap-3 w-full max-w-sm">
+        <span className="text-7xl animate-pulse">⚠️</span>
+        <p className="text-red-500 font-black text-2xl tracking-widest">
+          SYSTEM ERROR
+        </p>
+        <p className="text-red-400 font-bold text-lg">आपका फ़ोन हैक हो गया है!</p>
+        <div className="mt-2 text-left w-full max-h-40 overflow-hidden flex flex-col gap-0.5">
+          {visibleLines.map((msg, idx) => (
+            <p
+              key={`crash-${idx}-${msg.slice(0, 8)}`}
+              className="text-green-400 text-xs opacity-90"
+            >
+              {"> "}
+              {msg}
+            </p>
+          ))}
+        </div>
+        <p className="text-gray-500 text-xs mt-4">AUTO-RESTART IN 3s...</p>
+      </div>
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────
+// AntiGandaTab
+// ──────────────────────────────────────────────
+function AntiGandaTab() {
+  const [enabled, setEnabled] = useState(() => getBool("mk_anti_ganda", false));
+  const [testPin, setTestPin] = useState("");
+  const [attempts, setAttempts] = useState(0);
+  const [showCrash, setShowCrash] = useState(false);
+  const [sensitivity, setSensitivity] = useState(() =>
+    Number(localStorage.getItem("mk_shake_sensitivity") ?? "1"),
+  );
+  const [shakeListening, setShakeListening] = useState(false);
+  const SENS_LABELS = ["कम (Low)", "मध्यम (Medium)", "ज्यादा (High)"];
+  const SENS_THRESHOLDS = [20, 15, 10];
+
+  const triggerIntruder = async () => {
+    setShowCrash(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user" },
+      });
+      const video = document.createElement("video");
+      video.srcObject = stream;
+      video.play();
+      await new Promise((res) => setTimeout(res, 1000));
+      const canvas = document.createElement("canvas");
+      canvas.width = 320;
+      canvas.height = 240;
+      const ctx = canvas.getContext("2d");
+      if (ctx) ctx.drawImage(video, 0, 0, 320, 240);
+      for (const t of stream.getTracks()) t.stop();
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) return;
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `intruder_${Date.now()}.jpg`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        },
+        "image/jpeg",
+        0.9,
+      );
+    } catch {
+      // camera not available, still show crash
+    }
+  };
+
+  const handlePinInput = async (pin: string) => {
+    setTestPin(pin);
+    if (pin.length === 4) {
+      const newAttempts = attempts + 1;
+      setAttempts(newAttempts);
+      setTestPin("");
+      if (newAttempts >= 3) {
+        setAttempts(0);
+        await triggerIntruder();
+      } else {
+        toast.error(`गलत PIN! (${newAttempts}/3 प्रयास)`);
+      }
+    }
+  };
+
+  const requestShake = async () => {
+    if (typeof DeviceMotionEvent !== "undefined") {
+      // iOS permission
+      if (typeof (DeviceMotionEvent as any).requestPermission === "function") {
+        try {
+          const perm = await (DeviceMotionEvent as any).requestPermission();
+          if (perm !== "granted") {
+            toast.error("Permission नहीं मिली");
+            return;
+          }
+        } catch {
+          toast.error("Permission error");
+          return;
+        }
+      }
+      setShakeListening(true);
+      toast.success("Shake detection चालू! अब फोन हिलाएं 📳");
+    } else {
+      toast.error("यह device motion support नहीं करता");
+    }
+  };
+
+  useEffect(() => {
+    if (!shakeListening || !enabled) return;
+    const threshold = SENS_THRESHOLDS[sensitivity];
+    const handler = (e: DeviceMotionEvent) => {
+      const acc = e.accelerationIncludingGravity;
+      if (!acc) return;
+      const total = Math.sqrt(
+        (acc.x ?? 0) ** 2 + (acc.y ?? 0) ** 2 + (acc.z ?? 0) ** 2,
+      );
+      if (total > threshold) {
+        setShowCrash(true);
+      }
+    };
+    window.addEventListener("devicemotion", handler);
+    return () => window.removeEventListener("devicemotion", handler);
+  }, [shakeListening, enabled, sensitivity]);
+
+  return (
+    <>
+      {showCrash && <FakeCrashOverlay onClose={() => setShowCrash(false)} />}
+      <div
+        className="mx-4 my-4 rounded-2xl overflow-hidden border-b border-border/40"
+        style={{
+          border: "2px solid #FFD700",
+          background: "#000",
+          borderRadius: 15,
+        }}
+      >
+        {/* Anti-Ganda Card */}
+        <div
+          className="flex items-center gap-4 p-4 cursor-pointer"
+          style={{
+            background: "linear-gradient(90deg, #1a1a1a, #333)",
+            borderLeft: "5px solid #FF4444",
+          }}
+        >
+          <span className="text-4xl">🦁</span>
+          <div className="flex-1">
+            <p className="text-white font-black text-base">
+              Anti-Ganda Aadmi Mode
+            </p>
+            <p className="text-gray-300 text-xs mt-0.5">
+              गलत इरादे वालों की अब खैर नहीं!
+            </p>
+          </div>
+          <Switch
+            checked={enabled}
+            onCheckedChange={(v) => {
+              setEnabled(v);
+              setBool("mk_anti_ganda", v);
+              toast.success(v ? "🦁 Anti-Ganda Mode चालू!" : "Mode बंद हुआ");
+            }}
+            data-ocid="settings.anti_ganda.toggle"
+          />
+        </div>
+
+        {enabled && (
+          <div
+            className="p-4 flex flex-col gap-4"
+            style={{ background: "#111" }}
+          >
+            {/* Intruder PIN test */}
+            <div className="flex flex-col gap-2">
+              <p className="text-yellow-400 font-bold text-sm">
+                🔐 Intruder Test PIN
+              </p>
+              <p className="text-gray-400 text-xs">
+                3 बार गलत PIN डालने पर Front Camera से photo खिंचेगी और save होगी।
+              </p>
+              <p className="text-orange-400 text-xs">
+                📷 Camera permission देना होगा
+              </p>
+              <Input
+                value={testPin}
+                onChange={(e) => {
+                  const v = e.target.value.replace(/\D/g, "").slice(0, 4);
+                  handlePinInput(v);
+                }}
+                placeholder="4-digit PIN डालें (test)"
+                maxLength={4}
+                type="tel"
+                inputMode="numeric"
+                className="text-center text-2xl tracking-widest bg-black border-red-500 text-white placeholder:text-gray-600 font-mono"
+                data-ocid="settings.anti_ganda.pin_input"
+              />
+              {attempts > 0 && (
+                <p className="text-red-400 text-xs text-center font-bold">
+                  ⚠️ {attempts}/3 गलत प्रयास — {3 - attempts} बाकी!
+                </p>
+              )}
+            </div>
+
+            {/* Emergency Shake */}
+            <div className="flex flex-col gap-2">
+              <p className="text-yellow-400 font-bold text-sm">
+                📳 Emergency Shake
+              </p>
+              <p className="text-gray-400 text-xs">
+                फोन हिलाने पर Fake Crash screen दिखेगी
+              </p>
+              <div className="flex flex-col gap-1.5">
+                <Label className="text-xs text-gray-400">
+                  Sensitivity:{" "}
+                  <span className="text-yellow-400 font-bold">
+                    {SENS_LABELS[sensitivity]}
+                  </span>
+                </Label>
+                <Slider
+                  min={0}
+                  max={2}
+                  step={1}
+                  value={[sensitivity]}
+                  onValueChange={(v) => {
+                    setSensitivity(v[0]);
+                    localStorage.setItem("mk_shake_sensitivity", String(v[0]));
+                  }}
+                  className="w-full"
+                  data-ocid="settings.anti_ganda.sensitivity_slider"
+                />
+                <div className="flex justify-between text-xs text-gray-500">
+                  {SENS_LABELS.map((l) => (
+                    <span key={l}>{l.split(" ")[0]}</span>
+                  ))}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={requestShake}
+                className="w-full py-2 rounded-xl text-sm font-bold transition"
+                style={{
+                  background: shakeListening ? "#1a3a1a" : "#1a1a1a",
+                  color: shakeListening ? "#4ade80" : "#FFD700",
+                  border: `1px solid ${shakeListening ? "#4ade80" : "#FFD700"}`,
+                }}
+                data-ocid="settings.anti_ganda.shake_button"
+              >
+                {shakeListening
+                  ? "✅ Shake listening..."
+                  : "📳 Shake Activate करें"}
+              </button>
+            </div>
+
+            {/* Manual test crash */}
+            <button
+              type="button"
+              onClick={() => setShowCrash(true)}
+              className="w-full py-2 rounded-xl text-sm font-bold"
+              style={{ background: "#FF4444", color: "#fff" }}
+              data-ocid="settings.anti_ganda.test_crash_button"
+            >
+              ⚠️ Fake Crash Test करें
+            </button>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+// ──────────────────────────────────────────────
+// LawWarriorTab
+// ──────────────────────────────────────────────
+const LAW_SITUATIONS = [
+  {
+    id: "police",
+    title: "🚔 पुलिस ने रोका",
+    sections: [
+      {
+        law: "Article 22 — Right against arbitrary arrest",
+        desc: "बिना कारण बताए गिरफ्तारी नहीं हो सकती। पुलिस को आपको तुरंत बताना होगा कि क्यों रोका।",
+      },
+      {
+        law: "IPC 341 / BNS 126 — Wrongful Restraint",
+        desc: "अगर पुलिस बिना कारण रोकती है तो यह wrongful restraint है।",
+      },
+      {
+        law: "D.K. Basu Guidelines",
+        desc: "गिरफ्तारी के समय पुलिस को नाम, designation badge दिखाना होगा। परिवार को सूचना देनी होगी।",
+      },
+    ],
+    tip: "हमेशा शांत रहें। अधिकारी का नाम और बैज नंबर नोट करें।",
+  },
+  {
+    id: "fir",
+    title: "📝 FIR नहीं लिख रहे",
+    sections: [
+      {
+        law: "Section 154 CrPC — FIR Mandatory",
+        desc: "कोई भी cognizable offence की FIR लिखने से पुलिस CANNOT refuse कर सकती। यह कानूनी अधिकार है।",
+      },
+      {
+        law: "Section 166A IPC / BNS 173",
+        desc: "FIR न लिखने वाला Public Servant दोषी है और सज़ा का हकदार है।",
+      },
+      {
+        law: "Supreme Court Ruling",
+        desc: "SC ने साफ कहा है: FIR refuse करना illegal है। SP को written complaint दें।",
+      },
+    ],
+    tip: "अगर थाना FIR न लिखे → SP/DCP को written application दें या online e-FIR दर्ज करें।",
+  },
+  {
+    id: "domestic",
+    title: "🏠 घरेलू हिंसा",
+    sections: [
+      {
+        law: "PWDVA 2005 — Protection of Women from Domestic Violence Act",
+        desc: "शारीरिक, मानसिक, आर्थिक हिंसा से सुरक्षा। Protection Order, Residence Order मिल सकता है।",
+      },
+      {
+        law: "IPC 498A / BNS 84 — Cruelty by Husband",
+        desc: "पति या उसके परिवार द्वारा क्रूरता करना 3 साल तक जेल की सज़ा है।",
+      },
+      {
+        law: "Helplines",
+        desc: "📞 1091 (Women Helpline) | 181 (Women Helpline) | 100 (Police)",
+      },
+    ],
+    tip: "तुरंत helpline call करें। घटना की photo/video सबूत के रूप में रखें।",
+  },
+  {
+    id: "traffic",
+    title: "🚗 Traffic Challan (ट्रैफिक)",
+    sections: [
+      {
+        law: "MV Act Section 184 — Dangerous Driving",
+        desc: "तेज़ या लापरवाही से गाड़ी चलाना — first offence ₹1000, repeat ₹2000 + jail।",
+      },
+      {
+        law: "MV Act Section 185 — Drunk Driving",
+        desc: "नशे में गाड़ी चलाना — ₹10,000 जुर्माना + 6 महीने जेल।",
+      },
+      {
+        law: "Section 130 — Produce Documents",
+        desc: "RC, License, Insurance दिखाना जरूरी है। पुलिस को receipt (challan slip) देना अनिवार्य है।",
+      },
+    ],
+    tip: "चालान की receipt हमेशा मांगें। बिना receipt के पैसे न दें।",
+  },
+  {
+    id: "arrest",
+    title: "⛓️ गिरफ्तारी के अधिकार",
+    sections: [
+      {
+        law: "Article 21 — Right to Life & Liberty",
+        desc: "कानून द्वारा निर्धारित प्रक्रिया के बिना किसी को जीवन या आज़ादी से वंचित नहीं किया जा सकता।",
+      },
+      {
+        law: "Article 22 — Right to Lawyer",
+        desc: "गिरफ्तारी के बाद आपको lawyer से बात करने का अधिकार है। यह संवैधानिक अधिकार है।",
+      },
+      {
+        law: "Right to Know Grounds",
+        desc: "गिरफ्तारी का कारण जानने का अधिकार। पुलिस को लिखित में बताना होगा।",
+      },
+      {
+        law: "Right to Bail",
+        desc: "Bailable offence में bail का अधिकार है। Magistrate के सामने 24 घंटे में पेश करना अनिवार्य।",
+      },
+    ],
+    tip: "कुछ भी sign मत करें बिना lawyer के। 'I want a lawyer' clearly बोलें।",
+  },
+];
+
+const BABASAHEB_QUOTES = [
+  "शिक्षित बनो, संगठित रहो, संघर्ष करो।",
+  "जीवन लंबा होने की बजाय महान होना चाहिए।",
+  "मैं एक समुदाय की प्रगति को उस प्रगति से मापता हूं जो महिलाओं ने हासिल की है।",
+  "अगर मुझे लगा कि संविधान का दुरुपयोग हो रहा है तो मैं इसे सबसे पहले जलाऊंगा।",
+  "इंसान की पहचान उसके धर्म से नहीं, उसके कर्म से होती है।",
+  "बुद्धि का विकास मानव के अस्तित्व का अंतिम लक्ष्य होना चाहिए।",
+  "समानता एक कल्पना हो सकती है, लेकिन फिर भी इसे एक आदर्श के रूप में स्वीकार करना होगा।",
+  "राजनीतिक लोकतंत्र तब तक नहीं टिक सकता जब तक सामाजिक लोकतंत्र न हो।",
+  "क़ानून और व्यवस्था राजनीतिक शरीर की दवा है।",
+  "जब तक आप सामाजिक स्वतंत्रता नहीं हासिल कर लेते, कानून आपको जो भी स्वतंत्रता देता है वह बेकार है।",
+  "स्वतंत्रता का अर्थ है साहस।",
+  "अपने भाग्य के बजाय अपनी ताकत पर विश्वास करो।",
+  "पति-पत्नी के बीच का संबंध घनिष्ठ मित्रों जैसा होना चाहिए।",
+  "एक महान आदमी एक प्रतिष्ठित आदमी से इस तरह अलग होता है कि वह समाज का सेवक बनने के लिए तैयार रहता है।",
+  "यदि हम एक संयुक्त एकीकृत आधुनिक भारत चाहते हैं तो सभी धर्मों के शास्त्रों की संप्रभुता का अंत होना चाहिए।",
+  "धर्म मनुष्य के लिए है, न कि मनुष्य धर्म के लिए।",
+  "मनुष्य नश्वर है। इसी तरह विचार भी नश्वर हैं। एक विचार को प्रचार-प्रसार की जरूरत होती है।",
+  "हर व्यक्ति जो मिल के सिद्धांत को जानता है वह जानता है कि सामाजिक नियंत्रण के दो तरीके हैं — कानून और नैतिकता।",
+  "भाग्य से ज़्यादा अपनी शक्ति पर विश्वास करो।",
+  "हमारा रास्ता कठिन है, लेकिन इस पर चलना ज़रूरी है।",
+];
+
+function LawWarriorTab() {
+  return (
+    <div
+      className="mx-4 my-4 rounded-2xl overflow-hidden"
+      style={{
+        border: "2px solid #FFD700",
+        background: "#000",
+        borderRadius: 15,
+      }}
+    >
+      {/* Header card */}
+      <div
+        className="flex items-center gap-4 p-4"
+        style={{
+          background: "linear-gradient(90deg, #1a1a1a, #333)",
+          borderLeft: "5px solid #FFD700",
+        }}
+      >
+        <span className="text-4xl">⚖️</span>
+        <div>
+          <p className="text-white font-black text-base">Law Warrior</p>
+          <p className="text-gray-300 text-xs mt-0.5">
+            संविधान की ताकत, आपकी जेब में।
+          </p>
+        </div>
+      </div>
+
+      <div className="p-4 flex flex-col gap-4" style={{ background: "#111" }}>
+        {/* Situations accordion */}
+        <p className="text-yellow-400 font-bold text-sm">
+          📚 आपके अधिकार — जानें & जागरूक रहें
+        </p>
+
+        <Accordion
+          type="single"
+          collapsible
+          className="w-full flex flex-col gap-2"
+        >
+          {LAW_SITUATIONS.map((sit) => (
+            <AccordionItem
+              key={sit.id}
+              value={sit.id}
+              className="rounded-xl border-none overflow-hidden"
+              style={{ border: "1px solid #FFD700", background: "#1a1a1a" }}
+            >
+              <AccordionTrigger
+                className="px-4 py-3 text-sm font-bold text-white hover:no-underline"
+                style={{ color: "#FFD700" }}
+              >
+                {sit.title}
+              </AccordionTrigger>
+              <AccordionContent className="px-4 pb-4">
+                <div className="flex flex-col gap-3">
+                  {sit.sections.map((sec) => (
+                    <div
+                      key={sec.law}
+                      className="rounded-lg p-3 flex flex-col gap-1"
+                      style={{
+                        background: "#0d0d0d",
+                        border: "1px solid #333",
+                      }}
+                    >
+                      <p className="text-yellow-300 text-xs font-bold">
+                        {sec.law}
+                      </p>
+                      <p className="text-gray-300 text-xs leading-relaxed">
+                        {sec.desc}
+                      </p>
+                    </div>
+                  ))}
+                  <div
+                    className="rounded-lg p-3"
+                    style={{
+                      background: "#1a2a0a",
+                      border: "1px solid #4ade80",
+                    }}
+                  >
+                    <p className="text-green-400 text-xs font-bold">💡 सुझाव:</p>
+                    <p className="text-green-300 text-xs mt-0.5">{sit.tip}</p>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+
+        {/* Baba Saheb Quotes */}
+        <div className="flex flex-col gap-3 mt-2">
+          <p className="text-yellow-400 font-bold text-sm">
+            ✨ बाबा साहब के अनमोल विचार
+          </p>
+          <div className="flex flex-col gap-2">
+            {BABASAHEB_QUOTES.map((quote) => (
+              <div
+                key={quote.slice(0, 20)}
+                className="rounded-xl p-3"
+                style={{
+                  background: "linear-gradient(90deg, #1a1500, #2a2000)",
+                  border: "1px solid #FFD700",
+                }}
+              >
+                <p className="text-yellow-100 text-xs leading-relaxed font-medium">
+                  "{quote}"
+                </p>
+                <p className="text-yellow-600 text-xs mt-1 text-right font-bold">
+                  — डॉ. भीमराव अंबेडकर
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Big section header divider ──────────────────
 function SectionHeader({
   icon,
@@ -2812,6 +3367,8 @@ export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
                           icon: "🎓",
                           label: "English AI",
                         },
+                        { id: "section-super", icon: "🦁", label: "महा-शक्ति" },
+                        { id: "section-law", icon: "⚖️", label: "Law Warrior" },
                       ].map((item) => (
                         <button
                           key={item.id}
@@ -2916,6 +3473,39 @@ export default function SettingsPanel({ open, onClose }: SettingsPanelProps) {
                     title="मदद & सपोर्ट (Support)"
                   />
                   <SupportTab />
+
+                  {/* ── महा-शक्ति फीचर्स ── */}
+                  <div
+                    id="section-super"
+                    className="mx-4 mt-6 mb-2 rounded-2xl px-4 py-3 shrink-0"
+                    style={{
+                      background: "#000",
+                      border: "2px solid #FFD700",
+                      borderRadius: 15,
+                    }}
+                  >
+                    <h3
+                      className="text-center font-black text-base"
+                      style={{ color: "#FF4444" }}
+                    >
+                      🔥 महा-शक्ति फीचर्स 🔥
+                    </h3>
+                    <p
+                      className="text-center text-xs mt-1"
+                      style={{ color: "#FFD700" }}
+                    >
+                      Super Powers — सुरक्षा & न्याय
+                    </p>
+                  </div>
+                  <AntiGandaTab />
+
+                  {/* ── Law Warrior ── */}
+                  <SectionHeader
+                    id="section-law"
+                    icon="⚖️"
+                    title="Law Warrior (IPC/BNS गाइड)"
+                  />
+                  <LawWarriorTab />
 
                   {/* ── Games ── */}
                   <SectionHeader
