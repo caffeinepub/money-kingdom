@@ -1440,6 +1440,20 @@ function DisplayTab({
         </button>
       </div>
 
+      <SectionTitle icon="🧹" title="Midnight Cleaner Test" />
+      <button
+        type="button"
+        onClick={() => {
+          if ((window as any).__mkTestMidnight) {
+            (window as any).__mkTestMidnight();
+          }
+        }}
+        data-ocid="settings.dust.test_cleaner.button"
+        className="w-full py-3 rounded-xl text-sm font-bold border-2 border-yellow-500 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 transition-all flex items-center justify-center gap-2"
+      >
+        🧹 अभी Cleaner बुलाओ (Test करें)
+      </button>
+
       <SectionTitle icon="🎨" title="थीम" />
       {THEMES.map((t_item) => {
         const isActive = theme === t_item.id;
@@ -1825,6 +1839,20 @@ function DustWeatherTab() {
           ))}
         </div>
       </div>
+
+      <SectionTitle icon="🧹" title="Midnight Cleaner Test" />
+      <button
+        type="button"
+        onClick={() => {
+          if ((window as any).__mkTestMidnight) {
+            (window as any).__mkTestMidnight();
+          }
+        }}
+        data-ocid="settings.dust.test_cleaner.button"
+        className="w-full py-3 rounded-xl text-sm font-bold border-2 border-yellow-500 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 transition-all flex items-center justify-center gap-2"
+      >
+        🧹 अभी Cleaner बुलाओ (Test करें)
+      </button>
     </div>
   );
 }

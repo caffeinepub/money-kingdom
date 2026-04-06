@@ -446,17 +446,16 @@ export default function ReelsView({ onBack }: ReelsViewProps) {
       const evt = e as CustomEvent;
       const newPost = evt.detail?.post;
       if (newPost?.videoUrl) {
+        // Always use the event detail post directly for video posts
         setReels((prev) => {
           // Avoid duplicates
-          if (prev.find((p) => p.id === newPost.id)) return prev;
+          if (prev.some((r) => r.id === newPost.id)) return prev;
           return [newPost, ...prev];
         });
         setLikesMap((prev) => ({ ...prev, [newPost.id]: 0 }));
       } else {
-        // Re-read all video posts in case the post was added without full detail
-        const posts = loadVideoPosts();
-        setReels(posts);
-        setLikesMap(buildLikesMap(posts));
+        // For non-video posts, just reload from storage
+        setReels(loadVideoPosts());
       }
     };
     window.addEventListener("mk_new_post", handler);

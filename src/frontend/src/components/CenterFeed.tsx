@@ -48,7 +48,7 @@ function getInitials(name: string): string {
     .slice(0, 3);
 }
 
-function loadPostsFromStorage(): Post[] {
+export function loadPostsFromStorage(): Post[] {
   try {
     const raw = localStorage.getItem(POSTS_KEY);
     return raw ? JSON.parse(raw) : [];
@@ -57,7 +57,7 @@ function loadPostsFromStorage(): Post[] {
   }
 }
 
-function savePostsToStorage(posts: Post[]) {
+export function savePostsToStorage(posts: Post[]) {
   try {
     localStorage.setItem(POSTS_KEY, JSON.stringify(posts));
   } catch {
@@ -147,6 +147,10 @@ export default function CenterFeed({
       videoUrl,
       createdAt: Date.now(),
     };
+    // Write to localStorage immediately (synchronously) so ReelsView and Profile
+    // can read it when they receive the mk_new_post event
+    const current = loadPostsFromStorage();
+    savePostsToStorage([newPost, ...current]);
     setPosts((prev) => [newPost, ...prev]);
   };
 
